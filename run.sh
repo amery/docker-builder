@@ -8,10 +8,20 @@ if [ -z "${GOPATH:-}" ]; then
 	mkdir -p "$PWD/bin" "$PWD/src" "$PWD/pkg"
 fi
 
-set -x
+docker build --rm "$DOCKER_DIR"
 DOCKER_ID="$(docker build -q --rm "$DOCKER_DIR")"
-set --  --rm \
+set -- \
+	-e USER_NAME="$(id -urn)" \
+	-e USER_UID="$(id -ur)" \
+	-e USER_GID="$(id -gr)" \
 	-v "$GOPATH:/go" \
-	-ti "$DOCKER_ID" "$@"
+	"$DOCKER_ID" "$@"
 
-exec docker run "$@"
+if [ -t 0 ]; then
+	set -- -ti "$@"
+else
+	set -- -i "$@"
+fi
+
+set -x
+exec docker run --rm "$@"
