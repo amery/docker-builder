@@ -14,6 +14,7 @@ set -- \
 	-e USER_NAME="$(id -urn)" \
 	-e USER_UID="$(id -ur)" \
 	-e USER_GID="$(id -gr)" \
+	${DOCKER_EXPOSE:+-p $DOCKER_EXPOSE:$DOCKER_EXPOSE} \
 	-v "$GOPATH:/go" \
 	"$DOCKER_ID" "$@"
 
