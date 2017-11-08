@@ -12,7 +12,7 @@ adduser -s /bin/sh -S -h "$USER_HOME" \
 	"$USER_NAME"
 cat <<EOT > "$USER_PROFILE"
 cd "$GOPATH"
-export PATH="/usr/local/go/bin:\$PATH"
+export PATH="$GOPATH/bin:/usr/local/go/bin:\$PATH"
 export GOPATH=\$PWD
 export CGO_ENABLED=0
 EOT
