@@ -18,7 +18,10 @@ export CGO_ENABLED=0
 EOT
 
 if [ $# -gt 0 ]; then
-	echo "exec $*" >> "$USER_PROFILE"
+	cat <<-EOT >> "$USER_PROFILE"
+	set -x
+	exec $*
+	EOT
 fi
 
 su - "$USER_NAME"

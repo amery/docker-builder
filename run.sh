@@ -24,5 +24,4 @@ else
 	set -- -i "$@"
 fi
 
-set -x
 exec docker run --rm "$@"
