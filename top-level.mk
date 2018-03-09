@@ -8,6 +8,21 @@ DOCKER_RUN ?= $(WS)/docker.sh
 GO    = $(DOCKER_RUN) go
 GOGET = $(GO) get -v
 
+# go fmt
+#
+.PHONY: gofmt
+gofmt:
+	@echo $(filter %.go, $^) | xargs -r $(DOCKER_RUN) gofmt -l -w
+
+# go generate
+#
+.PHONY: gogenerate
+gogenerate:
+	@echo $(filter %.go, $^) | xargs -r grep -l '^//go:generate' | sed -e 's|/[^/]\+$$||g' | sort -u | \
+		while read d; do \
+			grep -l '^//go:generate' $$d/*.go | xargs -r $(GO) generate -v -x; \
+		done
+
 # godoc
 #
 .PHONY: godoc
