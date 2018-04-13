@@ -1,4 +1,5 @@
-FROM node:alpine
+# https://hub.docker.com/_/node/
+FROM node:9.11.1-alpine
 
 RUN deluser --remove-home node
 
