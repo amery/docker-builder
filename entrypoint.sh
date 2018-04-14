@@ -17,8 +17,6 @@ adduser -S -s /bin/sh \
 USER_PROFILE="$USER_HOME/.profile"
 cat <<EOT > "$USER_PROFILE"
 cd "$CURDIR"
-pwd
-env
 EOT
 
 if [ $# -gt 0 ]; then
