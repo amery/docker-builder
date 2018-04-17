@@ -2,7 +2,7 @@
 
 set -eu
 
-[ -n "${DOCKER_ID:-}" ] || DOCKER_ID=amery/node
+[ -n "${DOCKER_ID:-}" ] || DOCKER_ID=amery/nodejs-builder
 
 USER_NAME=$(id -urn)
 USER_UID=$(id -ur)
