@@ -9,6 +9,10 @@ RUN apk --update add git && \
 	rm -rf /var/lib/apt/lists/* && \
 	rm /var/cache/apk/*
 
+RUN apk --update add graphviz && \
+	rm -rf /var/lib/apt/lists/* && \
+	rm /var/cache/apk/*
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
