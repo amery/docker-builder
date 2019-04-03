@@ -27,6 +27,8 @@ if [ -n "$(docker --version 2> /dev/null)" ]; then
 	fi
 
 	set -- docker run --rm "$@"
+elif [ $# -eq 0 ]; then
+	set -- ${SHELL:-/bin/sh}
 fi
 
 exec "$@"
