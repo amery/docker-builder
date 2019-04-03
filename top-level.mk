@@ -5,14 +5,22 @@ GOBIN  ?= $(GOPATH)/bin
 
 DOCKER_RUN ?= $(WS)/docker.sh
 
+GOFMT_ARGS ?= -l -w
+GOGET_ARGS ?= -v
+GOGENERATE_ARGS ?= -v -x
+
 GO    = $(DOCKER_RUN) go
-GOGET = $(GO) get -v
+GOFMT = $(DOCKER_RUN) gofmt
+GODOC = $(DOCKER_RUN) godoc
+
+GOGET = $(GO) get $(GOGET_ARGS)
+GOGENERATE = $(GO) generate $(GOGENERATE_ARGS)
 
 # go fmt
 #
 .PHONY: gofmt
 gofmt:
-	@echo $(filter %.go, $^) | xargs -r $(DOCKER_RUN) gofmt -l -w
+	@echo $(filter %.go, $^) | xargs -r $(GOFMT) $(GOFMT_ARGS)
 
 # go generate
 #
@@ -20,7 +28,7 @@ gofmt:
 gogenerate:
 	@echo $(filter %.go, $^) | xargs -r grep -l '^//go:generate' | sed -e 's|/[^/]\+$$||g' | sort -u | \
 		while read d; do \
-			grep -l '^//go:generate' $$d/*.go | xargs -r $(GO) generate -v -x; \
+			grep -l '^//go:generate' $$d/*.go | xargs -r $(GOGENERATE); \
 		done
 
 # godoc
@@ -28,7 +36,7 @@ gogenerate:
 .PHONY: godoc
 godoc: PORT=6060
 godoc: $(GOBIN)/godoc
-	DOCKER_EXPOSE=$(PORT) $(DOCKER_RUN) godoc -http=:$(PORT)
+	DOCKER_EXPOSE=$(PORT) $(GODOC) -http=:$(PORT)
 
 $(GOBIN)/godoc: FORCE
 	$(GOGET) golang.org/x/tools/cmd/godoc
