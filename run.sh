@@ -49,7 +49,7 @@ set -- \
 	"$DOCKER_ID" "$@"
 
 # persistent volumes
-home_dir="$PWD/.docker-run-cache/home/$USER_NAME"
+home_dir="$WS/.docker-run-cache/home/$USER_NAME"
 parent_dir="$(dirname "$PWD")"
 
 volumes() {
