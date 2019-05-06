@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/node/
-FROM node:9.11.1-alpine
+FROM node:12.1.0-alpine
 
 # remove parent's assumptions
 #
@@ -9,7 +9,7 @@ CMD [ ]
 # update npm
 #
 RUN npm i -g \
-	npm \
+	npm@latest \
 	&& rm -rf ~/.npm
 
 # and inject own entrypoint that deals with -e USER_*
