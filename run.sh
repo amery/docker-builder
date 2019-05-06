@@ -50,18 +50,27 @@ set -- \
 home_dir="$PWD/.docker-run-cache/home/$USER_NAME"
 parent_dir="$(dirname "$PWD")"
 
-for x in "$home_dir"; do
-	[ -d "$x" ] || mkdir -p "$x"
-done
-
 volumes() {
 	local x=
 	sort -uV | while read x; do
+		# skip empty lines
+		[ -n "$x" -a '/' != "$x" ] || continue
+
+		# create missing directories
+		[ -d "$x/" ] || mkdir -p "$x"
+
+		# prevent root-owned directories at $home_dir
+		case "$x" in
+		"$HOME"/*|"$HOME")
+			x0="${x#$HOME}"
+			mkdir -p "$home_dir$x0"
+			;;
+		esac
+
+		# render -v pairs
 		case "$x" in
 		"$HOME")
 			echo "-v $home_dir:$x"
-			;;
-		''|/)
 			;;
 		*)
 			echo "-v $(readlink -f "$x"):$x"
