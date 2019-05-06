@@ -28,9 +28,7 @@ if [ -z "$WS" ]; then
 	find_git_root() {
 		if [ -s "$1/.git/HEAD" -o -s "$1/.git" ]; then
 			echo "$1"
-		fi
-
-		if [ "${1:-/}" != / ]; then
+		elif [ "${1:-/}" != / ]; then
 			find_git_root "${1%/*}"
 		fi
 	}
@@ -86,4 +84,5 @@ else
 	set -- -i "$@"
 fi
 
+set -x
 exec docker run --rm "$@"
