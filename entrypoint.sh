@@ -19,6 +19,13 @@ cat <<EOT > "$USER_PROFILE"
 cd "$CURDIR"
 EOT
 
+if [ -n "$NPM_CONFIG_PREFIX" ]; then
+	cat <<-EOT >> "$USER_PROFILE"
+	export NPM_CONFIG_PREFIX="$NPM_CONFIG_PREFIX"
+	export PATH="\${NPM_CONFIG_PREFIX}/bin:\$PATH"
+	EOT
+fi
+
 if [ $# -gt 0 ]; then
 	cat <<-EOT >> "$USER_PROFILE"
 	set -x

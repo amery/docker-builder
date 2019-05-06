@@ -36,8 +36,10 @@ if [ -z "$WS" ]; then
 fi
 
 [ -d "$WS" ] || WS="$PWD"
+[ -n "${NPM_CONFIG_PREFIX:-}" ] || NPM_CONFIG_PREFIX="$WS/node_modules"
 
 set -- \
+	-e NPM_CONFIG_PREFIX="$NPM_CONFIG_PREFIX" \
 	-e USER_NAME="$USER_NAME" \
 	-e USER_UID="$USER_UID" \
 	-e USER_GID="$USER_GID" \
@@ -84,6 +86,7 @@ $parent_dir
 $HOME
 $PWD
 $WS
+${NPM_CONFIG_PREFIX:-$WS/node_modules}
 EOT
 ) "$@"
 
