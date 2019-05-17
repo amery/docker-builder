@@ -6,6 +6,13 @@ FROM node:12.1.0-alpine
 RUN deluser --remove-home node
 CMD [ ]
 
+# git
+RUN apk --update add \
+	git \
+	openssh \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& rm /var/cache/apk/*
+
 # update npm
 #
 RUN npm i -g \
