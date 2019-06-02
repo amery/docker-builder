@@ -7,6 +7,7 @@ DOCKER_RUN ?= $(WS)/docker.sh
 
 GOFMT_ARGS ?= -l -w
 GOGET_ARGS ?= -v
+GOTEST_ARGS ?= -v
 GOGENERATE_ARGS ?= -v -x
 
 GO    = $(DOCKER_RUN) go
@@ -14,6 +15,7 @@ GOFMT = $(DOCKER_RUN) gofmt
 GODOC = $(DOCKER_RUN) godoc
 
 GOGET = $(GO) get $(GOGET_ARGS)
+GOTEST = $(GO) test $(GOTEST_ARGS)
 GOGENERATE = $(GO) generate $(GOGENERATE_ARGS)
 
 # go fmt
