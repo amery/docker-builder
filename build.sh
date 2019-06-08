@@ -17,7 +17,7 @@ TMPDIR="$0.$$"
 on_exit() {
 	rm -rf "$TMPDIR"
 }
-trap on_exit EXIT
+trap on_exit EXIT INT
 
 rm -rf "$TMPDIR"
 mkdir "$TMPDIR"
