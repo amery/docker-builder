@@ -121,22 +121,31 @@ volumes() {
 	done | tr '\n' ' '
 }
 
+gen_env() {
+	local x= v=
+	for x; do
+		eval "v=\"\${$x:-}\""
+		if [ -n "$v" ]; then
+			echo "-e \"$x=$v\""
+		fi
+	done | tr '\n' ' '
+}
+
 # hook to extend run.sh before mounting volumes or exporting variables
 #
 if [ -s "$DOCKER_DIR/run-hook.in" ]; then
 	. "$DOCKER_DIR/run-hook.in"
 fi
 
-eval "set -- $(volumes ${DOCKER_RUN_VOLUMES:-} parent_dir HOME PWD WS) \"\$@\""
-
-# pass through extra environment variables
+# add more options
 #
-for x in ${DOCKER_RUN_ENV:-}; do
-	eval "v=\"\${$x:-}\""
-	if [ -n "$v" ]; then
-		set -- -e "$x=$v" "$@"
-	fi
-done
+# volumes -> -v
+# gen_env -> -e
+#
+eval "set -- \
+	$(volumes ${DOCKER_RUN_VOLUMES:-} parent_dir HOME PWD WS) \
+	$(gen_env ${DOCKER_RUN_ENV}) \
+	\"\$@\""
 
 # PTRACE
 set -- \
