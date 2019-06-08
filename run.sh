@@ -6,6 +6,9 @@ set -eu
 #   DOCKER_DIR         ${DOCKER_DIR}/Dockerfile
 #   DOCKER_RUN_ENV     variables to passthrough if defined
 #   DOCKER_RUN_VOLUMES variables that specify extra directories to mount
+#
+# Hooks:
+#   ${DOCKER_DIR}/run-hook.in
 
 die() {
 	echo "$*" >&2
@@ -117,6 +120,12 @@ volumes() {
 		esac
 	done | tr '\n' ' '
 }
+
+# hook to extend run.sh before mounting volumes or exporting variables
+#
+if [ -s "$DOCKER_DIR/run-hook.in" ]; then
+	. "$DOCKER_DIR/run-hook.in"
+fi
 
 eval "set -- $(volumes ${DOCKER_RUN_VOLUMES:-} parent_dir HOME PWD WS) \"\$@\""
 
