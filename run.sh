@@ -2,20 +2,33 @@
 
 set -eu
 
+# Variables:
+#   DOCKER_DIR         ${DOCKER_DIR}/Dockerfile
+#   DOCKER_RUN_VOLUMES variables that specify extra directories to mount
+
+die() {
+	echo "$*" >&2
+	exit 1
+}
+
 # select image
 #
-RUN_SH="$0"
-DOCKER_DIR="$(dirname "$RUN_SH")"
+if [ -z "${DOCKER_DIR:-}" ]; then
+	RUN_SH="$0"
+	DOCKER_DIR="$(dirname "$RUN_SH")"
 
-while [ ! -s "$DOCKER_DIR/Dockerfile" ]; do
-	if [ -L "$RUN_SH" ]; then
-		RUN_SH="$DOCKER_DIR/$(readlink "$RUN_SH")"
-		DOCKER_DIR="${RUN_SH%/*}"
-	else
-		echo "$0: failed to detect Dockerfile" >&2
-		exit 1
-	fi
-done
+	while [ ! -s "$DOCKER_DIR/Dockerfile" ]; do
+		if [ -L "$RUN_SH" ]; then
+			# follow symlink
+			RUN_SH="$DOCKER_DIR/$(readlink "$RUN_SH")"
+			DOCKER_DIR="${RUN_SH%/*}"
+		else
+			die "$0: failed to detect Dockerfile"
+		fi
+	done
+elif [ ! -s "$DOCKER_DIR/Dockerfile" ]; then
+	die "$DOCKER_DIR: invalid docker directory"
+fi
 
 # build image
 #
