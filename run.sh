@@ -4,6 +4,7 @@ set -eu
 
 # Variables:
 #   DOCKER_DIR         ${DOCKER_DIR}/Dockerfile
+#   DOCKER_RUN_ENV     variables to passthrough if defined
 #   DOCKER_RUN_VOLUMES variables that specify extra directories to mount
 
 die() {
@@ -118,6 +119,15 @@ volumes() {
 }
 
 eval "set -- $(volumes ${DOCKER_RUN_VOLUMES:-} parent_dir HOME PWD WS) \"\$@\""
+
+# pass through extra environment variables
+#
+for x in ${DOCKER_RUN_ENV:-}; do
+	eval "v=\"\${$x:-}\""
+	if [ -n "$v" ]; then
+		set -- -e "$x=$v" "$@"
+	fi
+done
 
 # PTRACE
 set -- \
