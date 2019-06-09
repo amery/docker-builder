@@ -77,7 +77,9 @@ done | tsort | tac | while read tag; do
 		#
 		# $tag ($dir)
 		#
+
 		EOT
 		docker build --rm -t "$tag" "$dir"
+		echo
 	fi
 done
