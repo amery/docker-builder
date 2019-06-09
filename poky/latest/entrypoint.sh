@@ -16,10 +16,11 @@ else
 	build_env="${OEROOT#$WS/}/oe-init-build-env"
 fi
 
+# find existing build directory
 x="$CURDIR"
 while true; do
 	if [ -s "$x/conf/local.conf" ]; then
-		builddir="$x"
+		builddir="${x#$WS/}"
 		break
 	elif [ "$WS" = "${x:-/}" ]; then
 		break
@@ -27,6 +28,11 @@ while true; do
 
 	x="${x%/*}"
 done
+
+if [ -z "${builddir:-}" -a "$CURDIR" != "$WS" ]; then
+	# or a new
+	builddir="$(echo "${CURDIR#$WS/}" | sed -n -e 's:\(^.*build[^/]*\).*:\1:p')"
+fi
 
 cat <<EOT
 cd '$WS'
