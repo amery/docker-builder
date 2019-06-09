@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -eu
+
+# find root of the `repo` workspace
+find_repo_workspace_root() {
+	if [ -d "$1/.repo" ]; then
+		echo "$1"
+	elif [ "${1:-/}" != / ]; then
+		find_repo_workspace_root "${1%/*}"
+	fi
+}
+
+WS="$(find_repo_workspace_root "$PWD")"
+if [ -z "$WS" ]; then
+	# find root of .git repository
+	WS="$(git rev-parse --show-superproject-working-tree 2> /dev/null || true)"
+	[ -d "$WS" ] || WS="$(git rev-parse --show-toplevel 2> /dev/null || true)"
+fi
+
+if [ -z "$WS" ]; then
+	:
+elif [ -x "$WS/run.sh" ]; then
+	exec "$WS/run.sh" "$@"
+elif [ -x "$WS/docker-run.sh" -a -x "$(which docker)" ]; then
+	exec "$WS/docker-run.sh" "$@"
+fi
+
+if [ "$#" -gt 0 ]; then
+	exec "$@"
+fi
