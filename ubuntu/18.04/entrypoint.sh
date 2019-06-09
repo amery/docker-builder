@@ -34,7 +34,12 @@ fi
 
 F=/etc/profile.d/Z99-docker-run.sh
 
-cat <<EOT > "$F"
+for x in /etc/entrypoint.d/*.sh; do
+	[ -s "$x" ] || continue
+	. "$x"
+done > "$F"
+
+cat <<EOT >> "$F"
 cd '$CURDIR'
 EOT
 
