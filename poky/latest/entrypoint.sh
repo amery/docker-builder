@@ -31,7 +31,7 @@ done
 
 if [ -z "${builddir:-}" -a "$CURDIR" != "$WS" ]; then
 	# or a new
-	builddir="$(echo "${CURDIR#$WS/}" | sed -n -e 's:\(^.*build[^/]*\).*:\1:p')"
+	builddir="$(echo "${CURDIR#$WS/}" | sed -n -e 's:\(^[^/]*build[^/]*\).*:\1:p')"
 fi
 
 cat <<EOT
