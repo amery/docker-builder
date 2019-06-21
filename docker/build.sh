@@ -81,5 +81,14 @@ done | tsort | tac | while read tag; do
 		EOT
 		docker build --rm -t "$tag" "$dir"
 		echo
+	else
+		cat <<-EOT
+		#
+		# $tag
+		#
+
+		EOT
+		docker pull "$tag"
+		echo
 	fi
 done
