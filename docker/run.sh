@@ -144,7 +144,7 @@ fi
 #
 eval "set -- \
 	$(volumes ${DOCKER_RUN_VOLUMES:-} parent_dir HOME PWD WS) \
-	$(gen_env ${DOCKER_RUN_ENV}) \
+	$(gen_env ${DOCKER_RUN_ENV:-}) \
 	\"\$@\""
 
 # PTRACE
