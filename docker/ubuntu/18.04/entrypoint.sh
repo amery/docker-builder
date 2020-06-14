@@ -39,16 +39,30 @@ for x in /etc/entrypoint.d/*.sh; do
 	. "$x"
 done > "$F"
 
-cat <<EOT >> "$F"
-cd '$CURDIR'
-EOT
-
 if [ $# -gt 0 ]; then
-	cat <<-EOT >> "$F"
-
-	exec $*
-	EOT
+	CMD="$*"
+else
+	CMD=
 fi
 
+if [ -n "${USER_IS_SUDO:+yes}" ]; then
+	set -- /bin/bash -l
+
+	cat <<-EOT >> "$F"
+	export SUDO_COMMAND="${CMD:-/bin/bash}"
+	export SUDO_USER=$USER_NAME
+	export SUDO_UID=$USER_UID
+	export SUDO_GID=$USER_GID
+	EOT
+else
+	set -- su - "$USER_NAME"
+fi
+
+cat <<EOT >> "$F"
+
+cd '$CURDIR'
+${CMD:+exec $CMD}
+EOT
+
 grep -n ^ "$F"
-su - "$USER_NAME"
+"$@"

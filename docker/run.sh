@@ -15,6 +15,13 @@ die() {
 	exit 1
 }
 
+if [ "x${1:-}" = "x-r" ]; then
+	USER_IS_SUDO=true
+	shift
+else
+	USER_IS_SUDO=
+fi
+
 # select image
 #
 if [ -z "${DOCKER_DIR:-}" ]; then
@@ -72,6 +79,7 @@ USER_UID="$(id -ur)"
 USER_GID="$(id -gr)"
 
 set -- \
+	${USER_IS_SUDO:+-e USER_IS_SUDO=true} \
 	-e USER_HOME="$HOME" \
 	-e USER_NAME="$USER_NAME" \
 	-e USER_UID="$USER_UID" \
