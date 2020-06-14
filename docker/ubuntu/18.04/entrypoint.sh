@@ -64,5 +64,4 @@ cd '$CURDIR'
 ${CMD:+exec $CMD}
 EOT
 
-grep -n ^ "$F"
 "$@"
