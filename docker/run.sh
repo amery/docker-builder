@@ -157,6 +157,7 @@ eval "set -- \
 
 # PTRACE
 set -- \
+	${USER_IS_SUDO:+--cap-add=SYS_ADMIN } \
 	--cap-add SYS_PTRACE \
 	--security-opt apparmor:unconfined \
 	--security-opt seccomp:unconfined \
