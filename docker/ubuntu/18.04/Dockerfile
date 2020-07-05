@@ -23,6 +23,7 @@ RUN update-locale LANG=$LANG LC_MESSAGES=POSIX
 #
 RUN apt-get update && apt-get install --no-install-recommends -y \
 	autoconf \
+	autoconf-archive \
 	automake \
 	build-essential \
 	clang \
