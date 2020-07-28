@@ -159,7 +159,13 @@ if [ $# -gt 0 ]; then
 		;;
 	gdb)
 		FILTER=
-		set -- gdb ${SOURCES_BASE:+-ex "dir $SOURCES_BASE"} -ex "break main" -ex "run" --args "$@"
+		if [ -s .gdbinit ]; then
+			gdb_cmds="-x $PWD/.gdbinit"
+		else
+			gdb_cmds="-ex 'break main'"
+		fi
+
+		set -- gdb ${SOURCES_BASE:+-ex "dir $SOURCES_BASE"} $gdb_cmds -ex 'run' --args "$@"
 		;;
 	esac
 else
