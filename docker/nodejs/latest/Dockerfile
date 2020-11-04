@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/node/
-FROM node:12.1.0-alpine
+FROM node:15.0.1-alpine3.12
 
 # remove parent's assumptions
 #
@@ -15,11 +15,14 @@ RUN apk --update add \
 
 # update npm
 #
-RUN npm i -g \
-	npm@latest \
+# workaround `EXDEV: cross-device link not permitted` bug
+#
+RUN mv /usr/local/lib/node_modules /usr/local/lib/node_modules.tmp \
+	&& mv /usr/local/lib/node_modules.tmp /usr/local/lib/node_modules \
+	&& npm i -g npm@latest \
 	&& rm -rf ~/.npm
 
-# and inject own entrypoint that deals with -e USER_*
+# and inject entrypoint to deal with -e USER_*
 #
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
