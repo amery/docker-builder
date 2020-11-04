@@ -21,11 +21,13 @@ RUN apk --update add \
 
 # update npm
 #
+ENV NPM_VERSION="7.0.8"
 # workaround `EXDEV: cross-device link not permitted` bug
 #
 RUN mv /usr/local/lib/node_modules /usr/local/lib/node_modules.tmp \
 	&& mv /usr/local/lib/node_modules.tmp /usr/local/lib/node_modules \
-	&& npm i -g npm@latest \
+	&& npm i -g npm@${NPM_VERSION} \
+	&& npm i -g npm-check-updates \
 	&& rm -rf ~/.npm
 
 # and inject entrypoint to deal with -e USER_*
