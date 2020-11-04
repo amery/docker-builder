@@ -1,4 +1,5 @@
-FROM golang:1.12.1-alpine3.9
+# https://hub.docker.com/_/golang/
+FROM golang:1.15.3-alpine3.12
 
 # disable CGO and rebuild
 ENV CGO_ENABLED=0
@@ -9,10 +10,12 @@ RUN apk --update add git && \
 	rm -rf /var/lib/apt/lists/* && \
 	rm /var/cache/apk/*
 
+# graphviz
 RUN apk --update add graphviz && \
 	rm -rf /var/lib/apt/lists/* && \
 	rm /var/cache/apk/*
 
+# and inject entrypoint to deal with -e USER_*
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
