@@ -13,6 +13,12 @@ RUN apk --update add \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& rm /var/cache/apk/*
 
+# extra `npm install` dependencies
+RUN apk --update add \
+	g++ make python2 \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& rm /var/cache/apk/*
+
 # update npm
 #
 # workaround `EXDEV: cross-device link not permitted` bug
