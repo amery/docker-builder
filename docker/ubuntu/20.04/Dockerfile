@@ -31,9 +31,11 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 	autoconf \
 	autoconf-archive \
 	automake \
+	bison \
 	build-essential \
 	clang \
 	cmake \
+	flex \
 	gawk \
 	libtool \
 	pkg-config \
