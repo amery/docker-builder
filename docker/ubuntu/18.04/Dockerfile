@@ -33,8 +33,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 	gawk \
 	libtool \
 	pkg-config \
+	psmisc \
 	python3-pip \
 	python3-setuptools \
+	time \
 	vim \
 	&& apt-get clean
 
