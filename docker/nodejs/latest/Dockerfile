@@ -6,15 +6,10 @@ FROM node:15.0.1-alpine3.12
 RUN deluser --remove-home node
 CMD [ ]
 
-# git
+# dependencies
 RUN apk --update add \
 	git \
 	openssh \
-	&& rm -rf /var/lib/apt/lists/* \
-	&& rm /var/cache/apk/*
-
-# extra `npm install` dependencies
-RUN apk --update add \
 	g++ make python2 \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& rm /var/cache/apk/*
