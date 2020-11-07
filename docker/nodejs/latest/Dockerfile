@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/node/
-FROM node:15.0.1-alpine3.12
+FROM node:15.1.0-alpine3.12
 
 # remove parent's assumptions
 #
@@ -16,7 +16,7 @@ RUN apk --update add \
 
 # update npm
 #
-ENV NPM_VERSION="7.0.8"
+ENV NPM_VERSION="7.0.9"
 # workaround `EXDEV: cross-device link not permitted` bug
 #
 RUN mv /usr/local/lib/node_modules /usr/local/lib/node_modules.tmp \
