@@ -4,8 +4,10 @@ set -eu
 
 # Variables:
 #   DOCKER_DIR         ${DOCKER_DIR}/Dockerfile
+#   DOCKER_ID          optional image id to use instead of building DOCKER_DIR
 #   DOCKER_RUN_ENV     variables to passthrough if defined
 #   DOCKER_RUN_VOLUMES variables that specify extra directories to mount
+#   DOCKER_EXTRA_OPTS  extra options to pass as-is to `docker run`
 #
 # Hooks:
 #   ${DOCKER_DIR}/run-hook.in
@@ -24,27 +26,29 @@ fi
 
 # select image
 #
-if [ -z "${DOCKER_DIR:-}" ]; then
-	RUN_SH="$0"
-	DOCKER_DIR="$(dirname "$RUN_SH")"
+if [ -z "${DOCKER_ID:-}" ]; then
+	if [ -z "${DOCKER_DIR:-}" ]; then
+		RUN_SH="$0"
+		DOCKER_DIR="$(dirname "$RUN_SH")"
 
-	while [ ! -s "$DOCKER_DIR/Dockerfile" ]; do
-		if [ -L "$RUN_SH" ]; then
-			# follow symlink
-			RUN_SH="$DOCKER_DIR/$(readlink "$RUN_SH")"
-			DOCKER_DIR="${RUN_SH%/*}"
-		else
-			die "$0: failed to detect Dockerfile"
-		fi
-	done
-elif [ ! -s "$DOCKER_DIR/Dockerfile" ]; then
-	die "$DOCKER_DIR: invalid docker directory"
+		while [ ! -s "$DOCKER_DIR/Dockerfile" ]; do
+			if [ -L "$RUN_SH" ]; then
+				# follow symlink
+				RUN_SH="$DOCKER_DIR/$(readlink "$RUN_SH")"
+				DOCKER_DIR="${RUN_SH%/*}"
+			else
+				die "$0: failed to detect Dockerfile"
+			fi
+		done
+	elif [ ! -s "$DOCKER_DIR/Dockerfile" ]; then
+		die "$DOCKER_DIR: invalid docker directory"
+	fi
+
+	# build image
+	#
+	docker build --rm "$DOCKER_DIR"
+	DOCKER_ID="$(docker build --rm -q "$DOCKER_DIR")"
 fi
-
-# build image
-#
-docker build --rm "$DOCKER_DIR"
-DOCKER_ID="$(docker build --rm -q "$DOCKER_DIR")"
 
 # find root of the "workspace"
 #
@@ -170,4 +174,4 @@ fi
 
 # and finally run within the container
 set -x
-exec docker run --rm "$@"
+exec docker run --rm ${DOCKER_EXTRA_OPTS:-} "$@"
