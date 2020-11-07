@@ -10,9 +10,11 @@ USER_NAME=$(id -urn)
 USER_UID=$(id -ur)
 USER_GID=$(id -gr)
 
-# build image
-docker build --rm "$DOCKER_DIR"
-DOCKER_ID="$(docker build --rm -q "$DOCKER_DIR")"
+if [ -z "${DOCKER_ID:-}" ]; then
+	# build image
+	docker build --rm "$DOCKER_DIR"
+	DOCKER_ID="$(docker build --rm -q "$DOCKER_DIR")"
+fi
 
 # find root of the workspace
 find_repo_workspace_root() {
@@ -97,4 +99,4 @@ else
 fi
 
 set -x
-exec docker run --rm "$@"
+exec docker run --rm ${DOCKER_EXTRA_OPTS:-} "$@"
