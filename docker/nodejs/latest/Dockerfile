@@ -14,15 +14,16 @@ RUN apk --update add \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& rm /var/cache/apk/*
 
-# update npm
+# update npm and install ncu
 #
-ENV NPM_VERSION="7.0.9"
+ENV NPM_VERSION="7.0.10"
+ENV NCU_VERSION="10.0.0"
 # workaround `EXDEV: cross-device link not permitted` bug
 #
 RUN mv /usr/local/lib/node_modules /usr/local/lib/node_modules.tmp \
 	&& mv /usr/local/lib/node_modules.tmp /usr/local/lib/node_modules \
 	&& npm i -g npm@${NPM_VERSION} \
-	&& npm i -g npm-check-updates \
+	&& npm i -g npm-check-updates@${NCU_VERSION} \
 	&& rm -rf ~/.npm
 
 # and inject entrypoint to deal with -e USER_*
