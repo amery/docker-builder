@@ -16,7 +16,7 @@ RUN apk --update add \
 
 # update npm and install ncu
 #
-ENV NPM_VERSION="7.0.10"
+ENV NPM_VERSION="7.0.14"
 ENV NCU_VERSION="10.0.0"
 # workaround `EXDEV: cross-device link not permitted` bug
 #
