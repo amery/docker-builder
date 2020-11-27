@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/node/
-FROM node:15.1.0-alpine3.12
+FROM node:15.3.0-alpine3.12
 
 # remove parent's assumptions
 #
