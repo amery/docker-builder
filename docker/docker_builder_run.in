@@ -183,7 +183,7 @@ builder_gen_env() {
 #
 #
 builder_run_exec() {
-	local home_dir= parent_dir=
+	local home_dir=
 	local WS="$1"
 	shift 1
 
@@ -209,7 +209,6 @@ builder_run_exec() {
 	fi
 
 	home_dir="$DOCKER_RUN_CACHEDIR$HOME"
-	parent_dir="$(dirname "$WS")"
 
 	# add more options
 	#
@@ -217,7 +216,7 @@ builder_run_exec() {
 	# gen_env -> -e
 	#
 	eval "set -- \
-		$(builder_gen_volumes ${DOCKER_RUN_VOLUMES:-} parent_dir HOME PWD WS) \
+		$(builder_gen_volumes ${DOCKER_RUN_VOLUMES:-} HOME PWD WS) \
 		$(builder_gen_env ${DOCKER_RUN_ENV:-}) \
 		${DOCKER_EXTRA_OPTS:-} \
 		\"\$@\""
