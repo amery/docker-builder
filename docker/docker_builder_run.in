@@ -94,15 +94,58 @@ builder_find_docker_dir() {
 }
 
 #
-builder_gen_volumes() {
-	local v= x=
-	for v; do
-		# name to value
-		eval "echo \"\${$v:-}\""
-	done | sort -uV | while read x; do
-		# skip empty lines
-		[ -n "$x" -a '/' != "$x" ] || continue
+builder__filter_volumes() {
+	local list= match= m=
+	local d= n= prev= new=
 
+	while read d n; do
+		new=true
+
+		if match="$(echo "$list" | grep "^$d:")"; then
+			for m in $match; do
+				# known device, known base?
+
+				prev="${match#*:}"
+				if [ "$prev" = / ]; then
+					new=false
+				elif expr "$n" : "$prev/" > /dev/null; then
+					new=false
+				fi
+
+				$new || break
+			done
+		fi
+
+		if $new; then
+			list="${list:+$list
+}$d:$n"
+			echo "$n"
+		fi
+	done
+}
+
+builder_gen_filter_volumes() {
+	local k= v=
+
+	for k; do
+		eval "v=\"\${$k:-}\""
+
+		if [ -z "$v" ]; then
+			continue
+		elif [ -L "$v" ]; then
+			readink -f "$v"
+			dirname "$v"
+		else
+			echo "$v"
+		fi
+
+	done | sort -uV | grep -v "^$HOME\$" | xargs -r stat -c '%d %n' | builder__filter_volumes
+	echo "$HOME"
+}
+
+#
+builder_gen_volumes() {
+	builder_gen_filter_volumes "$@" | sort -V | while read x; do
 		# create missing directories
 		[ -d "$x/" ] || mkdir -p "$x"
 
@@ -120,7 +163,7 @@ builder_gen_volumes() {
 			echo "-v \"$home_dir:$x\""
 			;;
 		*)
-			echo "-v \"$(readlink -f "$x"):$x\""
+			echo "-v \"$x:$x\""
 			;;
 		esac
 	done | tr '\n' ' '
@@ -165,7 +208,7 @@ builder_run_exec() {
 		DOCKER_RUN_CACHEDIR="$WS/.docker-run-cache"
 	fi
 
-	home_dir="$DOCKER_RUN_CACHEDIR/$HOME"
+	home_dir="$DOCKER_RUN_CACHEDIR$HOME"
 	parent_dir="$(dirname "$WS")"
 
 	# add more options
