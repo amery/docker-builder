@@ -15,17 +15,22 @@ adduser -S -s /bin/sh \
 	-u "$USER_UID" "$USER_NAME"
 
 USER_PROFILE="$USER_HOME/.profile"
-cat <<EOT > "$USER_PROFILE"
-cd "$CURDIR"
-${WS:+export PATH="$WS/bin:\$PATH"}
-EOT
 
-if [ -n "$NPM_CONFIG_PREFIX" ]; then
-	cat <<-EOT >> "$USER_PROFILE"
+if [ -n "${WS:-}${NPM_CONFIG_PREFIX:-}" ]; then
+	[ -n "$NPM_CONFIG_PREFIX" ] || NPM_CONFIG_PREFIX="$WS"
+
+	[ "$WS" != "$NPM_CONFIG_PREFIX" ] || WS=
+
+	cat <<-EOT
+	cd "$CURDIR"
 	export NPM_CONFIG_PREFIX="$NPM_CONFIG_PREFIX"
-	export PATH="\${NPM_CONFIG_PREFIX}/bin:\$PATH"
+	export PATH="\${NPM_CONFIG_PREFIX}/bin:${WS:+$WS/bin}:\$PATH"
 	EOT
-fi
+else
+	cat <<-EOT
+	cd "$CURDIR"
+	EOT
+fi > "$USER_PROFILE"
 
 if [ $# -gt 0 ]; then
 	cat <<-EOT >> "$USER_PROFILE"

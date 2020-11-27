@@ -29,18 +29,13 @@ elif [ -z "${DOCKER_ID:-}" ]; then
 	fi
 fi
 
-# take the parent of NPM_CONFIG_PREFIX as the root of the workspace
-if [ -d "${NPM_CONFIG_PREFIX:-}" ]; then
-	WS=$(dirname "$NPM_CONFIG_PREFIX")
-else
-	# or try to find one containing node_modules
-	test_node_root() {
-		test -d "$1/node_modules"
-	}
+# or try to find one containing node_modules
+test_node_root() {
+	test -d "$1/node_modules"
+}
 
-	WS="$(builder_find_workspace test_node_root)"
-	NPM_CONFIG_PREFIX="$WS/node_modules"
-fi
+WS="$(builder_find_workspace test_node_root)"
+: ${NPM_CONFIG_PREFIX:=$WS}
 
 # run
 #
