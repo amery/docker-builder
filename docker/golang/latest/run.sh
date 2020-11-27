@@ -48,7 +48,7 @@ mkdir -p "$GOPATH/bin" "$GOPATH/src" "$GOPATH/pkg"
 [ $# -gt 0 ] || set -- ${SHELL:-/bin/sh}
 
 if [ -n "$DOCKER_ID" ]; then
-	builder_run_exec "$GOPATH" -v "$GOPATH:/go" "$DOCKER_ID" "$@"
+	builder_run_exec "$GOPATH" "$DOCKER_ID" "$@"
 else
 	export GOPATH
 	exec "$@"
