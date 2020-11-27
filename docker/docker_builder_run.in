@@ -28,7 +28,7 @@ builder_brute_find() {
 #
 #
 builder_find_workspace() {
-	local ws= prev="$PWD" check="$1"
+	local ws= prev="$PWD" check="${1:-}"
 
 	# any .repo workspace wins
 	ws="$(builder_brute_find -d .repo)"
