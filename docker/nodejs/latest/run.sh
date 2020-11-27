@@ -2,101 +2,56 @@
 
 set -eu
 
-# select image
-DOCKER_DIR="$(dirname "$(readlink -f "$0")")"
+# Variables:
+#   DOCKER_DIR           ${DOCKER_DIR}/Dockerfile
+#   DOCKER_ID            optional image id to use instead of building DOCKER_DIR
+#   DOCKER_EXTRA_OPTS    extra options to pass as-is to `docker run`
+#   DOCKER_RUN_CACHE_DIR
+#   DOCKER_RUN_VOLUMES
+#   DOCKER_RUN_ENV
+#
+#   NPM_CONFIG_PREFIX
+#
 
-# preserve user identity
-USER_NAME=$(id -urn)
-USER_UID=$(id -ur)
-USER_GID=$(id -gr)
+RUN_SH=$(readlink -f "$0")
+. "$(dirname "$RUN_SH")/../../docker_builder_run.in"
 
-if [ -z "${DOCKER_ID:-}" ]; then
-	# build image
-	docker build --rm "$DOCKER_DIR"
-	DOCKER_ID="$(docker build --rm -q "$DOCKER_DIR")"
-fi
+# DOCKER_ID
+if [ -z "$(docker --version 2> /dev/null)" ]; then
+	DOCKER_ID=
+	DOCKER_DIR=
+elif [ -z "${DOCKER_ID:-}" ]; then
+	DOCKER_DIR="$(builder_find_docker_dir "$0" "${DOCKER_DIR:-}")"
 
-# find root of the workspace
-find_repo_workspace_root() {
-	if [ -d "$1/.repo" ]; then
-		echo "$1"
-	elif [ "${1:-/}" != / ]; then
-		find_repo_workspace_root "${1%/*}"
+	if [ -d "$DOCKER_DIR" ]; then
+		docker build --rm "$DOCKER_DIR"
+		DOCKER_ID="$(docker build -q --rm "$DOCKER_DIR")"
 	fi
-}
-WS="$(find_repo_workspace_root "$PWD")"
-
-if [ -z "$WS" ]; then
-	find_git_root() {
-		if [ -s "$1/.git/HEAD" -o -s "$1/.git" ]; then
-			echo "$1"
-		elif [ "${1:-/}" != / ]; then
-			find_git_root "${1%/*}"
-		fi
-	}
-	WS="$(find_git_root "$PWD" | tail -n1)"
 fi
 
-[ -d "$WS" ] || WS="$PWD"
-[ -n "${NPM_CONFIG_PREFIX:-}" ] || NPM_CONFIG_PREFIX="$WS/node_modules"
-
-set -- \
-	-e NPM_CONFIG_PREFIX="$NPM_CONFIG_PREFIX" \
-	-e USER_NAME="$USER_NAME" \
-	-e USER_UID="$USER_UID" \
-	-e USER_GID="$USER_GID" \
-	-e USER_HOME="$HOME" \
-	-e WS="$WS" \
-	-w "$PWD" \
-	"$DOCKER_ID" "$@"
-
-# persistent volumes
-home_dir="$WS/.docker-run-cache/home/$USER_NAME"
-parent_dir="$(dirname "$PWD")"
-
-volumes() {
-	local x=
-	sort -uV | while read x; do
-		# skip empty lines
-		[ -n "$x" -a '/' != "$x" ] || continue
-
-		# create missing directories
-		[ -d "$x/" ] || mkdir -p "$x"
-
-		# prevent root-owned directories at $home_dir
-		case "$x" in
-		"$HOME"/*|"$HOME")
-			x0="${x#$HOME}"
-			mkdir -p "$home_dir$x0"
-			;;
-		esac
-
-		# render -v pairs
-		case "$x" in
-		"$HOME")
-			echo "-v $home_dir:$x"
-			;;
-		*)
-			echo "-v $(readlink -f "$x"):$x"
-			;;
-		esac
-	done
-}
-
-set -- $(volumes <<EOT
-$parent_dir
-$HOME
-$PWD
-$WS
-${NPM_CONFIG_PREFIX:-$WS/node_modules}
-EOT
-) "$@"
-
-if [ -t 0 ]; then
-	set -- -ti "$@"
+# take the parent of NPM_CONFIG_PREFIX as the root of the workspace
+if [ -d "${NPM_CONFIG_PREFIX:-}" ]; then
+	WS=$(dirname "$NPM_CONFIG_PREFIX")
 else
-	set -- -i "$@"
+	# or try to find one containing node_modules
+	test_node_root() {
+		test -d "$1/node_modules"
+	}
+
+	WS="$(builder_find_workspace test_node_root)"
+	NPM_CONFIG_PREFIX="$WS/node_modules"
 fi
 
-set -x
-exec docker run --rm ${DOCKER_EXTRA_OPTS:-} "$@"
+# run
+#
+[ $# -gt 0 ] || set -- ${SHELL:-/bin/sh}
+
+if [ -n "$DOCKER_ID" ]; then
+	DOCKER_RUN_ENV="${DOCKER_RUN_ENV:+$DOCKER_RUN_ENV }NPM_CONFIG_PREFIX"
+	DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES }NPM_CONFIG_PREFIX"
+
+	builder_run_exec "$WS" -w "$PWD" "$DOCKER_ID" "$@"
+else
+	export NPM_CONFIG_PREFIX
+	exec "$@"
+fi
