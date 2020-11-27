@@ -50,7 +50,7 @@ if [ -n "$DOCKER_ID" ]; then
 	DOCKER_RUN_ENV="${DOCKER_RUN_ENV:+$DOCKER_RUN_ENV }NPM_CONFIG_PREFIX"
 	DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES }NPM_CONFIG_PREFIX"
 
-	builder_run_exec "$WS" -w "$PWD" "$DOCKER_ID" "$@"
+	builder_run_exec "$WS" "$DOCKER_ID" "$@"
 else
 	export NPM_CONFIG_PREFIX
 	exec "$@"
