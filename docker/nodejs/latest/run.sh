@@ -39,7 +39,7 @@ WS="$(builder_find_workspace test_node_root)"
 
 # run
 #
-[ $# -gt 0 ] || set -- ${SHELL:-/bin/sh}
+[ $# -gt 0 ] || set -- /bin/sh
 
 if [ -n "$DOCKER_ID" ]; then
 	DOCKER_RUN_ENV="${DOCKER_RUN_ENV:+$DOCKER_RUN_ENV }NPM_CONFIG_PREFIX"
