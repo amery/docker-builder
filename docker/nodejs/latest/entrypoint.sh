@@ -17,6 +17,7 @@ adduser -S -s /bin/sh \
 USER_PROFILE="$USER_HOME/.profile"
 cat <<EOT > "$USER_PROFILE"
 cd "$CURDIR"
+${WS:+export PATH="$WS/bin:\$PATH"}
 EOT
 
 if [ -n "$NPM_CONFIG_PREFIX" ]; then
