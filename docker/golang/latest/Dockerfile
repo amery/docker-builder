@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/golang/
-FROM golang:1.15.5-alpine3.12
+FROM golang:1.15.6-alpine3.12
 
 # disable CGO and rebuild
 ENV CGO_ENABLED=0
