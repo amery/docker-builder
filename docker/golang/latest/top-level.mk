@@ -3,7 +3,12 @@ WS     ?= $(CURDIR)
 GOPATH ?= $(WS)
 GOBIN  ?= $(GOPATH)/bin
 
-DOCKER_RUN ?= $(WS)/docker.sh
+DOCKER = $(shell which docker)
+ifneq ($(DOCKER),)
+DOCKER_RUN ?= $(WS)/run.sh
+else
+DOCKER_RUN ?=
+endif
 
 GOFMT_ARGS ?= -l -w
 GOGET_ARGS ?= -v
