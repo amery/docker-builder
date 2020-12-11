@@ -5,15 +5,10 @@ FROM golang:1.15.5-alpine3.12
 ENV CGO_ENABLED=0
 RUN go install -tags netgo -v -a all
 
-# install git for `go get`
-RUN apk --update add git && \
-	rm -rf /var/lib/apt/lists/* && \
-	rm /var/cache/apk/*
-
-# graphviz
-RUN apk --update add graphviz && \
-	rm -rf /var/lib/apt/lists/* && \
-	rm /var/cache/apk/*
+RUN apk --update --no-cache add \
+	git \
+	graphviz \
+	make
 
 # and inject entrypoint to deal with -e USER_*
 COPY entrypoint.sh /entrypoint.sh
