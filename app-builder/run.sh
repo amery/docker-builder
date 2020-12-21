@@ -164,7 +164,7 @@ if [ $# -gt 0 ]; then
 		if [ -s .gdbinit ]; then
 			set -- -n -x "$PWD/.gdbinit" "$@"
 		else
-			set -- -ex 'break main'
+			set -- -ex 'break main' "$@"
 		fi
 
 		set -- gdb ${SOURCES_BASE:+-ex "dir $SOURCES_BASE"} "$@"
