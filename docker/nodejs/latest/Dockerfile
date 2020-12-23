@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/node/
-FROM node:15.3.0-alpine3.12
+FROM node:15.4.0-alpine3.12
 
 # remove parent's assumptions
 #
@@ -16,8 +16,8 @@ RUN apk --update add \
 
 # update npm and install ncu
 #
-ENV NPM_VERSION="7.0.14"
-ENV NCU_VERSION="10.0.0"
+ENV NPM_VERSION="7.3.0"
+ENV NCU_VERSION="10.2.5"
 # workaround `EXDEV: cross-device link not permitted` bug
 #
 RUN mv /usr/local/lib/node_modules /usr/local/lib/node_modules.tmp \
