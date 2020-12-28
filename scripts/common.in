@@ -1,0 +1,80 @@
+# vim: set ft=sh et! ts=8 sw=8:
+
+sort_uV() {
+	local x=
+	for x; do
+		echo "$x"
+	done | sort -uV
+}
+
+list_f() {
+	local f="$1" x=
+	shift
+
+	if [ -n "$f" ]; then
+		for x; do
+			printf "$($f $x)|"
+		done
+	else
+		for x; do
+			printf "$x|"
+		done
+	fi | sed -e 's:|$::' -e 's:|: \\\n\t:g'
+}
+
+list_key__f() {
+	local key="$1" op="$2" f="$3"
+	shift 3
+
+	if [ $# -gt 1 ]; then
+		cat <<EOT
+$key $op \\
+	$(list_f "$f" "$@")
+EOT
+	elif [ $# -eq 0 ]; then
+		echo "$key $op"
+	elif [ -n "$f" ]; then
+		echo "$key $op $($f $1)"
+	else
+		echo "$key $op $1"
+	fi
+}
+
+list_key_f() {
+	local key="$1" f="$2"
+	shift 2
+
+	list_key__f "$key" ":=" "$f" "$@"
+}
+
+list_key() {
+	local key="$1"
+	shift
+
+	list_key__f "$key" ":=" "" "$@"
+}
+
+list_target_f() {
+	local key="$1" f="$2"
+	shift 2
+
+	if [ $# -gt 1 ]; then
+		cat <<EOT
+$key: \\
+	$(list_f "$f" "$@")
+EOT
+	elif [ $# -eq 0 ]; then
+		echo "$key:"
+	elif [ -n "$f" ]; then
+		echo "$key: $($f $1)"
+	else
+		echo "$key: $1"
+	fi
+}
+
+list_target() {
+	local key="$1"
+	shift
+
+	list_target_f "$key" "" "$@"
+}

@@ -1,1 +1,5 @@
 .docker-run-cache
+.tag-dirs
+.image-*
+images.mk
+rules.mk
