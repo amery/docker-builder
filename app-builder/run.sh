@@ -159,15 +159,21 @@ if [ $# -gt 0 ]; then
 		;;
 	gdb)
 		FILTER=
+		GDB_OPT=
 
 		set -- -ex run --args "$@"
-		if [ -s .gdbinit ]; then
-			set -- -n -x "$PWD/.gdbinit" "$@"
+
+		if [ -f .gdbinit ]; then
+			GDB_OPT='-n'
+			set -- -x "$PWD/.gdbinit" "$@"
 		else
 			set -- -ex 'break main' "$@"
 		fi
 
-		set -- gdb ${SOURCES_BASE:+-ex "dir $SOURCES_BASE"} "$@"
+		set -- gdb $GDB_OPT \
+			${SOURCES_BASE:+-ex "dir $SOURCES_BASE"} \
+			-ex 'set breakpoint pending on' \
+			"$@"
 		;;
 	esac
 else
