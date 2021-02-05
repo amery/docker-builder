@@ -25,6 +25,18 @@ if [ -z "${DOCKER_ID:-}" ]; then
 	fi
 fi
 
+# labels
+#
+docker_labels() {
+	docker inspect --format "{{range \$Key, \$Value := .Config.Labels}}{{\$Key}}={{\$Value}}:{{end}}" "$1" | tr ':' '\n'
+}
+
+docker_env_labels() {
+	docker_labels "$1" | grep '^docker-builder\.run-env\.' | cut -d= -f2- | tr ' ' '\n' | sort -u
+}
+
+DOCKER_ENV_LABELS="$(docker_env_labels "$DOCKER_ID")"
+
 # -r (sudo) mode
 #
 if [ "x${1:-}" = "x-r" ]; then
@@ -34,10 +46,15 @@ else
 	USER_IS_SUDO=
 fi
 
+# pass-through environment
+#
+for x in $DOCKER_ENV_LABELS USER_IS_SUDO; do
+	DOCKER_RUN_ENV="${DOCKER_RUN_ENV:+$DOCKER_RUN_ENV }$x"
+done
+
 # find root of the "workspace"
 #
 WS=$(builder_find_workspace)
-DOCKER_RUN_ENV="${DOCKER_RUN_ENV:+$DOCKER_RUN_ENV }USER_IS_SUDO"
 
 # run
 #
