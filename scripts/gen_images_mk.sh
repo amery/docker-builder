@@ -42,6 +42,22 @@ get_3rd_party() {
 	done < "$OWN" | sort -uV
 }
 
+gen_image_files() {
+	local dir="$1" x=
+	shift
+
+	(
+	for x; do
+		echo "$x"
+	done
+
+	find "$dir" ! -type d -a ! -name Dockerfile -a ! -name Dockerfile.in
+	find "$dir" ! -type d -a -name '*.in' | sed -e 's|\.in$||'
+	echo "$dir/Dockerfile"
+
+	) | sed -e "s|^$PWD/||" -e "s|^./||" | sort -uV
+}
+
 key() {
 	local x=
 	for x; do
@@ -129,7 +145,12 @@ while read tag dir; do
 	p1=$(pusher $tag)
 	s1=$(sentinel $tag)
 
-	[ -z "$dir" ] || from=
+	if [ -z "$dir" ]; then
+		files=
+	else
+		from=
+		files="$(gen_image_files "$dir" "$s0" '$(IMAGE_MK)')"
+	fi
 
 	cat <<EOT
 
@@ -142,7 +163,7 @@ while read tag dir; do
 $p1: $s1
 	\$(DOCKER) push \$(PREFIX)$tag
 
-$(list_target $s1 '$(IMAGE_MK)' $s0)
+$(list_target $s1 $files)
 EOT
 
 if [ -d "$dir" ]; then
