@@ -35,7 +35,12 @@ docker_env_labels() {
 	docker_labels "$1" | grep '^docker-builder\.run-env\.' | cut -d= -f2- | tr ' ' '\n' | sort -u
 }
 
+docker_version_labels() {
+	docker_labels "$1" | grep '^docker-builder\.version\.' | cut -d. -f3-
+}
+
 DOCKER_ENV_LABELS="$(docker_env_labels "$DOCKER_ID")"
+DOCKER_VERSION_LABELS="$(docker_version_labels "$DOCKER_ID")"
 
 # -r (sudo) mode
 #
