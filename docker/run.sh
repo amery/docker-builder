@@ -2,15 +2,6 @@
 
 set -eu
 
-# Variables:
-#   DOCKER_DIR         ${DOCKER_DIR}/Dockerfile
-#   DOCKER_ID          optional image id to use instead of building DOCKER_DIR
-#   DOCKER_RUN_ENV     variables to passthrough if defined
-#   DOCKER_RUN_VOLUMES variables that specify extra directories to mount
-#   DOCKER_EXTRA_OPTS  extra options to pass as-is to `docker run`
-#
-# Hooks:
-#   ${DOCKER_DIR}/run-hook.in
 
 RUN_SH=$(readlink -f "$0")
 . "$(dirname "$RUN_SH")/docker_builder_run.in"
