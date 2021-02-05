@@ -50,10 +50,12 @@ done
 
 # find root of the "workspace"
 #
-WS=$(builder_find_workspace)
+if [ ! -d "$DOCKER_RUN_WS" ]; then
+	DOCKER_RUN_WS=$(builder_find_workspace)
+fi
 
 # run
 #
 [ $# -gt 0 ] || set -- ${SHELL:-/bin/sh}
 
-builder_run_exec "$WS" ${USER_IS_SUDO:+--cap-add=SYS_ADMIN} "$DOCKER_ID" "$@"
+builder_run_exec "$DOCKER_RUN_WS" ${USER_IS_SUDO:+--cap-add=SYS_ADMIN} "$DOCKER_ID" "$@"
