@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 	build-essential \
 	clang \
 	cmake \
+	curl \
 	flex \
 	gawk \
 	libtool \
