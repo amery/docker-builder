@@ -1,4 +1,4 @@
-#
+# vim: set ft=sh:
 #
 #
 
@@ -43,11 +43,13 @@ builder_find_workspace() {
 				ws=
 				break
 			elif [ -z "$check" ]; then
-				# git-root is good, unchecked
-				break
+				# remember this git-root, but try deeper
+				prev="$ws"
+				cd "$ws/.."
 			elif $check "$ws"; then
-				# git-root passed the checks
-				break
+				# remember this git-root, but try deeper
+				prev="$ws"
+				cd "$ws/.."
 			elif [ "$ws" != / ]; then
 				# remember this git-root, but try deeper
 				prev="$ws"
