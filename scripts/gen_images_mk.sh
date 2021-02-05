@@ -169,7 +169,7 @@ EOT
 if [ -d "$dir" ]; then
 	echo "$TAB\$(DOCKER) build -t \$(PREFIX)$tag $dir"
 else
-	echo "$TAB\$(DOCKER) tag \$(PREFIX)$tag \$(PREFIX)$from"
+	echo "$TAB\$(DOCKER) -D tag \$(PREFIX)$from \$(PREFIX)$tag"
 fi
 echo "${TAB}touch \$@"
 
