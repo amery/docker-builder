@@ -1,5 +1,7 @@
 FROM ubuntu:16.04
 
+LABEL docker-builder.version.ubuntu=16.04
+
 # UK mirror
 RUN sed -i 's|http://archive.ubuntu.com|http://gb.archive.ubuntu.com|' /etc/apt/sources.list
 
