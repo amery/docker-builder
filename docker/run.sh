@@ -130,7 +130,11 @@ builder_gen_filter_volumes() {
 	local k= v=
 
 	for k; do
-		eval "v=\"\${$k:-}\""
+
+		case "$k" in
+		!*) v="${k#!}" ;;
+		*)  eval "v=\"\${$k:-}\"" ;;
+		esac
 
 		if [ -z "$v" ]; then
 			continue
@@ -269,6 +273,10 @@ docker_env_labels() {
 	docker_labels "$1" | grep '^docker-builder\.run-env\.' | cut -d= -f2- | tr ' ' '\n' | sort -u
 }
 
+docker_bind_labels() {
+	docker_labels "$1" | grep '^docker-builder\.run-bind\.' | cut -d= -f2- | tr ' ' '\n' | sort -u
+}
+
 docker_version_labels() {
 	docker_labels "$1" | grep '^docker-builder\.version\.' | cut -d. -f3-
 }
@@ -294,6 +302,23 @@ done
 #
 for x in $DOCKER_ENV_LABELS USER_IS_SUDO; do
 	DOCKER_RUN_ENV="${DOCKER_RUN_ENV:+$DOCKER_RUN_ENV }$x"
+done
+
+# -v requiested by the image itself
+#
+for x in $(docker_bind_labels "$DOCKER_ID"); do
+	case "$x" in
+	/tmp/.X11-unix)
+		if [ -d "$x" ]; then
+			DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES }!$x"
+		else
+			die "docker-builder.run-bind: '$x' directory not found"
+		fi
+		;;
+	*)
+		die "docker-builder.run-bind: '$x' not supported"
+		;;
+	esac
 done
 
 # detect run mode
