@@ -135,7 +135,7 @@ builder_gen_filter_volumes() {
 		if [ -z "$v" ]; then
 			continue
 		elif [ -L "$v" ]; then
-			readink -f "$v"
+			readlink -f "$v"
 			dirname "$v"
 		else
 			echo "$v"
