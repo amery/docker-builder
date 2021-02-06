@@ -2,8 +2,252 @@
 
 set -eu
 
-RUN_SH=$(readlink -f "$0")
-. "$(dirname "$RUN_SH")/docker_builder_run.in"
+#
+#
+die() {
+	echo "$*" >&2
+	exit 1
+}
+
+#
+#
+builder_brute_find() {
+	local op="$1" cue="$2"
+
+	while [ "$PWD" != / ]; do
+
+		if [ $op "$PWD/$cue" ]; then
+			echo "$PWD"
+			break
+		fi
+
+		cd ..
+	done
+}
+
+#
+#
+builder_find_workspace() {
+	local ws= prev="$PWD" check="${1:-}"
+
+	# any .repo workspace wins
+	ws="$(builder_brute_find -d .repo)"
+	if [ ! -d "$ws" ]; then
+		while true; do
+			# try .git repositories
+			ws="$(git rev-parse --show-superproject-working-tree 2> /dev/null || true)"
+			[ -d "$ws" ] || ws="$(git rev-parse --show-toplevel 2> /dev/null || true)"
+
+			if [ ! -d "$ws" ]; then
+				# no deeper git-root, accept what we had
+				ws=
+				break
+			elif [ -z "$check" ]; then
+				# remember this git-root, but try deeper
+				prev="$ws"
+				cd "$ws/.."
+			elif $check "$ws"; then
+				# remember this git-root, but try deeper
+				prev="$ws"
+				cd "$ws/.."
+			elif [ "$ws" != / ]; then
+				# remember this git-root, but try deeper
+				prev="$ws"
+				cd "$ws/.."
+			else
+				# can't go deeper, just take it
+				break
+			fi
+		done
+	fi
+
+	echo "${ws:-$prev}"
+}
+
+#
+#
+builder_find_docker_dir() {
+	local run_sh="$1" dir="$2"
+
+	if [ -z "$dir" ]; then
+		dir="$(dirname "$run_sh")"
+
+		while [ ! -s "$dir/Dockerfile" ]; do
+			if [ -L "$run_sh" ]; then
+				# follow symlink
+				run_sh="$(readlink "$run_sh")"
+
+				case "$run_sh" in
+				/*)	;;
+				*)	run_sh="$(realpath "$dir/$run_sh")" ;;
+				esac
+
+				dir="$(dirname "$run_sh")"
+			else
+				die "$1: failed to detect Dockerfile"
+			fi
+		done
+
+	elif [ ! -s "$dir/Dockerfile" ]; then
+		die "$dir: invalid docker directory"
+	fi
+
+	echo "$dir"
+}
+
+#
+builder__filter_volumes() {
+	local list= match= m=
+	local d= n= prev= new=
+
+	while read d n; do
+		new=true
+
+		if match="$(echo "$list" | grep "^$d:")"; then
+			for m in $match; do
+				# known device, known base?
+
+				prev="${match#*:}"
+				if [ "$prev" = / ]; then
+					new=false
+				elif expr "$n" : "$prev/" > /dev/null; then
+					new=false
+				fi
+
+				$new || break
+			done
+		fi
+
+		if $new; then
+			list="${list:+$list
+}$d:$n"
+			echo "$n"
+		fi
+	done
+}
+
+builder_gen_filter_volumes() {
+	local k= v=
+
+	for k; do
+		eval "v=\"\${$k:-}\""
+
+		if [ -z "$v" ]; then
+			continue
+		elif [ -L "$v" ]; then
+			readink -f "$v"
+			dirname "$v"
+		else
+			echo "$v"
+		fi
+
+	done | sort -uV | grep -v "^$HOME\$" | xargs -r stat -c '%d %n' | builder__filter_volumes
+	echo "$HOME"
+}
+
+#
+builder_gen_volumes() {
+	builder_gen_filter_volumes "$@" | sort -V | while read x; do
+		# create missing directories
+		[ -d "$x/" ] || mkdir -p "$x"
+
+		# prevent root-owned directories at $home_dir
+		case "$x" in
+		"$HOME"/*|"$HOME")
+			x0="${x#$HOME}"
+			mkdir -p "$home_dir$x0"
+			;;
+		esac
+
+		# render -v pairs
+		case "$x" in
+		"$HOME")
+			echo "-v \"$home_dir:$x\""
+			;;
+		*)
+			echo "-v \"$x:$x\""
+			;;
+		esac
+	done | tr '\n' ' '
+}
+
+#
+builder_gen_env() {
+	local x= v=
+	for x; do
+		eval "v=\"\${$x:-}\""
+		if [ -n "$v" ]; then
+			echo "-e \"$x=$v\""
+		fi
+	done | tr '\n' ' '
+}
+
+#
+#
+builder_run_exec() {
+	local home_dir=
+	local WS="$1"
+	shift 1
+
+	# preserve user identity
+	local USER_NAME="$(id -urn)"
+	local USER_UID="$(id -ur)"
+	local USER_GID="$(id -gr)"
+
+	if [ -z "${HOME:-}" ]; then
+		HOME="$(getent passwd "$USER_NAME" | cut -d: -f6)"
+	fi
+
+	# hook to extend run.sh before mounting volumes or exporting variables
+	#
+	if [ -d "${DOCKER_DIR:-}" -a -s "${DOCKER_DIR:-}/run-hook.in" ]; then
+		. "$DOCKER_DIR/run-hook.in"
+	fi
+
+	# persistent volumes
+	#
+	if [ -z "${DOCKER_RUN_CACHEDIR:-}" ]; then
+		DOCKER_RUN_CACHEDIR="$WS/.docker-run-cache"
+	fi
+
+	home_dir="$DOCKER_RUN_CACHEDIR$HOME"
+
+	# add more options
+	#
+	# volumes -> -v
+	# gen_env -> -e
+	#
+	eval "set -- \
+		$(builder_gen_volumes ${DOCKER_RUN_VOLUMES:-} HOME PWD WS) \
+		$(builder_gen_env ${DOCKER_RUN_ENV:-}) \
+		${DOCKER_EXTRA_OPTS:-} \
+		\"\$@\""
+
+	# PTRACE
+	set -- \
+		--cap-add SYS_PTRACE \
+		--security-opt apparmor:unconfined \
+		--security-opt seccomp:unconfined \
+		"$@"
+
+	# isatty()
+	if [ -t 0 ]; then
+		set -- -ti "$@"
+	else
+		set -- -i "$@"
+	fi
+
+	# and finally run within the container
+	set -x
+	exec docker run --rm \
+		-e USER_HOME="$HOME" \
+		-e USER_NAME="$USER_NAME" \
+		-e USER_UID="$USER_UID" \
+		-e USER_GID="$USER_GID" \
+		-e CURDIR="$PWD" \
+		-e WS="$WS" \
+		"$@"
+}
 
 # DOCKER_ID
 if [ -z "${DOCKER_ID:-}" ]; then
