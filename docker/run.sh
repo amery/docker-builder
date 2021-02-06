@@ -52,11 +52,57 @@ for x in $DOCKER_ENV_LABELS USER_IS_SUDO; do
 	DOCKER_RUN_ENV="${DOCKER_RUN_ENV:+$DOCKER_RUN_ENV }$x"
 done
 
+# detect run mode
+#
+DOCKER_RUN_MODE=
+for x in $DOCKER_ENV_LABELS; do
+
+	case "$x" in
+	GOPATH)
+		x=golang ;;
+	*)
+		continue ;;
+	esac
+
+	if ! echo "$DOCKER_RUN_MODE" | grep -q "^$x\$"; then
+		DOCKER_RUN_MODE="${DOCKER_RUN_MODE:+$DOCKER_RUN_MODE
+}$x"
+	fi
+done
+
 # find root of the "workspace"
 #
 if [ ! -d "${DOCKER_RUN_WS:-}" ]; then
-	DOCKER_RUN_WS=$(builder_find_workspace)
+	CHECKER=
+
+	for x in $DOCKER_RUN_MODE; do
+		case "$x" in
+		golang)
+			f="test -d %/pkg"
+			CHECKER="${CHECKER:+$CHECKER && }$f"
+			;;
+		esac
+	done
+
+	if [ -n "$CHECKER" ]; then
+		eval "check_ws() { $(echo "$CHECKER" | sed -e 's|%|"$1"|g'); }"
+		CHECKER=check_ws
+	fi
+
+	DOCKER_RUN_WS=$(builder_find_workspace $CHECKER)
 fi
+
+# initialise workspace based on run mode
+for x in $DOCKER_RUN_MODE; do
+	case "$x" in
+	golang)
+		[ -d "${GOPATH:-}" ] || GOPATH="$DOCKER_RUN_WS"
+		mkdir -p "$GOPATH/bin" "$GOPATH/src" "$GOPATH/pkg"
+
+		DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES } GOPATH"
+		;;
+	esac
+done
 
 # run
 #
