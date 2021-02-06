@@ -52,7 +52,7 @@ done
 
 # find root of the "workspace"
 #
-if [ ! -d "$DOCKER_RUN_WS" ]; then
+if [ ! -d "${DOCKER_RUN_WS:-}" ]; then
 	DOCKER_RUN_WS=$(builder_find_workspace)
 fi
 
