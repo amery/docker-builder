@@ -200,8 +200,8 @@ builder_run_exec() {
 
 	# hook to extend run.sh before mounting volumes or exporting variables
 	#
-	if [ -d "${DOCKER_DIR:-}" -a -s "${DOCKER_DIR:-}/run-hook.in" ]; then
-		. "$DOCKER_DIR/run-hook.in"
+	if [ -d "${DOCKER_DIR:-}" -a -s "${DOCKER_DIR:-}/run-hook.sh" ]; then
+		. "$DOCKER_DIR/run-hook.sh"
 	fi
 
 	# persistent volumes
