@@ -39,6 +39,8 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 	-r)	USER_IS_SUDO=true ;;
 	-l)	docker_labels "$DOCKER_ID" ;;
+	-x)	set -x ;;
+	--)	shift; break ;;
 	*)	break ;;
 	esac
 	shift
