@@ -34,6 +34,8 @@ RUN mv /usr/local/lib/node_modules /usr/local/lib/node_modules.tmp \
 	&& npm i -g npm-check-updates@${NCU_VERSION} \
 	&& rm -rf ~/.npm
 
+COPY npm.sh /etc/entrypoint.d/
+
 # and inject entrypoint to deal with -e USER_*
 #
 COPY entrypoint.sh /entrypoint.sh
