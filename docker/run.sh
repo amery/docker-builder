@@ -2,7 +2,6 @@
 
 set -eu
 
-
 RUN_SH=$(readlink -f "$0")
 . "$(dirname "$RUN_SH")/docker_builder_run.in"
 
@@ -33,14 +32,17 @@ docker_version_labels() {
 DOCKER_ENV_LABELS="$(docker_env_labels "$DOCKER_ID")"
 DOCKER_VERSION_LABELS="$(docker_version_labels "$DOCKER_ID")"
 
-# -r (sudo) mode
+# special options
 #
-if [ "x${1:-}" = "x-r" ]; then
-	USER_IS_SUDO=true
+USER_IS_SUDO=
+while [ $# -gt 0 ]; do
+	case "$1" in
+	-r)	USER_IS_SUDO=true ;;
+	-l)	docker_labels "$DOCKER_ID" ;;
+	*)	break ;;
+	esac
 	shift
-else
-	USER_IS_SUDO=
-fi
+done
 
 # pass-through environment
 #
