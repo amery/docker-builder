@@ -304,7 +304,7 @@ for x in $DOCKER_ENV_LABELS USER_IS_SUDO; do
 	DOCKER_RUN_ENV="${DOCKER_RUN_ENV:+$DOCKER_RUN_ENV }$x"
 done
 
-# -v requiested by the image itself
+# -v requested by the image itself
 #
 for x in $(docker_bind_labels "$DOCKER_ID"); do
 	case "$x" in
@@ -331,6 +331,8 @@ for x in $DOCKER_ENV_LABELS; do
 		x=golang ;;
 	NPM_CONFIG_PREFIX)
 		x=nodejs ;;
+	DISPLAY)
+		x=x11 ;;
 	*)
 		continue ;;
 	esac
@@ -381,6 +383,11 @@ for x in $DOCKER_RUN_MODE; do
 
 		DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES } NPM_CONFIG_PREFIX"
 		;;
+	x11)
+		[ -n "${DISPLAY:-}" -a -d /tmp/.X11-unix -a -d /dev/snd ] || die "x11: mode not available"
+
+		DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES }!/tmp/.X11-unix"
+		DOCKER_EXTRA_OPTS="${DOCKER_EXTRA_OPTS:+$DOCKER_EXTRA_OPTS }--device /dev/snd"
 	esac
 done
 
