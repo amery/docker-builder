@@ -1,5 +1,7 @@
 FROM amery/docker-ubuntu-builder:18.04
 
+LABEL docker-builder.run-env.oe="MACHINE DISTRO TCLIBC OEROOT DL_DIR"
+
 # OE dependencies
 RUN apt-get update && apt-get install --no-install-recommends -y \
 	chrpath cpio diffstat git python texinfo wget \
