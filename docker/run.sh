@@ -60,6 +60,8 @@ for x in $DOCKER_ENV_LABELS; do
 	case "$x" in
 	GOPATH)
 		x=golang ;;
+	NPM_CONFIG_PREFIX)
+		x=nodejs ;;
 	*)
 		continue ;;
 	esac
@@ -81,6 +83,10 @@ if [ ! -d "${DOCKER_RUN_WS:-}" ]; then
 			f="test -d %/pkg"
 			CHECKER="${CHECKER:+$CHECKER && }$f"
 			;;
+		nodejs)
+			f="test -d %/node_modules -o -d %/lib/node_modules"
+			CHECKER="${CHECKER:+$CHECKER && }$f"
+			;;
 		esac
 	done
 
@@ -100,6 +106,11 @@ for x in $DOCKER_RUN_MODE; do
 		mkdir -p "$GOPATH/bin" "$GOPATH/src" "$GOPATH/pkg"
 
 		DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES } GOPATH"
+		;;
+	nodejs)
+		[ -n "${NPM_CONFIG_PREFIX:-}" ] || export NPM_CONFIG_PREFIX="$DOCKER_RUN_WS"
+
+		DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES } NPM_CONFIG_PREFIX"
 		;;
 	esac
 done
