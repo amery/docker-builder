@@ -1,8 +1,13 @@
 # docker-builder
 
-## `docker-builder` runner
+## `docker-builder-run`
 
-https://github.com/amery/docker-builder/blob/master/docker/run.sh
+```
+mkdir projects/docker
+cd projects/docker
+git clone https://github.com/amery/docker-builder
+ln -s [$PWD/docker-builder/docker/run.sh](https://github.com/amery/docker-builder/blob/master/docker/run.sh) ~/bin/docker-builder-run
+```
 
 ### Environment
 
