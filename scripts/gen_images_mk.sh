@@ -79,6 +79,13 @@ pusher() {
 	done
 }
 
+puller() {
+	local x=
+	for x; do
+		echo "pull-$(key $x)"
+	done
+}
+
 sentinel() {
 	local x=
 	for x; do
@@ -96,6 +103,7 @@ cat <<EOT
 #
 $(list_key_f IMAGES prefix $IMAGES_SHORT)
 $(list_key_f PUSHERS pusher $IMAGES_SHORT)
+$(list_key_f PULLERS puller $(sort_uV $IMAGES_SHORT $IMAGES $THIRD_PARTY))
 $(list_key_f SENTINELS sentinel $(sort_uV $IMAGES_SHORT $IMAGES $THIRD_PARTY))
 EOT
 
@@ -104,12 +112,14 @@ EOT
 for tag in $THIRD_PARTY; do
 	s1="$(sentinel "$tag")"
 	k1="$(key "$tag")"
+	d1="$(puller "$tag")"
 	cat <<EOT
 
 # $tag
 #
-.PHONY: $k1
+.PHONY: $k1 $d1
 $k1: $s1
+$d1: $s1
 
 $s1: \$(IMAGE_MK)
 	\$(DOCKER) pull $tag
@@ -143,6 +153,7 @@ while read tag dir; do
 
 	k1=$(key $tag)
 	p1=$(pusher $tag)
+	d1=$(puller $tag)
 	s1=$(sentinel $tag)
 
 	if [ -z "$dir" ]; then
@@ -163,6 +174,10 @@ while read tag dir; do
 $p1: $s1
 	\$(DOCKER) push \$(PREFIX)$tag
 
+.PHONY: $d1
+$d1:
+	\$(DOCKER) pull \$(PREFIX)$tag
+
 $(list_target $s1 $files)
 EOT
 
@@ -181,6 +196,7 @@ for x in $IMAGES_SHORT; do
 
 	k1=$(prefix $x)
 	p1=$(pusher $x)
+	d1=$(puller $x)
 	s1=$(sentinel $x)
 
 	sub="$(grep "$x:" "$OWN" | cut -d' ' -f1)"
@@ -192,8 +208,9 @@ for x in $IMAGES_SHORT; do
 .PHONY: $k1
 $k1: $s1
 
-.PHONY: $p1
+.PHONY: $p1 $d1
 $(list_target_f $p1 pusher $sub)
+$(list_target_f $d1 puller $sub)
 
 $(list_target_f $s1 sentinel $sub)
 	touch \$@
