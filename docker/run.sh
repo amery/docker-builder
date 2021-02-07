@@ -393,6 +393,5 @@ done
 
 # run
 #
-[ $# -gt 0 ] || set -- ${SHELL:-/bin/sh}
 
 builder_run_exec "$DOCKER_RUN_WS" ${USER_IS_SUDO:+--cap-add=SYS_ADMIN} "$DOCKER_ID" "$@"
