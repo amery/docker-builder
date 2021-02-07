@@ -1,11 +1,12 @@
 FROM amery/docker-ubuntu-x11-builder:latest
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
 		gnupg \
 		libgbm1 \
 		libgtk-3-0 \
 		libnss3 \
 		libsecret-1-0 \
+		libx11-xcb1 \
 		libxkbfile1 \
 		libxss1 \
 		wget \
