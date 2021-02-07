@@ -173,6 +173,9 @@ while read tag dir; do
 .PHONY: $p1
 $p1: $s1
 	\$(DOCKER) push \$(PREFIX)$tag
+	@\$(DOCKER) run \$(PREFIX)$tag --version | grep -v undefined | grep -v "^\$(subst .,\.,${tag#*:})\$\$" | while read v; do \\
+		\$(DOCKER) push "\$(PREFIX)${tag%:*}:\$\$v"; \\
+	done
 
 .PHONY: $d1
 $d1:
@@ -182,7 +185,14 @@ $(list_target $s1 $files)
 EOT
 
 if [ -d "$dir" ]; then
-	echo "$TAB\$(DOCKER) build -t \$(PREFIX)$tag $dir"
+	cat <<EOT
+	\$(DOCKER) build -t \$(PREFIX)$tag $dir
+	@\$(DOCKER) run \$(PREFIX)$tag --version | grep -v undefined | grep -v "^\$(subst .,\.,${tag#*:})\$\$" | while read v; do \\
+		x="\$(PREFIX)${tag%:*}:\$\$v"; \\
+		\$(DOCKER) tag \$(PREFIX)$tag \$\$x; \\
+		echo "Successfully tagged \$\$x"; \\
+	done
+EOT
 else
 	echo "$TAB\$(DOCKER) tag \$(PREFIX)$from \$(PREFIX)$tag"
 fi
