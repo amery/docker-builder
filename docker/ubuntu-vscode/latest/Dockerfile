@@ -17,4 +17,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		wget \
 	&& apt-get clean
 
+COPY code.sh /usr/local/bin/code
 COPY builder_version.sh /usr/local/bin/builder_version
