@@ -15,6 +15,17 @@ die() {
 	exit 1
 }
 
+if [ "x${1:-}" = "x--version" ]; then
+	if [ -s /etc/builder_version ]; then
+		cat /etc/builder_version
+	elif [ -x /usr/local/bin/builder_version ]; then
+		exec /usr/local/bin/builder_version
+	else
+		echo "undefined"
+	fi
+	exit
+fi
+
 [ "${USER_NAME:-root}" != "root" ] || die "Invalid \$USER_NAME (${USER_NAME})"
 
 # create workspace-friendly user
