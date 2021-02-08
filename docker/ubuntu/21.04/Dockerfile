@@ -22,6 +22,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
         language-pack-en \
 	&& apt-get clean
 
+# This system has been minimized by removing packages and content that are
+# not required on a system that users do not log into.
+RUN yes | unminimize
+
 # use a locale with utf-8 support
 #
 ENV LANG=en_GB.UTF-8
@@ -41,6 +45,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 	flex \
 	gawk \
 	libtool \
+	man-db \
 	pkg-config \
 	psmisc \
 	python3-pip \
