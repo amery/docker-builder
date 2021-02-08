@@ -39,16 +39,17 @@ $(RULES_MK): $(GEN_RULES_MK_SH) $(TEMPLATES) Makefile
 	$< $(IMAGE_MK_VARS) > $@~
 	mv $@~ $@
 
+include $(RULES_MK)
+include $(CONFIG_MK)
+
 $(TAG_DIRS): $(GEN_TAG_DIRS_SH) FORCE
 	$(GEN_TAG_DIRS_SH) > $@~
 	if ! cmp -s $@~ $@; then mv $@~ $@; else rm $@~; fi
 
-$(IMAGES_MK): $(GEN_IMAGES_MK_SH) $(TAG_DIRS) Makefile
-	$< $(TAG_DIRS) > $@~
+$(IMAGES_MK): $(GEN_IMAGES_MK_SH) $(TAG_DIRS) $(CONFIG_MK) Makefile
+	$< $(PREFIX) $(TAG_DIRS) > $@~
 	mv $@~ $@
 
-include $(RULES_MK)
-include $(CONFIG_MK)
 include $(IMAGES_MK)
 
 images: files $(IMAGES)

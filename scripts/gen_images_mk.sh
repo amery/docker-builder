@@ -2,8 +2,9 @@
 
 set -eu
 
-OWN="$1"
-shift
+PREFIX="$1"
+OWN="$2"
+shift 2
 
 TAB="$(printf '\t')"
 
@@ -35,7 +36,7 @@ get_3rd_party() {
 		fi
 
 		if [ -n "$from" ]; then
-			if ! grep -q "^${from#*/} " "$OWN"; then
+			if ! grep -q "^${from#$PREFIX} " "$OWN"; then
 				echo "$from"
 			fi
 		fi
@@ -145,8 +146,8 @@ while read tag dir; do
 		dir=
 	fi
 
-	if grep -q "^${from#*/} " "$OWN"; then
-		s0=$(sentinel "${from#*/}")
+	if grep -q "^${from#$PREFIX} " "$OWN"; then
+		s0=$(sentinel "${from#$PREFIX}")
 	else
 		s0=$(sentinel "$from")
 	fi
