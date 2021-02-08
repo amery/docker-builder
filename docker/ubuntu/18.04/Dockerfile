@@ -57,6 +57,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 	valgrind \
 	&& apt-get clean
 
+# dynamic version
+#
+COPY builder_version.sh /usr/local/bin/builder_version
+
 # trampoline
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
