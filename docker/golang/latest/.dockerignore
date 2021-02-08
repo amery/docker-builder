@@ -1,3 +1,4 @@
 *
+!builder_version.sh
 !entrypoint.sh
 !golang.sh

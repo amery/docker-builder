@@ -1,8 +1,5 @@
 # https://hub.docker.com/_/golang/
-FROM golang:1.15.8-alpine3.13
-
-LABEL docker-builder.version.alpine=3.13
-LABEL docker-builder.version.golang=1.15.8
+FROM golang:alpine
 
 LABEL docker-builder.run-env.golang=GOPATH
 
@@ -15,6 +12,12 @@ RUN apk --update --no-cache add \
 	graphviz \
 	make
 
+# dynamic version
+#
+COPY builder_version.sh /usr/local/bin/builder_version
+
+# runtime environment
+#
 COPY golang.sh /etc/entrypoint.d/
 
 # and inject entrypoint to deal with -e USER_*
