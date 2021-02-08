@@ -174,9 +174,7 @@ while read tag dir; do
 .PHONY: $p1
 $p1: $s1
 	\$(DOCKER) push \$(PREFIX)$tag
-	@\$(DOCKER) run \$(PREFIX)$tag --version | grep -v undefined | grep -v "^\$(subst .,\.,${tag#*:})\$\$" | while read v; do \\
-		\$(DOCKER) push "\$(PREFIX)${tag%:*}:\$\$v"; \\
-	done
+	@\$(SCRIPTS)/get_aliases.sh \$(PREFIX)$tag | xargs -rt -n 1 \$(DOCKER) push
 
 .PHONY: $d1
 $d1:
@@ -188,8 +186,7 @@ EOT
 if [ -d "$dir" ]; then
 	cat <<EOT
 	\$(DOCKER) build -t \$(PREFIX)$tag $dir
-	@\$(DOCKER) run \$(PREFIX)$tag --version | grep -v undefined | grep -v "^\$(subst .,\.,${tag#*:})\$\$" | while read v; do \\
-		x="\$(PREFIX)${tag%:*}:\$\$v"; \\
+	@\$(SCRIPTS)/get_aliases.sh \$(PREFIX)$tag | while read x; do \\
 		\$(DOCKER) tag \$(PREFIX)$tag \$\$x; \\
 		echo "Successfully tagged \$\$x"; \\
 	done

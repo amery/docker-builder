@@ -3,6 +3,12 @@
 TAB=$(printf "\t")
 DOLLAR="\$\$"
 
+cat <<EOT
+export DOCKER
+SCRIPTS = $(dirname "$0")
+
+EOT
+
 if [ $# -eq 0 ]; then
 	# no variable replacements
 	#
