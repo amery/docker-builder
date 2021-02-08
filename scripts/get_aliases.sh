@@ -15,7 +15,7 @@ get_versions() {
 	fi
 
 	for v in $(${DOCKER:-docker} run "$image" --version); do
-		if [ "x$v" != "x$tag" ]; then
+		if [ "x$v" != "x$tag" -a "x$x" != "undefined" ]; then
 			echo "$v"
 		fi
 	done
