@@ -35,3 +35,5 @@ RUN npm update && npm i -g \
 		cordova-android \
 		cordova-browser \
 	&& rm -rf ~/.npm
+
+COPY builder_version.sh /usr/local/bin/builder_version
