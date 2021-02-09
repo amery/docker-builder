@@ -1,13 +1,5 @@
 # https://hub.docker.com/_/node/
-FROM node:15.4.0-alpine3.12
-
-ENV NPM_VERSION="7.5.1"
-ENV NCU_VERSION="11.1.1"
-
-LABEL docker-builder.version.alpine=3.12
-LABEL docker-builder.version.nodejs=15.4.0
-LABEL docker-builder.version.npm="$NPM_VERSION"
-LABEL docker-builder.version.ncu="$NCU_VERSION"
+FROM node:current-alpine3.12
 
 LABEL docker-builder.run-env.npm="NPM_CONFIG_PREFIX"
 
@@ -30,10 +22,16 @@ RUN apk --update add \
 #
 RUN mv /usr/local/lib/node_modules /usr/local/lib/node_modules.tmp \
 	&& mv /usr/local/lib/node_modules.tmp /usr/local/lib/node_modules \
-	&& npm i -g npm@${NPM_VERSION} \
-	&& npm i -g npm-check-updates@${NCU_VERSION} \
+	&& npm i -g npm \
+	&& npm i -g npm-check-updates \
 	&& rm -rf ~/.npm
 
+# dynamic version
+#
+COPY builder_version.sh /usr/local/bin/builder_version
+
+# runtime environment
+#
 COPY npm.sh /etc/entrypoint.d/
 
 # and inject entrypoint to deal with -e USER_*
