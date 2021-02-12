@@ -22,8 +22,10 @@ RUN apk --update add \
 #
 RUN mv /usr/local/lib/node_modules /usr/local/lib/node_modules.tmp \
 	&& mv /usr/local/lib/node_modules.tmp /usr/local/lib/node_modules \
-	&& npm i -g npm \
-	&& npm i -g npm-check-updates \
+	&& npm i -g \
+		npm \
+		npm-check-updates \
+		npx \
 	&& rm -rf ~/.npm
 
 # dynamic version
