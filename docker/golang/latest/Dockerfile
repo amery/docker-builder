@@ -12,6 +12,9 @@ RUN apk --update --no-cache add \
 	graphviz \
 	make
 
+# extra helpers
+RUN go get golang.org/x/tools/cmd/godoc
+
 # dynamic version
 #
 COPY builder_version.sh /usr/local/bin/builder_version
