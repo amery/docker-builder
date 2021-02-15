@@ -2,6 +2,8 @@
 
 set -eu
 
+RUN_VERSION="1.5.0"
+
 #
 #
 die() {
@@ -265,20 +267,25 @@ fi
 
 # labels
 #
-docker_labels() {
+docker__labels() {
 	docker inspect --format "{{range \$Key, \$Value := .Config.Labels}}{{\$Key}}={{\$Value}}:{{end}}" "$1" | tr ':' '\n'
+	echo "docker-builder.version.run=$RUN_VERSION"
+}
+
+docker_labels() {
+	docker__labels "$1" | sed '/^[ \t]*$/d;' | sort -uV
 }
 
 docker_env_labels() {
-	docker_labels "$1" | grep '^docker-builder\.run-env\.' | cut -d= -f2- | tr ' ' '\n' | sort -u
+	docker__labels "$1" | grep '^docker-builder\.run-env\.' | cut -d= -f2- | tr ' ' '\n' | sort -u
 }
 
 docker_bind_labels() {
-	docker_labels "$1" | grep '^docker-builder\.run-bind\.' | cut -d= -f2- | tr ' ' '\n' | sort -u
+	docker__labels "$1" | grep '^docker-builder\.run-bind\.' | cut -d= -f2- | tr ' ' '\n' | sort -u
 }
 
 docker_version_labels() {
-	docker_labels "$1" | grep '^docker-builder\.version\.' | cut -d. -f3-
+	docker__labels "$1" | grep '^docker-builder\.version\.' | cut -d. -f3- | sort -V
 }
 
 DOCKER_ENV_LABELS="$(docker_env_labels "$DOCKER_ID")"
@@ -289,10 +296,17 @@ DOCKER_VERSION_LABELS="$(docker_version_labels "$DOCKER_ID")"
 USER_IS_SUDO=
 while [ $# -gt 0 ]; do
 	case "$1" in
+	-V)	cat <<-EOT >&2
+		docker-builder-run $RUN_VERSION
+		https://github.com/amery/docker-builder
+		EOT
+		exit 1 ;;
+	-l)	docker_labels "$DOCKER_ID"
+		;;
+
 	-r)	USER_IS_SUDO=true ;;
 	-p)	DOCKER_EXPOSE="${DOCKER_EXPOSE:+$DOCKER_EXPOSE }$2"
 		shift ;;
-	-l)	docker_labels "$DOCKER_ID" ;;
 	-x)	set -x ;;
 	--)	shift; break ;;
 	*)	break ;;
