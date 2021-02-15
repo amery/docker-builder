@@ -290,6 +290,8 @@ USER_IS_SUDO=
 while [ $# -gt 0 ]; do
 	case "$1" in
 	-r)	USER_IS_SUDO=true ;;
+	-p)	DOCKER_EXPOSE="${DOCKER_EXPOSE:+$DOCKER_EXPOSE }$2"
+		shift ;;
 	-l)	docker_labels "$DOCKER_ID" ;;
 	-x)	set -x ;;
 	--)	shift; break ;;
