@@ -391,7 +391,19 @@ for x in $DOCKER_RUN_MODE; do
 	esac
 done
 
+# port expose
+#
+for x in ${DOCKER_EXPOSE:-}; do
+
+	case "$x" in
+	*:*/*)  ;;
+	*/*)    x="${x%/*}:$x" ;;
+	*)      x="$x:$x/tcp" ;;
+	esac
+
+	export DOCKER_EXTRA_OPTS="${DOCKER_EXTRA_OPTS:+$DOCKER_EXTRA_OPTS }-p $x"
+done
+
 # run
 #
-
 builder_run_exec "$DOCKER_RUN_WS" ${USER_IS_SUDO:+--cap-add=SYS_ADMIN} "$DOCKER_ID" "$@"

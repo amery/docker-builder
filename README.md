@@ -19,3 +19,4 @@ ln -s [$PWD/docker-builder/docker/run.sh](https://github.com/amery/docker-builde
 | `DOCKER_RUN_VOLUMES` | variables that specify extra directories to mount
 | `DOCKER_RUN_WS`      | use given workspace root instead of attempting detection
 | `DOCKER_EXTRA_OPTS`  | extra options to pass as-is to `docker run`
+| `DOCKER_EXPOSE`      | list of ports to expose via `docker run -p ...`
