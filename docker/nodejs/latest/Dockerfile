@@ -28,6 +28,11 @@ RUN mv /usr/local/lib/node_modules /usr/local/lib/node_modules.tmp \
 		npx \
 	&& rm -rf ~/.npm
 
+# yarn
+#
+RUN apk --update --no-cache add \
+	yarn
+
 # dynamic version
 #
 COPY builder_version.sh /usr/local/bin/builder_version
