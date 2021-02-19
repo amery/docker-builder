@@ -9,12 +9,12 @@ RUN deluser --remove-home node
 CMD [ ]
 
 # dependencies
-RUN apk --update add \
+RUN apk --update --no-cache add \
+	g++ \
 	git \
+	make \
 	openssh \
-	g++ make python2 \
-	&& rm -rf /var/lib/apt/lists/* \
-	&& rm /var/cache/apk/*
+	python2
 
 # update npm and install ncu
 #
