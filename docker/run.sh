@@ -2,7 +2,7 @@
 
 set -eu
 
-RUN_VERSION="1.5.1"
+RUN_VERSION="1.5.2"
 
 #
 #
