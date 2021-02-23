@@ -44,6 +44,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 	curl \
 	flex \
 	gawk \
+	less \
 	libtool \
 	man-db \
 	pkg-config \
@@ -54,9 +55,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 	vim \
 	&& apt-get clean
 
-# debugging tools
+# extra development and debugging tools
 #
 RUN apt-get update && apt-get install --no-install-recommends -y \
+	cscope \
 	gdb \
 	ltrace \
 	strace \
