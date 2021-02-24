@@ -58,7 +58,18 @@ find_run_sh() {
 }
 
 run_sh="$(find_run_sh)"
-if [ -x "$run_sh" ]; then
+
+if test "x--root" = "x${1:-}"; then
+
+	if [ -x "$run_sh" ]; then
+		# found
+		echo "$(dirname "$run_sh")"
+		exit 0
+	fi
+
+	# failed to find workspace
+	exit 1
+elif [ -x "$run_sh" ]; then
 	exec "$run_sh" "$@"
 elif [ "$#" -gt 0 ]; then
 	exec "$@"
