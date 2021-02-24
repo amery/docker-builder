@@ -49,6 +49,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 #
 RUN apt-get update && apt-get install --no-install-recommends -y \
 	cscope \
+	git \
 	gdb \
 	ltrace \
 	strace \
