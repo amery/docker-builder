@@ -5,7 +5,7 @@ LABEL docker-builder.run-env.golang=GOPATH
 
 # disable CGO and rebuild
 ENV CGO_ENABLED=0
-RUN go install -tags netgo -v -a ...
+RUN go install -v -a ...
 
 RUN apk --update --no-cache add \
 	git \
