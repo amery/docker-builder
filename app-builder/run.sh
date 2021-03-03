@@ -154,7 +154,10 @@ if [ $# -gt 0 ]; then
 	valgrind)
 		set -- valgrind -v \
 			--leak-check=full --show-leak-kinds=all \
-			--track-origins=yes \
+			--leak-resolution=high \
+			--show-reachable=yes \
+			--track-origins=yes --trace-children=yes \
+			--num-callers=100 \
 			"$@"
 		;;
 	gdb)
