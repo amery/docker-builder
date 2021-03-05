@@ -1,7 +1,7 @@
 # https://hub.docker.com/_/golang/
 FROM golang:alpine
 
-LABEL docker-builder.run-env.golang="GOPATH GO111MODULE"
+LABEL docker-builder.run-env.golang="GOPATH GO111MODULE GOINSECURE GOPRIVATE"
 
 # disable CGO and rebuild
 ENV CGO_ENABLED=0
