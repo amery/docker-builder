@@ -50,6 +50,7 @@ $(GOBIN)/godoc: FORCE
 
 .PHONY: clean
 clean:
+	@$(GO) clean -modcache
 	@rm -rf $(WS)/bin $(WS)/pkg
 
 .PHONY: FORCE
