@@ -45,7 +45,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 	flex \
 	gawk \
 	less \
-	libtool \
+	libtool-bin \
 	man-db \
 	pkg-config \
 	psmisc \
