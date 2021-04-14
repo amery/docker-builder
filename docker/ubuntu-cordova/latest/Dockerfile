@@ -1,7 +1,7 @@
 FROM amery/docker-ubuntu-android-builder:latest
 
 ENV NODE_VERSION="15.x"
-ENV NPM_VERSION="7.5.2"
+ENV NPM_VERSION="7.9.0"
 ENV NCU_VERSION="11.1.1"
 
 LABEL docker-builder.version.nodejs="$NODE_VERSION"
