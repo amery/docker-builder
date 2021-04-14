@@ -10,7 +10,7 @@ ENV TERM xterm
 
 # make sure tzdata is installed without prompts
 RUN DEBIAN_FRONTEND="noninteractive" \
-	apt-get update && apt-get install --no-install-recommends -y \
+	apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-recommends -y \
 	tzdata \
 	&& apt-get clean
 

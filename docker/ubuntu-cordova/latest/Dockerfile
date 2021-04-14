@@ -10,6 +10,8 @@ LABEL docker-builder.version.ncu="$NCU_VERSION"
 
 LABEL docker-builder.run-env.npm="NPM_CONFIG_PREFIX"
 
+RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
+
 #
 # node.js
 #

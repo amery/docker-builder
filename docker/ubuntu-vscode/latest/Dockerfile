@@ -1,6 +1,6 @@
 FROM amery/docker-ubuntu-x11-builder:latest
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y --no-install-recommends \
 		gnupg \
 		libgbm1 \
 		libgtk-3-0 \
