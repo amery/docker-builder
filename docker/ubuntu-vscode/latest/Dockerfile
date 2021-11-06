@@ -1,5 +1,8 @@
 FROM amery/docker-ubuntu-x11-builder:latest
 
+#
+# vscode
+#
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y --no-install-recommends \
 		gnupg \
 		libgl1 \
@@ -19,5 +22,22 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y --no-install
 		wget \
 	&& apt-get clean
 
+# `code --wait "$@"` wrapper for `x code` compatibility
 COPY code.sh /usr/local/bin/code
+
+#
+# Vim support
+#
+RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y \
+	software-properties-common \
+	&& add-apt-repository ppa:neovim-ppa/stable \
+	&& apt-get update && apt-get install -y \
+		neovim \
+	&& apt-get clean
+
+COPY code-vim.sh /etc/entrypoint.sh/
+
+#
+# dynamic version
+#
 COPY builder_version.sh /usr/local/bin/builder_version
