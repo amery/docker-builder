@@ -2,12 +2,14 @@ FROM amery/docker-ubuntu-x11-builder:latest
 
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y --no-install-recommends \
 		gnupg \
+		libgl1 \
 		libgbm1 \
 		libgtk-3-0 \
 		libnss3 \
 		libsecret-1-0 \
 		libx11-xcb1 \
 		libxkbfile1 \
+		libxshmfence1 \
 		libxss1 \
 		wget \
 	&& wget -O /tmp/vscode.deb "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64" \
