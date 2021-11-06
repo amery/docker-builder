@@ -1,5 +1,5 @@
-DOCKER = docker
-DOKCER_BUILD_OPT = --rm
+DOCKER ?= docker
+DOCKER_BUILD_OPT ?= --rm
 
 B = $(CURDIR)
 

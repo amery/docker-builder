@@ -185,7 +185,7 @@ EOT
 
 if [ -d "$dir" ]; then
 	cat <<EOT
-	\$(DOCKER) build -t \$(PREFIX)$tag $dir
+	\$(DOCKER) build \$(DOCKER_BUILD_OPT) -t \$(PREFIX)$tag $dir
 	@\$(SCRIPTS)/get_aliases.sh \$(PREFIX)$tag | while read x; do \\
 		\$(DOCKER) tag \$(PREFIX)$tag \$\$x; \\
 		echo "Successfully tagged \$\$x"; \\
