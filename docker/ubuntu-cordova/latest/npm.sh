@@ -1,0 +1,3 @@
+cat <<EOT
+export NPM_CONFIG_PREFIX="${NPM_CONFIG_PREFIX:-$WS}"
+EOT

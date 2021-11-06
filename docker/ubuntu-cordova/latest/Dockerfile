@@ -1,22 +1,21 @@
 FROM amery/docker-ubuntu-android-builder:latest
 
-ENV NODE_VERSION="15.x"
-ENV NPM_VERSION="7.9.0"
-ENV NCU_VERSION="11.1.1"
+ENV NODE_VERSION="16.x"
+ENV NPM_VERSION="8.1.3"
 
 LABEL docker-builder.version.nodejs="$NODE_VERSION"
 LABEL docker-builder.version.npm="$NPM_VERSION"
-LABEL docker-builder.version.ncu="$NCU_VERSION"
 
 LABEL docker-builder.run-env.npm="NPM_CONFIG_PREFIX"
 
+#
+# update world
+#
 RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
 
 #
 # node.js
 #
-
-# WORKDIR needed for installing node 15.x+
 WORKDIR /tmp
 RUN apt-get update \
 	&& curl -sL https://deb.nodesource.com/setup_${NODE_VERSION} | bash - \
@@ -26,8 +25,12 @@ RUN apt-get update \
 
 RUN npm update && npm i -g \
 		npm@${NPM_VERSION} \
-		npm-check-updates@${NCU_VERSION} \
+		npm-check-updates \
+		npx \
+		yarn \
 	&& rm -rf ~/.npm
+
+COPY npm.sh /etc/entrypoint.d/
 
 #
 # cordova
