@@ -24,6 +24,8 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y --no-install
 
 # `code --wait "$@"` wrapper for `x code` compatibility
 COPY code.sh /usr/local/bin/code
+# code_install_extension() helper for /etc/entrypoint.d
+COPY code-extensions.sh /etc/entrypoint.d/code.sh
 
 #
 # Vim support
