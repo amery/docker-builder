@@ -404,6 +404,10 @@ for x in $DOCKER_RUN_MODE; do
 
 		DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES }!/tmp/.X11-unix"
 		DOCKER_EXTRA_OPTS="${DOCKER_EXTRA_OPTS:+$DOCKER_EXTRA_OPTS }--device /dev/snd"
+
+		if [ -d /dev/dri ]; then
+			DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES }!/dev/dri"
+		fi
 	esac
 done
 

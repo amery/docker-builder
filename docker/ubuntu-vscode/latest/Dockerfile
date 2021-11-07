@@ -5,7 +5,6 @@ FROM amery/docker-ubuntu-x11-builder:latest
 #
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y --no-install-recommends \
 		gnupg \
-		libgl1 \
 		libgbm1 \
 		libgtk-3-0 \
 		libnss3 \
