@@ -45,7 +45,7 @@ fi
 
 F=/etc/profile.d/Z99-docker-run.sh
 
-for x in /etc/entrypoint.d/*.sh; do
+for x in $(ls -1 /etc/entrypoint.d/*.sh 2> /dev/null | sort -V); do
 	[ -s "$x" ] || continue
 	. "$x"
 done > "$F"
