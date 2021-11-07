@@ -62,9 +62,11 @@ fi
 
 cat <<EOT >> "$F"
 
-[ ! -d "\$HOME/bin" ] || export PATH="\$HOME/bin:\$PATH"
-[ ! -d "\$HOME/.local/bin" ] || export PATH="\$HOME/.local/bin:\$PATH"
-[ ! -d "$WS/bin" ] || export PATH="$WS/bin:\$PATH"
+for d in /opt/* "\$HOME/.local" "\$HOME" "$WS"; do
+	if [ -n "\$d" -a -d "\$d/bin" ]; then
+		export PATH="\$d/bin:\$PATH"
+	fi
+done
 
 cd '$CURDIR'
 ${CMD:+exec $CMD}
