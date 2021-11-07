@@ -45,10 +45,18 @@ fi
 
 F=/etc/profile.d/Z99-docker-run.sh
 
+cat <<EOT > "$F"
+for d in /opt/* "\$HOME/.local" "\$HOME" "$WS"; do
+	if [ -n "\$d" -a -d "\$d/bin" ]; then
+		export PATH="\$d/bin:\$PATH"
+	fi
+done
+EOT
+
 for x in $(ls -1 /etc/entrypoint.d/*.sh 2> /dev/null | sort -V); do
 	[ -s "$x" ] || continue
 	. "$x"
-done > "$F"
+done >> "$F"
 
 if [ $# -gt 0 ]; then
 	CMD="$*"
@@ -60,6 +68,7 @@ if [ -n "${USER_IS_SUDO:+yes}" ]; then
 	set -- /bin/bash -l
 
 	cat <<-EOT >> "$F"
+
 	export SUDO_COMMAND="${CMD:-/bin/bash}"
 	export SUDO_USER=$USER_NAME
 	export SUDO_UID=$USER_UID
@@ -70,12 +79,6 @@ else
 fi
 
 cat <<EOT >> "$F"
-
-for d in /opt/* "\$HOME/.local" "\$HOME" "$WS"; do
-	if [ -n "\$d" -a -d "\$d/bin" ]; then
-		export PATH="\$d/bin:\$PATH"
-	fi
-done
 
 cd '$CURDIR'
 ${CMD:+exec $CMD}
