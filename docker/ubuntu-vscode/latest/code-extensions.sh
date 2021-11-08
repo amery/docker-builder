@@ -7,8 +7,8 @@ code_install_extension() {
 		pat="$(echo "$x" | sed -e 's|\.|\\.|g')"
 
 	cat <<EOT
+
 # $x
-echo "[code:$x]"
 if ! code --list-extensions | grep -q -e "^$pat\$"; then
 	code --install-extension $x
 fi
