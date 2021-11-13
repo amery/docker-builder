@@ -9,6 +9,11 @@ LABEL docker-builder.version.godoc="$GODOC_VERSION"
 LABEL docker-builder.run-env.golang="GOPATH GO111MODULE GOINSECURE GOPRIVATE"
 
 #
+# update world
+#
+RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
+
+#
 # golang
 #
 ENV CGO_ENABLED 0

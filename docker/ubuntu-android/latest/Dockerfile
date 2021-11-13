@@ -4,13 +4,18 @@ ENV OPENJDK_VERSION="8"
 ENV ANDROID_VERSION="30"
 ENV ANDROID_CMD_VERSION="6858069_latest"
 
+#
+# update world
+#
+RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
+
 # Android SDK
 #
 ENV ANDROID_SDK_ROOT "/opt/android-sdk"
 ENV JAVA_HOME "/usr/lib/jvm/java-${OPENJDK_VERSION}-openjdk-amd64"
 ENV PATH "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH"
 
-RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y \
+RUN apt-get update && apt-get install -y \
 		gradle \
 		openjdk-${OPENJDK_VERSION}-jdk-headless \
 		unzip \

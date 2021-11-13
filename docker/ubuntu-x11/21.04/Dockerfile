@@ -2,8 +2,17 @@ FROM amery/docker-ubuntu-builder:21.04
 
 LABEL docker-builder.run-env.x11="DISPLAY"
 
-RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y \
+#
+# update world
+#
+RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
+
+#
+# X11
+#
+RUN apt-get update && apt-get install --no-install-recommends -y \
 	libgl1 \
-	xauth
+	xauth \
+	&& apt-get clean
 
 COPY display.sh /etc/entrypoint.d/05-display.sh
