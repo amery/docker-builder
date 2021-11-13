@@ -6,4 +6,4 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y \
 	libgl1 \
 	xauth
 
-COPY display.sh /etc/entrypoint.d/
+COPY display.sh /etc/entrypoint.d/05-display.sh
