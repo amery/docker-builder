@@ -260,7 +260,7 @@ if [ -z "${DOCKER_ID:-}" ]; then
 	DOCKER_DIR="$(builder_find_docker_dir "$0" "${DOCKER_DIR:-}")"
 
 	if [ -d "$DOCKER_DIR" ]; then
-		docker build --rm "$DOCKER_DIR"
+		docker build ${DOCKER_BUILD_OPT:---rm} "$DOCKER_DIR"
 		DOCKER_ID="$(docker build -q --rm "$DOCKER_DIR")"
 	fi
 fi
