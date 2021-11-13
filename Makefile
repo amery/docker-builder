@@ -1,5 +1,10 @@
 DOCKER ?= docker
+
+ifneq ($(FORCE),)
+DOCKER_BUILD_OPT ?= --rm --pull --no-cache
+else
 DOCKER_BUILD_OPT ?= --rm
+endif
 
 B = $(CURDIR)
 
