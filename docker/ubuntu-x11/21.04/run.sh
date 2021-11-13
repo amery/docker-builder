@@ -2,7 +2,7 @@
 
 set -eu
 
-RUN_VERSION="1.5.6"
+RUN_VERSION="1.8.0"
 
 #
 #
@@ -260,7 +260,7 @@ if [ -z "${DOCKER_ID:-}" ]; then
 	DOCKER_DIR="$(builder_find_docker_dir "$0" "${DOCKER_DIR:-}")"
 
 	if [ -d "$DOCKER_DIR" ]; then
-		docker build --rm "$DOCKER_DIR"
+		docker build ${DOCKER_BUILD_OPT:---rm} "$DOCKER_DIR"
 		DOCKER_ID="$(docker build -q --rm "$DOCKER_DIR")"
 	fi
 fi
@@ -404,6 +404,10 @@ for x in $DOCKER_RUN_MODE; do
 
 		DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES }!/tmp/.X11-unix"
 		DOCKER_EXTRA_OPTS="${DOCKER_EXTRA_OPTS:+$DOCKER_EXTRA_OPTS }--device /dev/snd"
+
+		if [ -d /dev/dri ]; then
+			DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES }!/dev/dri"
+		fi
 	esac
 done
 
