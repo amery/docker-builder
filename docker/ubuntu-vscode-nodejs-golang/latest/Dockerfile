@@ -24,6 +24,8 @@ RUN curl -L -o /tmp/go.linux-amd64.tar.gz https://golang.org/dl/go${GO_VERSION}.
 	&& mv /opt/go /opt/golang \
 	&& /opt/golang/bin/go install -v -a ...
 
+COPY golang.sh /etc/entrypoint.d/
+
 ENV PATH /opt/golang/bin:${PATH}
 
 #
