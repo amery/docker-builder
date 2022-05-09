@@ -1,7 +1,7 @@
 FROM amery/docker-ubuntu-vscode-builder:latest
 
 ENV NODE_VERSION="16.x"
-ENV NPM_VERSION="8.1.4"
+ENV NPM_VERSION="8.9.0"
 
 LABEL docker-builder.version.nodejs="$NODE_VERSION"
 LABEL docker-builder.version.npm="$NPM_VERSION"
