@@ -1,7 +1,7 @@
 FROM amery/docker-ubuntu-vscode-nodejs-builder:latest
 
-ENV GO_VERSION 1.17.3
-ENV GODOC_VERSION 0.1.7
+ENV GO_VERSION 1.18.2
+ENV GODOC_VERSION 0.1.10
 
 LABEL docker-builder.version.go="$GO_VERSION"
 LABEL docker-builder.version.godoc="$GODOC_VERSION"
