@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 OS_V2=$(cut -d. -f1-2 /etc/alpine-release)
 
 GO_VERSION=$(go version | sed -e 's|.* go\([1-9][^ ]\+\) .*|\1|')
