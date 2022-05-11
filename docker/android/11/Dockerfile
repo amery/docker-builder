@@ -1,4 +1,4 @@
-FROM amery/docker-ubuntu-builder:21.04
+FROM amery/docker-ubuntu-builder:22.04
 
 #
 # update world
@@ -11,7 +11,8 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	ccache \
 	libncurses5 \
-	python \
+	python2 \
+	python3 \
 	unzip \
 	zip \
 	&& apt-get clean
