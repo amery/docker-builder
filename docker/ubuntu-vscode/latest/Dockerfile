@@ -27,8 +27,6 @@ COPY code-extensions.sh /etc/entrypoint.d/code.sh
 # Vim support
 #
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y \
-	software-properties-common \
-	&& add-apt-repository ppa:neovim-ppa/stable \
 	&& apt-get update && apt-get install -y \
 		neovim \
 	&& apt-get clean
