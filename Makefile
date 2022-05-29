@@ -1,7 +1,7 @@
 DOCKER ?= docker
 
 ifneq ($(FORCE),)
-DOCKER_BUILD_OPT ?= --rm --pull --no-cache
+DOCKER_BUILD_OPT ?= --rm --no-cache
 else
 DOCKER_BUILD_OPT ?= --rm
 endif
