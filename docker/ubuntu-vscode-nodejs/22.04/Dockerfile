@@ -1,4 +1,4 @@
-FROM amery/docker-ubuntu-vscode-builder:latest
+FROM amery/docker-ubuntu-vscode-builder:22.04
 
 ENV NODE_VERSION="16.x"
 ENV NPM_VERSION="8.11.0"
