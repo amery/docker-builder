@@ -1,9 +1,9 @@
 FROM amery/docker-ubuntu-builder:22.04
 
-ENV GO_VERSION 1.18.2
+ENV GO_VERSION 1.18.3
 ENV GODOC_VERSION 0.1.10
 ENV NODE_VERSION 16.x
-ENV NPM_VERSION 8.9.0
+ENV NPM_VERSION 8.12.1
 
 LABEL docker-builder.version.go="$GO_VERSION"
 LABEL docker-builder.version.godoc="$GODOC_VERSION"
