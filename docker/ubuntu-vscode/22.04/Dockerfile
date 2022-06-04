@@ -32,7 +32,7 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y \
 		neovim \
 	&& apt-get clean
 
-COPY code-vim.sh /etc/entrypoint.sh/
+COPY code-vim.sh /etc/entrypoint.d/
 
 #
 # dynamic version
