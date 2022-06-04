@@ -1,4 +1,4 @@
-FROM amery/docker-ubuntu-vscode-nodejs-builder:latest
+FROM amery/docker-ubuntu-vscode-nodejs-builder:22.04
 
 ENV GO_VERSION 1.18.2
 ENV GODOC_VERSION 0.1.10
