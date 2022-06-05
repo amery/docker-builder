@@ -9,7 +9,7 @@ code_install_extension() {
 	cat <<EOT
 
 # $x
-if ! code --list-extensions | grep -q -e "^$pat\$"; then
+if ! code --list-extensions | grep -q -i -e "^$pat\$"; then
 	code --install-extension $x
 fi
 EOT
