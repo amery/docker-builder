@@ -80,6 +80,13 @@ pusher() {
 	done
 }
 
+all_pusher() {
+	local x=
+	for x; do
+		echo "push-all-$(key $x)"
+	done
+}
+
 puller() {
 	local x=
 	for x; do
@@ -104,6 +111,7 @@ cat <<EOT
 #
 $(list_key_f IMAGES prefix $IMAGES_SHORT)
 $(list_key_f PUSHERS pusher $IMAGES_SHORT)
+$(list_key_f ALL_PUSHERS all_pusher $IMAGES_SHORT)
 $(list_key_f PULLERS puller $(sort_uV $IMAGES_SHORT $IMAGES $THIRD_PARTY))
 $(list_key_f SENTINELS sentinel $(sort_uV $IMAGES_SHORT $IMAGES $THIRD_PARTY))
 EOT
@@ -204,6 +212,7 @@ for x in $IMAGES_SHORT; do
 
 	k1=$(prefix $x)
 	p1=$(pusher $x)
+	p2=$(all_pusher $x)
 	d1=$(puller $x)
 	s1=$(sentinel $x)
 
@@ -216,11 +225,14 @@ for x in $IMAGES_SHORT; do
 .PHONY: $k1
 $k1: $s1
 
-.PHONY: $p1 $d1
+.PHONY: $p1 $p2 $d1
 $(list_target_f $p1 pusher $sub)
 $(list_target_f $d1 puller $sub)
 
 $(list_target_f $s1 sentinel $sub)
 	touch \$@
+
+$p2: $s1
+	\$(DOCKER) push -a $k1
 EOT
 done

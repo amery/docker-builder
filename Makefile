@@ -28,7 +28,7 @@ CONFIG_MK = config.mk
 IMAGES_MK = images.mk
 TAG_DIRS = .tag-dirs
 
-.PHONY: all files images pull push clean
+.PHONY: all files images pull push push-all clean
 
 all: images
 
@@ -59,4 +59,5 @@ include $(IMAGES_MK)
 
 images: files $(IMAGES)
 push: files $(PUSHERS)
+push-all: files $(ALL_PUSHERS)
 pull: files $(PULLERS)
