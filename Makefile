@@ -27,6 +27,9 @@ RULES_MK = rules.mk
 CONFIG_MK = config.mk
 IMAGES_MK = images.mk
 TAG_DIRS = .tag-dirs
+TAGS_FILE = .tags-current
+TAGS_ALL_FILE = .tags-all
+TAGS_GC_FILE = .tags-obsolete
 
 .PHONY: all files images pull push push-all clean
 
@@ -61,3 +64,31 @@ images: files $(IMAGES)
 push: files $(PUSHERS)
 push-all: files $(ALL_PUSHERS)
 pull: files $(PULLERS)
+
+.PHONY: tags tags-to-delete
+
+# garbage collection
+#
+.PHONY: tags-gc
+
+tags-gc: $(TAGS_GC_FILE)
+	while read tag; do \
+		$(DOCKER) image rmi "$$tag"; \
+	done < $^
+
+$(TAGS_FILE): images FORCE
+	@while read t d; do \
+		echo \$(PREFIX)$$t; \
+		\$(SCRIPTS)/get_aliases.sh \$(PREFIX)$$t; \
+	done < $(TAG_DIRS) | sort -uV > $@~
+	mv $@~ $@
+
+$(TAGS_ALL_FILE): FORCE
+	$(DOCKER) images | grep \
+		-e "^$(PREFIX)docker-[^ ]\+-builder " | sed -e 's|^\([^ ]\+\)[ ]\+\([^ ]\+\)[ ]\+\([^ ]\+\) .*|\1:\2\t\3|g' \
+		| sort -uV > $@~
+	mv $@~ $@
+
+$(TAGS_GC_FILE): $(TAGS_FILE) $(TAGS_ALL_FILE)
+	\$(SCRIPTS)/filter-out-tags.sh $(TAGS_FILE) < $(TAGS_ALL_FILE) > $@~
+	mv $@~ $@
