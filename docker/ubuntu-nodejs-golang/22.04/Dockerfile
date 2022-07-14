@@ -32,7 +32,7 @@ RUN npm update && npm i -g \
 		yarn@latest \
 	&& rm -rf ~/.npm
 
-COPY npm.sh /etc/entrypoint.d/
+COPY node.sh /etc/entrypoint.d/
 
 #
 # golang

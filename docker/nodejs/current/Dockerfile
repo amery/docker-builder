@@ -39,7 +39,7 @@ COPY builder_version.sh /usr/local/bin/builder_version
 
 # runtime environment
 #
-COPY npm.sh /etc/entrypoint.d/
+COPY node.sh /etc/entrypoint.d/
 
 # and inject entrypoint to deal with -e USER_*
 #
