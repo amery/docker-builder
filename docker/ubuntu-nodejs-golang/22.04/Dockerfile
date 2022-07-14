@@ -3,12 +3,10 @@ FROM amery/docker-ubuntu-builder:22.04
 ENV GO_VERSION 1.18.3
 ENV GODOC_VERSION 0.1.10
 ENV NODE_VERSION 16.x
-ENV NPM_VERSION 8.12.1
 
 LABEL docker-builder.version.go="$GO_VERSION"
 LABEL docker-builder.version.godoc="$GODOC_VERSION"
 LABEL docker-builder.version.nodejs="$NODE_VERSION"
-LABEL docker-builder.version.npm="$NPM_VERSION"
 
 LABEL docker-builder.run-env.npm="NPM_CONFIG_PREFIX"
 LABEL docker-builder.run-env.golang="GOPATH GO111MODULE GOINSECURE GOPRIVATE"
@@ -29,10 +27,9 @@ RUN apt-get update \
 	&& apt-get clean
 
 RUN npm update && npm i -g \
-		npm@${NPM_VERSION} \
-		npm-check-updates@${NCU_VERSION} \
-		npx \
-		yarn \
+		npm@latest \
+		npx@latest \
+		yarn@latest \
 	&& rm -rf ~/.npm
 
 COPY npm.sh /etc/entrypoint.d/
