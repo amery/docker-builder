@@ -16,16 +16,11 @@ RUN apk --update --no-cache add \
 	openssh \
 	python2
 
-# update npm and install ncu
+# update npm and install npx
 #
-# workaround `EXDEV: cross-device link not permitted` bug
-#
-RUN mv /usr/local/lib/node_modules /usr/local/lib/node_modules.tmp \
-	&& mv /usr/local/lib/node_modules.tmp /usr/local/lib/node_modules \
-	&& npm i -g \
-		npm \
-		npm-check-updates \
-		npx \
+RUN npm i -g \
+		npm@latest \
+		npx@latest \
 	&& rm -rf ~/.npm
 
 # yarn
