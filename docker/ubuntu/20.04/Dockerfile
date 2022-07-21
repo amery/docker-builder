@@ -37,6 +37,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 	autoconf \
 	autoconf-archive \
 	automake \
+	bash-completion \
 	bison \
 	build-essential \
 	clang \
