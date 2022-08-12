@@ -26,10 +26,14 @@ RUN apt-get update \
 		nodejs \
 	&& apt-get clean
 
-RUN npm update && npm i -g \
+# update npm and install npx, corepack, yarn and pnpm
+#
+RUN npm i -g \
 		npm@latest \
 		npx@latest \
+		corepack@latest \
 		yarn@latest \
+		pnpm@latest \
 	&& rm -rf ~/.npm
 
 COPY node.sh /etc/entrypoint.d/

@@ -16,17 +16,15 @@ RUN apk --update --no-cache add \
 	openssh \
 	python2
 
-# update npm and install npx
+# update npm and install npx, corepack, yarn and pnpm
 #
 RUN npm i -g \
 		npm@latest \
 		npx@latest \
+		corepack@latest \
+		yarn@latest \
+		pnpm@latest \
 	&& rm -rf ~/.npm
-
-# yarn
-#
-RUN apk --update --no-cache add \
-	yarn
 
 # dynamic version
 #
