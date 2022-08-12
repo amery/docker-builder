@@ -14,6 +14,7 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y --no-install
 		libxkbfile1 \
 		libxshmfence1 \
 		libxss1 \
+		xdg-utils \
 	&& curl -L -o /tmp/vscode.deb "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64" \
 	&& dpkg -i /tmp/vscode.deb \
 	&& rm /tmp/vscode.deb \
