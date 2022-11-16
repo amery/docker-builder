@@ -32,6 +32,7 @@ RUN npm i -g \
 	&& rm -rf ~/.npm
 
 COPY node.sh /etc/entrypoint.d/
+COPY node-pnpm.sh /etc/entrypoint.d/
 
 #
 # dynamic version
