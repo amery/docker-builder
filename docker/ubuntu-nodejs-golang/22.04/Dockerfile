@@ -1,11 +1,9 @@
 FROM amery/docker-ubuntu-builder:22.04
 
-ENV GO_VERSION 1.18.7
-ENV GODOC_VERSION 0.1.10
+ENV GO_VERSION 1.18.8
 ENV NODE_VERSION 16.x
 
 LABEL docker-builder.version.go="$GO_VERSION"
-LABEL docker-builder.version.godoc="$GODOC_VERSION"
 LABEL docker-builder.version.nodejs="$NODE_VERSION"
 
 LABEL docker-builder.run-env.npm="NPM_CONFIG_PREFIX"
@@ -56,7 +54,7 @@ ENV PATH /opt/golang/bin:${PATH}
 #
 # extra helpers
 #
-RUN go install -v golang.org/x/tools/cmd/godoc@v${GODOC_VERSION}
+RUN go install -v golang.org/x/tools/cmd/godoc@latest
 
 #
 # dynamic version
