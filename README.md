@@ -15,6 +15,8 @@ ln -s [$PWD/docker-builder/docker/run.sh](https://github.com/amery/docker-builde
 |----------------------|-----------------------------------------------------------
 | `DOCKER_DIR`         | `${DOCKER_DIR}/Dockerfile`
 | `DOCKER_ID`          | optional image id to use instead of building `DOCKER_DIR`
+| `DOCKER_BUILD_OPT`   | optional arguments for `docker build` (default: --rm)
+| `DOCKER_BUILD_FORCE` | set to force the repull/rebuild of the image
 | `DOCKER_RUN_ENV`     | variables to passthrough if defined
 | `DOCKER_RUN_VOLUMES` | variables that specify extra directories to mount
 | `DOCKER_RUN_WS`      | use given workspace root instead of attempting detection
