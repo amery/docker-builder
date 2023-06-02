@@ -2,7 +2,7 @@
 
 set -eu
 
-RUN_VERSION="1.9.1"
+RUN_VERSION="1.15.3"
 
 #
 #
@@ -306,6 +306,7 @@ while [ $# -gt 0 ]; do
 	-l)	docker_labels "$DOCKER_ID"
 		;;
 
+	--pull) DOCKER_BUILD_FORCE=true ;;
 	-r)	USER_IS_SUDO=true ;;
 	-p)	DOCKER_EXPOSE="${DOCKER_EXPOSE:+$DOCKER_EXPOSE }$2"
 		shift ;;
