@@ -1,6 +1,6 @@
 FROM amery/docker-ubuntu-builder:22.04
 
-ENV GO_VERSION 1.19.5
+ENV GO_VERSION 1.19.11
 ENV NODE_VERSION 16.x
 
 LABEL docker-builder.version.go="$GO_VERSION"
