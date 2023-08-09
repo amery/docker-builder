@@ -12,7 +12,7 @@ RUN apk --update --no-cache --virtual /tmp/.build-deps add \
 		musl-dev \
 	&& for GO_VERSION in \
 			"1.18.10" \
-			"1.19.11" \
+			"1.19.12" \
 			; do \
 		curl -Ls -o /tmp/go.tgz https://golang.org/dl/go${GO_VERSION}.src.tar.gz \
 		&& tar -C /tmp -zxf /tmp/go.tgz \
