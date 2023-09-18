@@ -1,6 +1,6 @@
 FROM amery/docker-ubuntu-android-builder:latest
 
-ENV NODE_VERSION="16.x"
+ENV NODE_VERSION="18.x"
 
 LABEL docker-builder.version.nodejs="$NODE_VERSION"
 
@@ -14,9 +14,12 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
 #
 # node.js
 #
-WORKDIR /tmp
 RUN apt-get update \
-	&& curl -sL https://deb.nodesource.com/setup_${NODE_VERSION} | bash - \
+	&& apt-get install -y \
+		gnupg \
+	&& curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+	&& echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_VERSION} nodistro main" \
+		> /etc/apt/sources.list.d/nodesource.list \
 	&& apt-get update && apt-get install -y \
 		nodejs \
 	&& apt-get clean
@@ -37,7 +40,7 @@ COPY node-pnpm.sh /etc/entrypoint.d/
 #
 # cordova
 #
-RUN npm update && npm i -g \
+RUN npm i -g \
 		cordova \
 		cordova-android \
 		cordova-browser \
