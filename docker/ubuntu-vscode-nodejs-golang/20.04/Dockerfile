@@ -1,4 +1,4 @@
-FROM amery/docker-ubuntu-vscode-nodejs-builder:20.04
+FROM quay.io/amery/docker-ubuntu-vscode-nodejs-builder:20.04
 
 ENV GO_VERSION 1.20.7
 

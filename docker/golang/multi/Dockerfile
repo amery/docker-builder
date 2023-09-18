@@ -1,4 +1,4 @@
-FROM amery/docker-golang-builder:latest
+FROM quay.io/amery/docker-golang-builder:latest
 
 RUN GO_VERSION=$(go version | sed -e 's|.* go\([1-9][^ ]\+\) .*|\1|') \
 	; ln -s ../go/bin/go /usr/local/bin/go-${GO_VERSION} \

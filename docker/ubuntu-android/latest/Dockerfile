@@ -1,4 +1,4 @@
-FROM amery/docker-ubuntu-builder:latest
+FROM quay.io/amery/docker-ubuntu-builder:latest
 
 ENV OPENJDK_VERSION="8"
 ENV ANDROID_VERSION="30"

@@ -1,4 +1,4 @@
-FROM amery/docker-ubuntu-builder:18.04
+FROM quay.io/amery/docker-ubuntu-builder:18.04
 
 LABEL docker-builder.run-env.oe="MACHINE DISTRO TCLIBC OEROOT DL_DIR"
 

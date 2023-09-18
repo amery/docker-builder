@@ -1,4 +1,4 @@
-FROM amery/docker-ubuntu-android-builder:latest
+FROM quay.io/amery/docker-ubuntu-android-builder:latest
 
 ENV NODE_VERSION="18.x"
 

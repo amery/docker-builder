@@ -1,4 +1,4 @@
-FROM amery/docker-ubuntu-x11-builder:20.04
+FROM quay.io/amery/docker-ubuntu-x11-builder:20.04
 
 #
 # vscode

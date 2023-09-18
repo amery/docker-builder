@@ -1,4 +1,4 @@
-FROM amery/docker-ubuntu-builder:22.04
+FROM quay.io/amery/docker-ubuntu-builder:22.04
 
 ENV GO_VERSION 1.20.7
 ENV NODE_VERSION 18.x

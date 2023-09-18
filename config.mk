@@ -1,2 +1,2 @@
 USER = $(shell id -urn)
-PREFIX ?= $(USER)/
+PREFIX ?= quay.io/$(USER)/
