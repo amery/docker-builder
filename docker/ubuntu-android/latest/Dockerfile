@@ -1,7 +1,7 @@
 FROM quay.io/amery/docker-ubuntu-builder:latest
 
 ENV OPENJDK_VERSION="19"
-ENV ANDROID_VERSION="30"
+ENV ANDROID_VERSION="34"
 ENV ANDROID_CMD_VERSION="10406996_latest"
 
 #
