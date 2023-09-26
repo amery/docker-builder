@@ -1,8 +1,8 @@
 FROM quay.io/amery/docker-ubuntu-builder:latest
 
-ENV OPENJDK_VERSION="8"
+ENV OPENJDK_VERSION="19"
 ENV ANDROID_VERSION="30"
-ENV ANDROID_CMD_VERSION="6858069_latest"
+ENV ANDROID_CMD_VERSION="10406996_latest"
 
 #
 # update world
@@ -21,7 +21,8 @@ RUN apt-get update && apt-get install -y \
 		unzip \
 	&& apt-get clean
 
-RUN curl -L -o/tmp/commandlinetools-linux.zip https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_CMD_VERSION}.zip \
+RUN curl -LsS -o /tmp/commandlinetools-linux.zip \
+		https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_CMD_VERSION}.zip \
 	&& unzip /tmp/commandlinetools-linux.zip -d "$ANDROID_SDK_ROOT" \
 	&& export SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT" \
 	&& $SDKMANAGER --update \
