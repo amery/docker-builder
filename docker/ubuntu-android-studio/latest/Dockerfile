@@ -1,7 +1,7 @@
-FROM quay.io/amery/docker-ubuntu-vscode-nodejs-builder:latest
+FROM quay.io/amery/docker-ubuntu-vscode-builder:latest
 
 ENV OPENJDK_VERSION="19"
-ENV ANDROID_API_VERSION="34"
+ENV ANDROID_API_VERSIONS="33 34"
 ENV ANDROID_STUDIO_VERSION="2022.3.1.19"
 ENV ANDROID_CMD_VERSION="10406996_latest"
 
@@ -35,15 +35,27 @@ RUN curl -LsS -o /tmp/commandlinetools-linux.zip \
 	&& yes | $SDKMANAGER --licenses \
 	&& $SDKMANAGER --install \
 		"cmdline-tools;latest" \
+		"emulator" \
+		"patcher;v4" \
 		"platform-tools" \
-		"platforms;android-${ANDROID_API_VERSION}" \
+		"tools" \
+	&& for x in $ANDROID_API_VERSIONS; do \
+			echo "platforms;android-$x"; \
+		done | xargs -r sdkmanager --install \
 	&& cd "$ANDROID_SDK_ROOT/cmdline-tools" \
 	&& rm -f /tmp/commandlinetools-linux.zip \
 	&& ls -1d latest/* | cut -d/ -f2- | xargs -rt rm -rf
 
-RUN curl -LsS -o /tmp/android-studio-linux.tar.gz \
+RUN apt-get update && apt-get install -y \
+		libxtst6 \
+	&& apt-get clean \
+	&& curl -LsS -o /tmp/android-studio-linux.tar.gz \
 		https://redirector.gvt1.com/edgedl/android/studio/ide-zips/${ANDROID_STUDIO_VERSION}/android-studio-${ANDROID_STUDIO_VERSION}-linux.tar.gz \
 	&& tar -C "$ANDROID_SDK_ROOT" -zxf /tmp/android-studio-linux.tar.gz \
-	&& rm -f /tmp/android-studio-linux.tar.gz
+	&& rm -f /tmp/android-studio-linux.tar.gz \
+	&& echo ${ANDROID_STUDIO_VERSION} > $ANDROID_SDK_ROOT/android-studio/.version
 
 COPY android-sdk.sh /etc/entrypoint.d/
+
+COPY studio.sh /usr/local/bin/studio
+COPY builder_version.sh /usr/local/bin/builder_version
