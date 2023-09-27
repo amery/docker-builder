@@ -1,7 +1,7 @@
 FROM quay.io/amery/docker-ubuntu-builder:latest
 
 ENV OPENJDK_VERSION="19"
-ENV ANDROID_API_VERSION="34"
+ENV ANDROID_API_VERSIONS="33 34"
 ENV ANDROID_CMD_VERSION="10406996_latest"
 
 #
@@ -35,7 +35,10 @@ RUN curl -LsS -o /tmp/commandlinetools-linux.zip \
 	&& $SDKMANAGER --install \
 		"cmdline-tools;latest" \
 		"platform-tools" \
-		"platforms;android-${ANDROID_API_VERSION}" \
+		"tools" \
+	&& for x in $ANDROID_API_VERSIONS; do \
+			echo "platforms;android-$x"; \
+		done | xargs -r sdkmanager --install \
 	&& cd "$ANDROID_SDK_ROOT/cmdline-tools" \
 	&& rm -f /tmp/commandlinetools-linux.zip \
 	&& ls -1d latest/* | cut -d/ -f2- | xargs -rt rm -rf
