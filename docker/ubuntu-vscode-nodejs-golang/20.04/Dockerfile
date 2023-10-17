@@ -1,6 +1,6 @@
 FROM quay.io/amery/docker-ubuntu-vscode-nodejs-builder:20.04
 
-ENV GO_VERSION 1.20.7
+ENV GO_VERSION 1.20.10
 
 LABEL docker-builder.version.go="$GO_VERSION"
 
