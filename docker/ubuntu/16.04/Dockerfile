@@ -11,9 +11,10 @@ ENV TERM xterm
 # debconf: delaying package configuration, since apt-utils is not installed
 #
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-recommends -y \
-        apt-utils \
-        ca-certificates \
-        language-pack-en \
+	apt-utils \
+	ca-certificates \
+	gnupg \
+	language-pack-en \
 	&& apt-get clean
 
 # use a locale with utf-8 support

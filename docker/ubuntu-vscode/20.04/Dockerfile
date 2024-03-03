@@ -4,7 +4,6 @@ FROM quay.io/amery/docker-ubuntu-x11-builder:20.04
 # vscode
 #
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y --no-install-recommends \
-		gnupg \
 		libasound2 \
 		libgbm1 \
 		libgtk-3-0 \

@@ -17,9 +17,10 @@ RUN DEBIAN_FRONTEND="noninteractive" \
 # debconf: delaying package configuration, since apt-utils is not installed
 #
 RUN apt-get update && apt-get install --no-install-recommends -y \
-        apt-utils \
-        ca-certificates \
-        language-pack-en \
+	apt-utils \
+	ca-certificates \
+	gnupg \
+	language-pack-en \
 	&& apt-get clean
 
 # This system has been minimized by removing packages and content that are
