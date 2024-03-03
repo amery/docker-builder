@@ -36,12 +36,11 @@ RUN curl -LsS -o /tmp/commandlinetools-linux.zip \
 	&& $SDKMANAGER --install \
 		"cmdline-tools;latest" \
 		"emulator" \
-		"patcher;v4" \
 		"platform-tools" \
 		"tools" \
 	&& for x in $ANDROID_API_VERSIONS; do \
 			echo "platforms;android-$x"; \
-		done | xargs -r sdkmanager --install \
+		done | xargs -r $SDKMANAGER --install \
 	&& cd "$ANDROID_SDK_ROOT/cmdline-tools" \
 	&& rm -f /tmp/commandlinetools-linux.zip \
 	&& ls -1d latest/* | cut -d/ -f2- | xargs -rt rm -rf
