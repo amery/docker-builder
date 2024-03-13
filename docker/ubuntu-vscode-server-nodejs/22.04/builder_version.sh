@@ -5,7 +5,7 @@ set -eu
 . /etc/os-release
 
 APP=vscode-server
-APP_VERSION="$(dpkg -s code | sed -n 's|^Version: \([^-]\+\).*|\1|p')"
+APP_VERSION="$(dpkg -s code-server | sed -n 's|^Version: \([^-]\+\).*|\1|p')"
 APP_V2=$(echo "$APP_VERSION" | cut -d. -f1-2)
 
 NODE_VERSION="$(node --version | sed -e 's/^v//')"
