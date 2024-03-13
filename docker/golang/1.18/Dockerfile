@@ -13,7 +13,7 @@ RUN apk --update --no-cache add \
 	make
 
 # extra helpers
-RUN go install -v golang.org/x/tools/cmd/godoc@latest
+RUN go install -v golang.org/x/tools/cmd/godoc@v0.18
 
 # dynamic version
 #

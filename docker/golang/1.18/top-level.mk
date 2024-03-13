@@ -46,7 +46,7 @@ godoc: $(GOBIN)/godoc
 	DOCKER_EXPOSE=$(PORT) $(GODOC) -http=:$(PORT)
 
 $(GOBIN)/godoc: FORCE
-	$(GO) install -v golang.org/x/tools/cmd/godoc@latest
+	$(GO) install -v golang.org/x/tools/cmd/godoc@v0.18
 
 .PHONY: clean
 clean:
