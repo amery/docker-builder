@@ -1,4 +1,15 @@
 #
+# EDITOR
+#
+
+cat <<EOT
+
+if [ -x "\$(which code)" ]; then
+	export EDITOR=code
+fi
+EOT
+
+#
 # vscode extensions helper
 #
 code_install_extension() {
