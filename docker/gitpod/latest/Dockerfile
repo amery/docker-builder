@@ -45,7 +45,8 @@ RUN curl -L -o /tmp/go.linux-amd64.tar.gz https://golang.org/dl/go${GO_VERSION}.
 	&& tar -C /opt -zxf /tmp/go.linux-amd64.tar.gz \
 	&& rm /tmp/go.linux-amd64.tar.gz \
 	&& mv /opt/go /opt/golang \
-	&& /opt/golang/bin/go install -v -a ...
+	&& /opt/golang/bin/go install -v -a ... \
+	&& rm -rf /home/gitpod/.cache
 
 USER gitpod
 
