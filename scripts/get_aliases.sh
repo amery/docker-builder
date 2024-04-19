@@ -14,6 +14,13 @@ get_versions() {
 		tag="${image##*:}"
 	fi
 
+	case "$image" in
+	*gitpod*)
+		# no entrypoint for --version
+		echo "$tag"
+		return
+	esac
+
 	for v in $(${DOCKER:-docker} run "$image" --version); do
 		if [ "x$v" != "x$tag" -a "x$x" != "undefined" ]; then
 			echo "$v"
