@@ -2,6 +2,10 @@ FROM gitpod/workspace-c:latest
 
 USER root
 
+RUN locale-gen \
+		en_GB.UTF-8 \
+	&& update-locale
+
 ENV GO_VERSION 1.21.9
 ENV NODE_VERSION 18.x
 
