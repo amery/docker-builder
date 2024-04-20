@@ -10,6 +10,12 @@ ENV GO_VERSION 1.21.9
 ENV NODE_VERSION 20.x
 
 #
+# extras
+#
+RUN apt-get update && apt-get upgrade -y && install-packages \
+	neovim
+
+#
 # C
 #
 RUN apt-get update && install-packages \
