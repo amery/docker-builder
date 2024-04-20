@@ -1,0 +1,16 @@
+FROM quay.io/amery/docker-gitpod-builder:latest
+
+USER root
+
+# tools
+#
+RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
+	protobuf-compiler \
+	&& apt-get clean
+
+# interactivity
+#
+RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
+	bash-completion \
+	tig \
+	&& apt-get clean
