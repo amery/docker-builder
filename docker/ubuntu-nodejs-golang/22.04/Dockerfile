@@ -1,6 +1,6 @@
 FROM quay.io/amery/docker-ubuntu-builder:22.04
 
-ENV GO_VERSION 1.21.9
+ENV GO_VERSION 1.21.10
 ENV NODE_VERSION 20.x
 
 LABEL docker-builder.version.go="$GO_VERSION"
