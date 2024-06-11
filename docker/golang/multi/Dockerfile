@@ -1,4 +1,4 @@
-FROM quay.io/amery/docker-golang-builder:1.21
+FROM quay.io/amery/docker-golang-builder:1.22
 
 RUN GO_VERSION=$(go version | sed -e 's|.* go\([1-9][^ ]\+\) .*|\1|') \
 	; ln -s ../go/bin/go /usr/local/bin/go-${GO_VERSION} \
@@ -14,7 +14,7 @@ RUN apk --update --no-cache --virtual /tmp/.build-deps add \
 			"1.18.10" \
 			"1.19.13" \
 			"1.20.14" \
-			"1.22.3" \
+			"1.21.10" \
 			; do \
 		curl -Ls -o /tmp/go.tgz https://golang.org/dl/go${GO_VERSION}.src.tar.gz \
 		&& tar -C /tmp -zxf /tmp/go.tgz \
