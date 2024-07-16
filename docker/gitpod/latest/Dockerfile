@@ -13,7 +13,8 @@ ENV NODE_VERSION 20.x
 # extras
 #
 RUN apt-get update && apt-get upgrade -y && install-packages \
-	neovim
+	neovim \
+	tig
 
 #
 # C
