@@ -51,6 +51,7 @@ RUN git clone --depth 1 \
 #
 RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
 	protobuf-compiler \
+	protoc-gen-go \
 	python3-protobuf \
 	python3-grpc-tools \
 	&& apt-get clean

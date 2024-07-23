@@ -6,6 +6,7 @@ USER root
 #
 RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
 	protobuf-compiler \
+	protoc-gen-go \
 	&& apt-get clean
 
 # interactivity

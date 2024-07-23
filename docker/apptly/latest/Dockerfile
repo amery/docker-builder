@@ -4,6 +4,7 @@ FROM quay.io/amery/docker-ubuntu-vscode-server-nodejs-golang-builder:latest
 #
 RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
 	protobuf-compiler \
+	protoc-gen-go \
 	&& apt-get clean
 
 # interactivity
