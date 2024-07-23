@@ -6,7 +6,7 @@ RUN locale-gen \
 		en_GB.UTF-8 \
 	&& update-locale
 
-ENV GO_VERSION 1.22.4
+ENV GO_VERSION 1.22.5
 ENV NODE_VERSION 20.x
 
 #
