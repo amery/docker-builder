@@ -17,6 +17,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recomme
 	cairosvg \
 	clang-format \
 	netcat \
+	rsync \
 	tig \
 	&& apt-get clean
 
