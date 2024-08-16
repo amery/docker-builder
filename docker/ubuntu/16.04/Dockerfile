@@ -6,7 +6,7 @@ LABEL docker-builder.version.ubuntu=16.04
 RUN sed -i 's|http://archive.ubuntu.com|http://gb.archive.ubuntu.com|' /etc/apt/sources.list
 
 # reduce apt-get install warnings
-ENV TERM xterm
+ENV TERM=xterm
 
 # debconf: delaying package configuration, since apt-utils is not installed
 #

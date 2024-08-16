@@ -1,7 +1,7 @@
 FROM quay.io/amery/docker-ubuntu-builder:22.04
 
-ENV GO_VERSION 1.22.5
-ENV NODE_VERSION 20.x
+ENV GO_VERSION=1.22.5
+ENV NODE_VERSION=20.x
 
 LABEL docker-builder.version.go="$GO_VERSION"
 LABEL docker-builder.version.nodejs="$NODE_VERSION"
@@ -40,7 +40,7 @@ COPY node-pnpm.sh /etc/entrypoint.d/
 #
 # golang
 #
-ENV CGO_ENABLED 0
+ENV CGO_ENABLED=0
 
 RUN curl -L -o /tmp/go.linux-amd64.tar.gz https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz \
 	&& tar -C /opt -zxf /tmp/go.linux-amd64.tar.gz \
@@ -50,7 +50,7 @@ RUN curl -L -o /tmp/go.linux-amd64.tar.gz https://golang.org/dl/go${GO_VERSION}.
 
 COPY golang.sh /etc/entrypoint.d/
 
-ENV PATH /opt/golang/bin:${PATH}
+ENV PATH=/opt/golang/bin:${PATH}
 
 #
 # extra helpers

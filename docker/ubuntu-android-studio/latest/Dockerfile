@@ -13,7 +13,7 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
 #
 # Java
 #
-ENV JAVA_HOME "/usr/lib/jvm/java-${OPENJDK_VERSION}-openjdk-amd64"
+ENV JAVA_HOME="/usr/lib/jvm/java-${OPENJDK_VERSION}-openjdk-amd64"
 
 RUN apt-get update && apt-get install -y \
 		gradle \
@@ -24,8 +24,8 @@ RUN apt-get update && apt-get install -y \
 #
 # Android SDK
 #
-ENV ANDROID_SDK_ROOT "/opt/android-sdk"
-ENV PATH "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH"
+ENV ANDROID_SDK_ROOT="/opt/android-sdk"
+ENV PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH"
 
 RUN curl -LsS -o /tmp/commandlinetools-linux.zip \
 		https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_CMD_VERSION}.zip \

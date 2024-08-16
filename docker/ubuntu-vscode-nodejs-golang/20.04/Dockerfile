@@ -1,6 +1,6 @@
 FROM quay.io/amery/docker-ubuntu-vscode-nodejs-builder:20.04
 
-ENV GO_VERSION 1.22.5
+ENV GO_VERSION=1.22.5
 
 LABEL docker-builder.version.go="$GO_VERSION"
 
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
 #
 # golang
 #
-ENV CGO_ENABLED 0
+ENV CGO_ENABLED=0
 
 RUN curl -L -o /tmp/go.linux-amd64.tar.gz https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz \
 	&& tar -C /opt -zxf /tmp/go.linux-amd64.tar.gz \
@@ -24,7 +24,7 @@ RUN curl -L -o /tmp/go.linux-amd64.tar.gz https://golang.org/dl/go${GO_VERSION}.
 
 COPY golang.sh /etc/entrypoint.d/
 
-ENV PATH /opt/golang/bin:${PATH}
+ENV PATH=/opt/golang/bin:${PATH}
 
 #
 # extra helpers

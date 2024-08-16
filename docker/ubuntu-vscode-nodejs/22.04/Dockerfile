@@ -1,6 +1,6 @@
 FROM quay.io/amery/docker-ubuntu-vscode-builder:22.04
 
-ENV NODE_VERSION "20.x"
+ENV NODE_VERSION="20.x"
 
 LABEL docker-builder.version.nodejs="$NODE_VERSION"
 

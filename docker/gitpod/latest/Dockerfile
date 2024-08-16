@@ -6,8 +6,8 @@ RUN locale-gen \
 		en_GB.UTF-8 \
 	&& update-locale
 
-ENV GO_VERSION 1.22.5
-ENV NODE_VERSION 20.x
+ENV GO_VERSION=1.22.5
+ENV NODE_VERSION=20.x
 
 #
 # extras
@@ -46,7 +46,7 @@ RUN npm i -g \
 #
 # golang
 #
-ENV CGO_ENABLED 0
+ENV CGO_ENABLED=0
 
 RUN curl -L -o /tmp/go.linux-amd64.tar.gz https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz \
 	&& tar -C /opt -zxf /tmp/go.linux-amd64.tar.gz \
@@ -57,4 +57,4 @@ RUN curl -L -o /tmp/go.linux-amd64.tar.gz https://golang.org/dl/go${GO_VERSION}.
 
 USER gitpod
 
-ENV PATH /opt/golang/bin:${PATH}
+ENV PATH=/opt/golang/bin:${PATH}

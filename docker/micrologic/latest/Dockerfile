@@ -21,7 +21,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recomme
 
 # sancus-core
 #
-ENV SANCUS_VERSION 0.3.10
+ENV SANCUS_VERSION=0.3.10.3
 LABEL docker-builder.version.sancus-core $SANCUS_VERSION
 
 RUN git clone -b $SANCUS_VERSION --depth 1 \

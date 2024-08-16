@@ -6,7 +6,7 @@ LABEL docker-builder.version.ubuntu=20.04
 RUN sed -i 's|http://archive.ubuntu.com|http://gb.archive.ubuntu.com|' /etc/apt/sources.list
 
 # reduce apt-get install warnings
-ENV TERM xterm
+ENV TERM=xterm
 
 # make sure tzdata is installed without prompts
 RUN DEBIAN_FRONTEND="noninteractive" \
