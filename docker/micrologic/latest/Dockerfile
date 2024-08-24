@@ -68,3 +68,11 @@ RUN git clone --depth 1 \
 	&& make \
 	&& make install \
 	&& rm -rf /usr/src/nanopb
+
+# buf
+#
+ENV BUF_VERSION=latest
+RUN env GOBIN=/usr/local/bin \
+	&& go install -v \
+		github.com/bufbuild/buf/cmd/buf@${BUF_VERSION} \
+	&& rm -rf ~/go
