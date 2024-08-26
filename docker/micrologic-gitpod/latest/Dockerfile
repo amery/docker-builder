@@ -18,6 +18,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recomme
 	clang-format \
 	netcat \
 	rsync \
+	socat \
 	tig \
 	&& apt-get clean
 
