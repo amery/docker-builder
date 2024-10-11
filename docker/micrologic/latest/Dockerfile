@@ -1,4 +1,4 @@
-FROM quay.io/amery/docker-ubuntu-vscode-server-nodejs-golang-builder:latest
+FROM quay.io/amery/docker-ubuntu-vscode-server-nodejs-golang-builder:24.04
 
 # extra dependencies
 RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recomme
 	bash-completion \
 	cairosvg \
 	clang-format \
-	netcat \
+	netcat-openbsd \
 	rsync \
 	socat \
 	tig \
