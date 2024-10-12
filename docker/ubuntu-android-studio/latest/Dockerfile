@@ -1,4 +1,4 @@
-FROM quay.io/amery/docker-ubuntu-vscode-builder:latest
+FROM quay.io/amery/docker-ubuntu-vscode-builder:22.04
 
 ENV OPENJDK_VERSION="19"
 ENV ANDROID_API_VERSIONS="33 34"
