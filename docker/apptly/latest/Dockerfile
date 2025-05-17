@@ -1,4 +1,4 @@
-FROM quay.io/amery/docker-ubuntu-vscode-server-nodejs-golang-builder:latest
+FROM quay.io/amery/docker-ubuntu-vsc-nodejs-golang-builder:24.04
 
 # tools
 #
@@ -6,11 +6,4 @@ RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recomme
 	protobuf-compiler \
 	protoc-gen-go \
 	socat \
-	&& apt-get clean
-
-# interactivity
-#
-RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
-	bash-completion \
-	tig \
 	&& apt-get clean
