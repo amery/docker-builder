@@ -255,18 +255,6 @@ builder_run_exec() {
 		"$@"
 }
 
-# DOCKER_ID
-if [ -z "${DOCKER_ID:-}" ]; then
-	DOCKER_DIR="$(builder_find_docker_dir "$0" "${DOCKER_DIR:-}")"
-
-	if [ -d "$DOCKER_DIR" ]; then
-		docker build ${DOCKER_BUILD_FORCE:+--pull --no-cache }${DOCKER_BUILD_OPT:---rm} "$DOCKER_DIR"
-		DOCKER_ID="$(docker build -q --rm "$DOCKER_DIR")"
-	fi
-elif [ -n "${DOCKER_BUILD_FORCE:-}" ]; then
-	docker pull "$DOCKER_ID"
-fi
-
 # labels
 #
 docker__labels() {
@@ -289,9 +277,6 @@ docker_bind_labels() {
 docker_version_labels() {
 	docker__labels "$1" | grep '^docker-builder\.version\.' | cut -d. -f3- | sort -V
 }
-
-DOCKER_ENV_LABELS="$(docker_env_labels "$DOCKER_ID")"
-DOCKER_VERSION_LABELS="$(docker_version_labels "$DOCKER_ID")"
 
 # special options
 #
@@ -316,6 +301,21 @@ while [ $# -gt 0 ]; do
 	esac
 	shift
 done
+
+# DOCKER_ID
+if [ -z "${DOCKER_ID:-}" ]; then
+	DOCKER_DIR="$(builder_find_docker_dir "$0" "${DOCKER_DIR:-}")"
+
+	if [ -d "$DOCKER_DIR" ]; then
+		docker build ${DOCKER_BUILD_FORCE:+--pull --no-cache }${DOCKER_BUILD_OPT:---rm} "$DOCKER_DIR"
+		DOCKER_ID="$(docker build -q --rm "$DOCKER_DIR")"
+	fi
+elif [ -n "${DOCKER_BUILD_FORCE:-}" ]; then
+	docker pull "$DOCKER_ID"
+fi
+
+DOCKER_ENV_LABELS="$(docker_env_labels "$DOCKER_ID")"
+DOCKER_VERSION_LABELS="$(docker_version_labels "$DOCKER_ID")"
 
 # pass-through environment
 #
