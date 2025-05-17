@@ -24,11 +24,10 @@ RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg -
 		nodejs \
 	&& apt-get clean
 
-# update npm and install npx, corepack, yarn and pnpm
+# update npm and install corepack, yarn and pnpm
 #
 RUN npm i -g \
 		npm@latest \
-		npx@latest \
 		corepack@latest \
 		yarn@latest \
 		pnpm@latest \
