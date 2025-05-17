@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/node/
-FROM node:current-alpine3.18
+FROM node:current-alpine3.20
 
 LABEL docker-builder.run-env.npm="NPM_CONFIG_PREFIX"
 
@@ -16,11 +16,10 @@ RUN apk --update --no-cache add \
 	openssh \
 	python3
 
-# update npm and install npx, corepack, yarn and pnpm
+# update npm and install corepack, yarn and pnpm
 #
 RUN npm i -g \
 		npm@latest \
-		npx@latest \
 		corepack@latest \
 		yarn@latest \
 		pnpm@latest \
