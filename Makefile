@@ -1,9 +1,9 @@
 DOCKER ?= docker
 
 ifneq ($(FORCE),)
-DOCKER_BUILD_OPT ?= --rm --no-cache
+DOCKER_BUILD_OPT ?= --rm --progress=plain --no-cache
 else
-DOCKER_BUILD_OPT ?= --rm
+DOCKER_BUILD_OPT ?= --rm --progress=plain
 endif
 
 B = $(CURDIR)
