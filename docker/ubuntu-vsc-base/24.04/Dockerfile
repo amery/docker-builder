@@ -30,18 +30,16 @@ RUN apt-get update && apt-get dist-upgrade -y \
 		bison \
 		clang \
 		cmake \
-		curl \
 		flex \
 		gawk \
-		gnupg \
-		jq \
+		gdb \
 		libtool-bin \
 		pkg-config \
+		python-is-python3 \
 		python3-pip \
 		python3-setuptools \
 		time \
 		vim \
-		wget \
 	&& apt-get clean
 
 #
