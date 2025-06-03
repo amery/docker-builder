@@ -63,13 +63,20 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
 	&& rm -rf /var/lib/apt/lists/*
 
 #
-# vscode - secure installation with auto-version detection
+# vscode - secure installation with auto-version and architecture detection
 #
 RUN VSC_VERSION=$(curl -s https://api.github.com/repos/coder/code-server/releases/latest | jq -r '.tag_name' | sed 's/^v//') \
-	&& echo "Detected code-server version: $VSC_VERSION" \
+	&& ARCH=$(dpkg --print-architecture) \
+	&& case "$ARCH" in \
+		amd64) VSC_ARCH="amd64" ;; \
+		arm64) VSC_ARCH="arm64" ;; \
+		armhf) VSC_ARCH="armhf" ;; \
+		*) echo "Unsupported architecture: $ARCH" && exit 1 ;; \
+	esac \
+	&& echo "Detected code-server version: $VSC_VERSION, architecture: $VSC_ARCH" \
 	&& mkdir -p /tmp/code-server \
 	&& cd /tmp/code-server \
-	&& curl -fsSL https://github.com/coder/code-server/releases/download/v${VSC_VERSION}/code-server_${VSC_VERSION}_amd64.deb -o code-server.deb \
+	&& curl -fsSL https://github.com/coder/code-server/releases/download/v${VSC_VERSION}/code-server_${VSC_VERSION}_${VSC_ARCH}.deb -o code-server.deb \
 	&& dpkg -i code-server.deb \
 	&& rm -rf /tmp/code-server \
 	&& apt-get clean \
