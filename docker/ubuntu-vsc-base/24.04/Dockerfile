@@ -47,6 +47,7 @@ RUN apt-get update && apt-get dist-upgrade -y \
 #
 RUN apt-get update && apt-get dist-upgrade -y \
 	&& apt-get install --no-install-recommends -y \
+		ripgrep \
 		tig \
 	&& apt-get clean
 
