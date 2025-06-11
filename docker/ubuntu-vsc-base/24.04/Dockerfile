@@ -32,7 +32,6 @@ RUN apt-get update && apt-get dist-upgrade -y \
 		cmake \
 		flex \
 		gawk \
-		gdb \
 		libtool-bin \
 		pkg-config \
 		python-is-python3 \
@@ -40,6 +39,18 @@ RUN apt-get update && apt-get dist-upgrade -y \
 		python3-setuptools \
 		time \
 		vim \
+	&& apt-get clean
+
+#
+# debugging
+#
+RUN apt-get update && apt-get dist-upgrade -y \
+	&& apt-get install --no-install-recommends -y \
+		gdb \
+		gdbserver \
+		valgrind \
+		ltrace \
+		netcat-openbsd \
 	&& apt-get clean
 
 #
