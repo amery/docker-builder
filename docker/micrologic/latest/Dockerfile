@@ -10,17 +10,45 @@ RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recomme
 
 # testing and interactivity
 #
-RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
-	cairosvg \
-	clang-format \
-	netcat-openbsd \
-	socat \
-	&& apt-get clean
+RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-recommends -y \
+		cairosvg \
+		clang-format \
+		netcat-openbsd \
+		socat \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/*
+
+# documentation
+#
+RUN apt-get update && apt-get dist-upgrade -y \
+	&& apt-get install -y \
+		python3-full \
+		python3-venv \
+		libclang-dev \
+		universal-ctags \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& python3 -m venv /opt/sphinx-env \
+	&& /opt/sphinx-env/bin/pip install --no-cache-dir --upgrade \
+		pip \
+		setuptools \
+		wheel \
+	&& /opt/sphinx-env/bin/pip install --no-cache-dir \
+		"clang~=16.0" \
+		"hawkmoth~=0.16.0" \
+		"myst-parser~=2.0.0" \
+		"sphinx~=7.3.7" \
+		"sphinx-rtd-theme~=2.0.0" \
+		"sphinx-copybutton~=0.5.2" \
+		"sphinx-autobuild~=2021.3.14" \
+		"sphinx-markdown-builder~=0.6.0"
+
+ENV PATH="/opt/sphinx-env/bin:$PATH"
 
 # sancus-core
 #
 ENV SANCUS_VERSION=0.3.10.3
-LABEL docker-builder.version.sancus-core $SANCUS_VERSION
+LABEL docker-builder.version.sancus-core=$SANCUS_VERSION
 
 RUN git clone -b $SANCUS_VERSION --depth 1 \
 		https://github.com/sancus-project/sancus-core /usr/src/sancus-core \
