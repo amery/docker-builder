@@ -24,7 +24,9 @@ RUN apt-get update && apt-get dist-upgrade -y \
 	&& apt-get install -y \
 		python3-full \
 		python3-venv \
+		python3-dev \
 		libclang-dev \
+		libclang-cpp14 \
 		universal-ctags \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/* \
@@ -34,16 +36,18 @@ RUN apt-get update && apt-get dist-upgrade -y \
 		setuptools \
 		wheel \
 	&& /opt/sphinx-env/bin/pip install --no-cache-dir \
-		"clang~=16.0" \
+		"clang~=18.0" \
+		"exhale~=0.3.6" \
 		"hawkmoth~=0.16.0" \
 		"myst-parser~=2.0.0" \
 		"sphinx~=7.3.7" \
 		"sphinx-rtd-theme~=2.0.0" \
+		"sphinx-immaterial~=0.11.0" \
 		"sphinx-copybutton~=0.5.2" \
 		"sphinx-autobuild~=2021.3.14" \
-		"sphinx-markdown-builder~=0.6.0"
-
-ENV PATH="/opt/sphinx-env/bin:$PATH"
+		"sphinx-markdown-builder~=0.6.0" \
+	&& echo 'export PATH="/opt/sphinx-env/bin:$PATH"' >> /etc/profile.d/sphinx.sh \
+	&& echo 'export VIRTUAL_ENV="/opt/sphinx-env"' >> /etc/profile.d/sphinx.sh
 
 # sancus-core
 #
