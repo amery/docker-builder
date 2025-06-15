@@ -13,6 +13,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recomme
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-recommends -y \
 		cairosvg \
 		clang-format \
+		dos2unix \
 		netcat-openbsd \
 		socat \
 	&& apt-get clean \
