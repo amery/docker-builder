@@ -37,15 +37,19 @@ RUN apt-get update && apt-get dist-upgrade -y \
 		wheel \
 	&& /opt/sphinx-env/bin/pip install --no-cache-dir \
 		"clang~=18.0" \
+		"doc8>=1.1.0" \
 		"exhale~=0.3.6" \
 		"hawkmoth~=0.16.0" \
 		"myst-parser~=2.0.0" \
+		"rstcheck>=6.2.0" \
+		"rstcheck-core>=1.2.0" \
 		"sphinx~=7.3.7" \
 		"sphinx-rtd-theme~=2.0.0" \
 		"sphinx-immaterial~=0.11.0" \
 		"sphinx-copybutton~=0.5.2" \
 		"sphinx-autobuild~=2021.3.14" \
 		"sphinx-markdown-builder~=0.6.0" \
+		"vale>=2.30.0" \
 	&& echo 'export PATH="/opt/sphinx-env/bin:$PATH"' >> /etc/profile.d/sphinx.sh \
 	&& echo 'export VIRTUAL_ENV="/opt/sphinx-env"' >> /etc/profile.d/sphinx.sh
 
