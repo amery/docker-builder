@@ -67,6 +67,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 	ltrace \
 	strace \
 	valgrind \
+	xxd \
 	&& apt-get clean
 
 # dynamic version
