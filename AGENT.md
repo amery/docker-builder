@@ -216,6 +216,96 @@ Remove obsolete tags:
 make tags-gc
 ```
 
+## Build Targets Reference
+
+### Image-Specific Targets
+
+For each image (e.g., `micrologic`), the following targets are available:
+
+```bash
+# Build the image
+make quay.io/amery/docker-micrologic-builder
+
+# Push to registry
+make push-docker-micrologic-builder
+
+# Build and push
+make quay.io/amery/docker-micrologic-builder push-docker-micrologic-builder
+```
+
+### Global Targets
+
+```bash
+# Build all images
+make
+
+# Push all images
+make push
+
+# Clean obsolete tags
+make tags-gc
+
+# Regenerate build files
+make files
+```
+
+## Managing Python Dependencies
+
+When building images with Python tools, special care is needed to avoid
+version conflicts:
+
+### Common Issues
+
+1. **System vs pip packages conflict**: Ubuntu's apt packages may conflict
+   with pip-installed versions
+2. **API changes**: Tools may break when dependencies update (e.g.,
+   protobuf removing RegisterExtension)
+3. **Path issues**: Python modules installed in unexpected locations
+
+### Solution: Virtual Environments
+
+Always use Python virtual environments for tool-specific dependencies:
+
+```dockerfile
+# Define environment variables for paths
+ENV TOOL_VERSION=1.2.3
+ENV TOOL_VENV=/opt/tool-env
+
+# Create venv and install dependencies
+RUN python3 -m venv $TOOL_VENV \
+    && $TOOL_VENV/bin/pip install --no-cache-dir \
+        "package==1.2.3" \
+        "dependency<2.0"
+
+# Update script shebangs
+RUN sed -i "1s|^#!/usr/bin/env python3|#!$TOOL_VENV/bin/python3|" \
+    /usr/bin/tool-script
+
+# Add to PATH
+RUN echo "export PATH=\"$TOOL_VENV/bin:\$PATH\"" >> /etc/profile.d/tool.sh
+```
+
+### Real-World Example: nanopb
+
+The nanopb tool requires specific protobuf versions:
+
+```dockerfile
+ENV NANOPB_VERSION=0.4.9.1
+ENV NANOPB_VENV=/opt/nanopb-env
+
+RUN python3 -m venv $NANOPB_VENV \
+    && $NANOPB_VENV/bin/pip install --no-cache-dir \
+        "protobuf<5.0" \
+        "grpcio-tools<1.65" \
+    && git clone -b $NANOPB_VERSION --depth 1 \
+        https://github.com/nanopb/nanopb /usr/src/nanopb \
+    && cd /usr/src/nanopb \
+    && cmake -DCMAKE_INSTALL_PREFIX=/usr \
+        -Dnanopb_PYTHON_INSTDIR_OVERRIDE=$NANOPB_VENV/lib/python3.12/site-packages \
+        . \
+    && make && make install
+```
+
 ## Code Quality Standards
 
 ### Shell Scripts
@@ -231,6 +321,8 @@ make tags-gc
 - Minimize layers by combining RUN commands
 - Clean up package manager caches
 - Add LABEL metadata for tracking
+- Use environment variables for versions and paths
+- Document non-obvious decisions with comments
 
 ### Makefiles
 
@@ -238,6 +330,23 @@ make tags-gc
 - Provide descriptive target names
 - Document complex rules with comments
 - Test with both GNU make 3.x and 4.x
+
+### Commit Messages
+
+Follow the repository convention:
+
+```text
+component: action description
+
+- Detailed change 1
+- Detailed change 2
+```
+
+Examples:
+
+- `docker-micrologic-builder: add dos2unix`
+- `go: update Go 1.23 to 1.23.10`
+- `docker: add tool to multiple images`
 
 ## Debugging Tips
 
@@ -252,6 +361,9 @@ cat rules.mk images.mk
 
 # List discovered images
 cat .tag-dirs
+
+# Check specific image build
+make DOCKER_BUILD_OPT="--no-cache" quay.io/amery/docker-<name>-builder
 ```
 
 ### Runtime Issues
@@ -265,15 +377,37 @@ DOCKER_ID=ubuntu:24.04 ./docker/run.sh bash
 
 # Inspect image labels
 docker inspect <image> | jq '.[] | .Config.Labels'
+
+# Test tool in container
+docker run --rm quay.io/amery/docker-<name>-builder tool --version
+```
+
+### Python Dependency Issues
+
+```bash
+# Check Python path in container
+docker run --rm <image> python3 -c "import sys; print(sys.path)"
+
+# Test module import
+docker run --rm <image> python3 -c "import module_name"
+
+# Check pip packages
+docker run --rm <image> pip list
+
+# Verify venv activation
+docker run --rm <image> bash -c "source /etc/profile.d/*.sh && which python3"
 ```
 
 ## Best Practices
 
-1. **Version Everything**: Use specific versions for base images
+1. **Version Everything**: Use specific versions for base images and tools
 2. **Label Images**: Add metadata for tracking and debugging
 3. **Test Locally**: Build and test before pushing
-4. **Document Changes**: Update both AGENT.md and README.md
+4. **Document Changes**: Update AGENT.md, README.md, and CONTRIBUTING.md
 5. **Coordinate Updates**: Notify dependent projects of breaking changes
+6. **Isolate Dependencies**: Use virtual environments for Python tools
+7. **Pin Versions**: Specify exact or compatible version ranges
+8. **Clean Builds**: Remove build artifacts in the same layer
 
 ## Security Considerations
 
@@ -282,6 +416,56 @@ docker inspect <image> | jq '.[] | .Config.Labels'
 - Regularly update base images for security patches
 - Review generated images with `docker history`
 - Scan images for vulnerabilities before pushing
+- Avoid running pip with `--break-system-packages`
+- Use virtual environments instead of system-wide Python packages
+
+## Troubleshooting Guide
+
+### ModuleNotFoundError in Python Tools
+
+**Symptom**: `ModuleNotFoundError: No module named 'package'`
+
+**Causes**:
+
+- System and pip packages installed in different locations
+- Missing Python path configuration
+- Version conflicts between system and pip packages
+
+**Solution**: Use virtual environments (see Managing Python Dependencies)
+
+### Version Compatibility Issues
+
+**Symptom**: `AttributeError: type object 'X' has no attribute 'Y'`
+
+**Causes**:
+
+- API changes in dependencies
+- Incompatible version combinations
+
+**Solution**: Pin compatible versions in requirements
+
+### Build Failures
+
+**Symptom**: Docker build fails with package errors
+
+**Checks**:
+
+1. Verify base image is accessible
+2. Check for typos in package names
+3. Ensure proper cleanup after apt operations
+4. Verify network connectivity for package downloads
+
+### Image Size Issues
+
+**Symptom**: Images are larger than expected
+
+**Solutions**:
+
+- Combine RUN commands to reduce layers
+- Remove build dependencies after compilation
+- Use `--no-install-recommends` with apt
+- Clean package manager caches in the same layer
 
 [readme-file]: ./README.md
 [dev-env]: https://github.com/amery/dev-env
+
