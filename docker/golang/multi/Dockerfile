@@ -16,7 +16,7 @@ RUN apk --update --no-cache --virtual /tmp/.build-deps add \
 			"1.20.14" \
 			"1.21.13" \
 			"1.22.12" \
-			"1.23.10" \
+			"1.23.11" \
 			; do \
 		curl -Ls -o /tmp/go.tgz https://golang.org/dl/go${GO_VERSION}.src.tar.gz \
 		&& tar -C /tmp -zxf /tmp/go.tgz \
