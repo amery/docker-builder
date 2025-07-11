@@ -76,6 +76,36 @@ DOCKER_ID=ubuntu:24.04 docker-builder-run bash
 - **poky/latest** - Yocto Project builds
 - **apptly/latest** - Apptly development base
 
+## Build System
+
+### Make Targets
+
+The build system provides several make targets for managing images:
+
+#### Build Targets
+
+- `make quay.io/amery/docker-<name>-builder` - Build a specific image
+- Images are automatically tagged as both `:latest` and `:<version>`
+  (e.g., `:24.04`)
+
+#### Pushing Images
+
+- `make push-docker-<name>-builder` - Push image to registry
+- Requires authentication to quay.io registry
+
+#### Examples
+
+```bash
+# Build the micrologic builder image
+make quay.io/amery/docker-micrologic-builder
+
+# Push the image to registry
+make push-docker-micrologic-builder
+
+# Build and push in sequence
+make quay.io/amery/docker-micrologic-builder push-docker-micrologic-builder
+```
+
 ## Environment Variables
 
 ### Build Configuration
@@ -113,6 +143,70 @@ docker-builder/
 └── LICENCE.txt         # MIT License
 ```
 
+## Troubleshooting
+
+### Python Dependencies in Docker Images
+
+When building images that require Python packages (e.g., nanopb, sphinx):
+
+1. **Use virtual environments** for isolated dependencies:
+
+   ```dockerfile
+   ENV TOOL_VENV=/opt/tool-env
+   RUN python3 -m venv $TOOL_VENV \
+       && $TOOL_VENV/bin/pip install --no-cache-dir package==version
+   ```
+
+2. **Pin compatible versions** to avoid conflicts:
+   - Check tool documentation for version requirements
+   - Use version constraints like `"protobuf<5.0"`
+   - Test compatibility between system and pip packages
+
+3. **Update script shebangs** to use venv Python:
+
+   ```dockerfile
+   RUN sed -i "1s|^#!/usr/bin/env python3|#!$TOOL_VENV/bin/python3|" /usr/bin/script
+   ```
+
+4. **Add venv to PATH** for runtime access:
+
+   ```dockerfile
+   RUN echo "export PATH=\"$TOOL_VENV/bin:\$PATH\"" >> /etc/profile.d/tool.sh
+   ```
+
+### Common Build Issues
+
+- **Version Conflicts**: System packages (apt) may conflict with pip
+  packages. Use virtual environments to isolate dependencies.
+- **Missing Modules**: If you see "ModuleNotFoundError", ensure the Python
+  path includes the installation directory.
+- **API Changes**: Pin versions when tools break due to API changes
+  (e.g., protobuf's RegisterExtension removal).
+
+## Best Practices
+
+### Dockerfile Conventions
+
+1. **Environment Variables**
+   - Define versions as ENV variables (e.g., `ENV TOOL_VERSION=1.2.3`)
+   - Define paths as ENV variables (e.g., `ENV TOOL_VENV=/opt/tool-env`)
+   - Use these variables consistently throughout the Dockerfile
+
+2. **Layer Optimization**
+   - Order layers from least to most frequently changing
+   - Combine related RUN commands with `&&`
+   - Remove build artifacts in the same layer they're created
+
+3. **Dependency Management**
+   - System packages: Use apt with `--no-install-recommends`
+   - Python packages: Use virtual environments to avoid conflicts
+   - Clean up: `apt-get clean`, `rm -rf /var/lib/apt/lists/*`
+
+4. **Documentation**
+   - Add comments explaining non-obvious decisions
+   - Document why specific versions are pinned
+   - Include usage examples in comments
+
 ## Integration with Other Projects
 
 docker-builder serves as the foundation for various development environments:
@@ -125,15 +219,12 @@ docker-builder serves as the foundation for various development environments:
 
 - [AGENT.md][agent-file] - Technical implementation details for AI agents
   and developers
+- [CONTRIBUTING.md][contributing-file] - Guidelines for contributing to the project
 - [LICENCE.txt][licence-file] - MIT License
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch
-3. Add your Dockerfile in `docker/<name>/<version>/`
-4. Update documentation
-5. Submit a pull request
+See [CONTRIBUTING.md][contributing-file] for detailed guidelines.
 
 ## License
 
@@ -141,4 +232,5 @@ MIT License - see [LICENCE.txt][licence-file] for details
 
 [dev-env]: https://github.com/amery/dev-env
 [agent-file]: ./AGENT.md
+[contributing-file]: ./CONTRIBUTING.md
 [licence-file]: ./LICENCE.txt
