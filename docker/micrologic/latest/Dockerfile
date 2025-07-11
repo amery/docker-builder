@@ -94,15 +94,25 @@ RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recomme
 
 # nanopb
 #
-RUN git clone --depth 1 \
+ENV NANOPB_VERSION=0.4.9.1
+ENV NANOPB_VENV=/opt/nanopb-env
+RUN python3 -m venv $NANOPB_VENV \
+	&& $NANOPB_VENV/bin/pip install --no-cache-dir "protobuf<5.0" "grpcio-tools<1.65" \
+	&& git clone -b $NANOPB_VERSION --depth 1 \
 		https://github.com/nanopb/nanopb /usr/src/nanopb \
 	&& cd /usr/src/nanopb \
 	&& mkdir build \
 	&& cd build \
-	&& cmake -DCMAKE_INSTALL_PREFIX=/usr ../ \
+	&& cmake -DCMAKE_INSTALL_PREFIX=/usr \
+		-DPython_EXECUTABLE=$NANOPB_VENV/bin/python3 \
+		-Dnanopb_PYTHON_INSTDIR_OVERRIDE=$NANOPB_VENV/lib/python3.12/site-packages \
+		../ \
 	&& make \
 	&& make install \
-	&& rm -rf /usr/src/nanopb
+	&& rm -rf /usr/src/nanopb \
+	&& ln -sf $NANOPB_VENV/bin/python3 /usr/local/bin/nanopb-python \
+	&& sed -i "1s|^#!/usr/bin/env python3|#!$NANOPB_VENV/bin/python3|" /usr/bin/nanopb_generator* \
+	&& echo "export PATH=\"$NANOPB_VENV/bin:\$PATH\"" >> /etc/profile.d/nanopb.sh
 
 # buf
 #
