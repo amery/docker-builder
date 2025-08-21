@@ -93,7 +93,7 @@ The system tracks image tags across three files:
 
 ### Development Stacks
 
-- **golang/{1.18-1.24}**: Go development environments
+- **golang/{1.18-1.25}**: Go development environments
 - **nodejs/{lts,current}**: Node.js with pnpm support
 - **ubuntu-nodejs-golang/{22.04,24.04}**: Combined Node.js + Go
 
@@ -468,4 +468,3 @@ docker run --rm <image> bash -c "source /etc/profile.d/*.sh && which python3"
 
 [readme-file]: ./README.md
 [dev-env]: https://github.com/amery/dev-env
-
