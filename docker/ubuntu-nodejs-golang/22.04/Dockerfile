@@ -65,11 +65,6 @@ COPY golang.sh /etc/entrypoint.d/
 ENV PATH=/opt/golang/bin:${PATH}
 
 #
-# extra helpers
-#
-RUN go install -v golang.org/x/tools/cmd/godoc@latest
-
-#
 # dynamic version
 #
 COPY builder_version.sh /usr/local/bin/builder_version
