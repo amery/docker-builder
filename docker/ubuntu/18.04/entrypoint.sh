@@ -28,10 +28,37 @@ fi
 
 [ "${USER_NAME:-root}" != "root" ] || die "Invalid \$USER_NAME (${USER_NAME})"
 
+# helper to find existing group by GID
+find_group_by_gid() {
+	local name
+	name=$(cut -d: -f1,3 /etc/group | grep ":$1$" | cut -d: -f1)
+	[ -n "$name" ] || return 1
+	echo "$name"
+}
+
+# helper to find existing user by UID
+find_user_by_uid() {
+	local name
+	name=$(cut -d: -f1,3 /etc/passwd | grep ":$1$" | cut -d: -f1)
+	[ -n "$name" ] || return 1
+	echo "$name"
+}
+
 # create workspace-friendly user
-groupadd -r -g "$USER_GID" "$USER_NAME"
-useradd -r -g "$USER_GID" -u "$USER_UID" \
-	-s /bin/bash -d "$USER_HOME" "$USER_NAME"
+if x=$(find_group_by_gid "$USER_GID"); then
+	groupmod -n "$USER_NAME" "$x"
+else
+	groupadd -g "$USER_GID" "$USER_NAME"
+fi
+
+if x=$(find_user_by_uid "$USER_UID"); then
+	usermod -g "$USER_GID" \
+		-s /bin/bash -d "$USER_HOME" -l "$USER_NAME" \
+		"$x"
+else
+	useradd -g "$USER_GID" -u "$USER_UID" \
+		-s /bin/bash -d "$USER_HOME" "$USER_NAME"
+fi
 
 if [ ! -s "$USER_HOME/.profile" ]; then
 	find /etc/skel ! -type d | while read f0; do
