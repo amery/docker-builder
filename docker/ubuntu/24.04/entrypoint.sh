@@ -48,7 +48,7 @@ find_user_by_uid() {
 if x=$(find_group_by_gid "$USER_GID"); then
 	groupmod -n "$USER_NAME" "$x"
 else
-	groupadd -r -g "$USER_GID" "$USER_NAME"
+	groupadd -g "$USER_GID" "$USER_NAME"
 fi
 
 if x=$(find_user_by_uid "$USER_UID"); then
@@ -56,7 +56,7 @@ if x=$(find_user_by_uid "$USER_UID"); then
 		-s /bin/bash -d "$USER_HOME" -l "$USER_NAME" \
 		"$x"
 else
-	useradd -r -g "$USER_GID" -u "$USER_UID" \
+	useradd -g "$USER_GID" -u "$USER_UID" \
 		-s /bin/bash -d "$USER_HOME" "$USER_NAME"
 fi
 
