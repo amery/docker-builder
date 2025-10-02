@@ -238,7 +238,7 @@ When updating versions (e.g., Go, Node.js):
 If you have questions about contributing:
 
 1. Check existing issues and pull requests
-2. Review the AGENT.md file for technical details
+2. Review the AGENTS.md file for technical details
 3. Open an issue for discussion
 
 Thank you for contributing to docker-builder!

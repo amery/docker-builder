@@ -217,7 +217,7 @@ docker-builder serves as the foundation for various development environments:
 
 ## Documentation
 
-- [AGENT.md][agent-file] - Technical implementation details for AI agents
+- [AGENTS.md][agent-file] - Technical implementation details for AI agents
   and developers
 - [CONTRIBUTING.md][contributing-file] - Guidelines for contributing to the project
 - [LICENCE.txt][licence-file] - MIT License
@@ -231,6 +231,6 @@ See [CONTRIBUTING.md][contributing-file] for detailed guidelines.
 MIT License - see [LICENCE.txt][licence-file] for details
 
 [dev-env]: https://github.com/amery/dev-env
-[agent-file]: ./AGENT.md
+[agent-file]: ./AGENTS.md
 [contributing-file]: ./CONTRIBUTING.md
 [licence-file]: ./LICENCE.txt

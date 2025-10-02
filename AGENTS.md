@@ -403,7 +403,7 @@ docker run --rm <image> bash -c "source /etc/profile.d/*.sh && which python3"
 1. **Version Everything**: Use specific versions for base images and tools
 2. **Label Images**: Add metadata for tracking and debugging
 3. **Test Locally**: Build and test before pushing
-4. **Document Changes**: Update AGENT.md, README.md, and CONTRIBUTING.md
+4. **Document Changes**: Update AGENTS.md, README.md, and CONTRIBUTING.md
 5. **Coordinate Updates**: Notify dependent projects of breaking changes
 6. **Isolate Dependencies**: Use virtual environments for Python tools
 7. **Pin Versions**: Specify exact or compatible version ranges
