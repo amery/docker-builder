@@ -22,6 +22,7 @@ mkdir -p ~/projects/docker
 cd ~/projects/docker
 git clone https://github.com/amery/docker-builder
 ln -s $PWD/docker-builder/bin/docker-builder-run ~/bin/docker-builder-run
+ln -s $PWD/docker-builder/bin/x ~/bin/x
 ```
 
 ### Building Images
@@ -34,9 +35,13 @@ make push              # Push to registry
 make tags-gc           # Clean up obsolete tags
 ```
 
-### Using docker-builder-run
+### Using the Runtime Scripts
 
-The `docker-builder-run` script provides intelligent container execution:
+docker-builder provides two complementary scripts in `bin/`:
+
+#### docker-builder-run
+
+Intelligent Docker container execution wrapper:
 
 ```bash
 # Run command in auto-detected container
@@ -48,6 +53,31 @@ DOCKER_BUILD_FORCE=true docker-builder-run npm install
 # Use specific image
 DOCKER_ID=ubuntu:24.04 docker-builder-run bash
 ```
+
+#### `x`
+
+Workspace-aware script finder and executor that locates and calls
+`run.sh`:
+
+```bash
+# Execute project's run.sh from anywhere in workspace
+x make test
+
+# Find workspace root
+x --root
+
+# Pass through if no run.sh found
+x echo "hello"
+```
+
+The `x` script searches for `run.sh` by checking:
+1. Git/repo workspace root for `run.sh`
+2. Parent directories for executable `run.sh`
+3. Falls back to direct command execution if none found
+
+The `x` script works with project-specific `run.sh` files that typically
+invoke `docker-builder-run`, enabling a clean execution chain from host to
+container.
 
 ## Available Images
 
@@ -134,7 +164,8 @@ docker-builder/
 ├── Makefile              # Main build orchestrator
 ├── config.mk            # User configuration
 ├── bin/
-│   └── docker-builder-run  # Container runtime wrapper
+│   ├── docker-builder-run  # Container runtime wrapper
+│   └── x                   # Workspace-aware run.sh finder
 ├── scripts/             # Build automation scripts
 ├── docker/              # Image definitions
 │   ├── ubuntu/         # Base Ubuntu images

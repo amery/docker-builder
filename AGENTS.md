@@ -13,7 +13,7 @@ Changes here affect all dependent projects.
 - **Build System**: GNU Make with dynamic rule generation
 - **Script Directory**: `scripts/` contains build automation tools
 - **Image Templates**: `docker/*/Dockerfile` defines various base images
-- **Run Script**: `bin/docker-builder-run` provides container execution wrapper
+- **Runtime Scripts**: `bin/docker-builder-run` and `bin/x`
 - **Base Images**: Ubuntu, Node.js, Go, Android, Poky, and combinations
 
 ## Architecture Overview
@@ -23,8 +23,8 @@ docker-builder is a sophisticated Docker image build system that:
 1. **Generates Dynamic Makefiles**: Creates build rules based on discovered
    Dockerfiles
 2. **Manages Image Tags**: Tracks current and obsolete image tags
-3. **Provides Run Wrapper**: `bin/docker-builder-run` for consistent container
-   execution
+3. **Provides Runtime Scripts**: `bin/docker-builder-run` and `bin/x` for
+   container execution
 4. **Supports Multiple Stacks**: Ubuntu, Node.js, Go, Android, X11, VS Code
 
 ### Build System Components
@@ -150,18 +150,86 @@ DOCKER_RUN_VOLUMES="/data" docker-builder-run
 docker-builder-run -p 8080 npm start
 ```
 
+## The `x` Script
+
+Located at `bin/x`, this script provides workspace-aware command
+execution by automatically locating and invoking `run.sh`.
+
+### Key Features
+
+1. **Workspace Detection**: Finds project root via `.repo` or `.git`
+2. **Script Discovery**: Locates executable `run.sh` in workspace
+3. **Transparent Execution**: Passes commands through to `run.sh`
+4. **Fallback Mode**: Executes directly if no `run.sh` found
+
+### Workspace Detection Algorithm
+
+The script searches for `run.sh` using a multi-step approach:
+
+1. **Repo Tool Workspaces**: Searches for `.repo` directory via
+   brute-force parent directory traversal
+2. **Git Workspace**: If no `.repo` found, tries:
+   - `git rev-parse --show-superproject-working-tree` for submodules
+   - `git rev-parse --show-toplevel` for regular repositories
+3. **Brute Force**: If no VCS found, searches parent directories for
+   executable `run.sh`
+
+Once workspace root is found, checks for executable `run.sh` at that
+location. If not found, searches parent directories iteratively.
+
+### Usage Examples
+
+```bash
+# Find workspace root
+x --root
+
+# Execute command via run.sh
+x make build
+x go test ./...
+
+# Works from any subdirectory
+cd src/myproject
+x make  # Still finds workspace root run.sh
+
+# Fallback: pass through if no run.sh
+x echo "hello"
+```
+
+### Integration Pattern
+
+The `x` script is designed to work with project-specific `run.sh`
+wrappers that invoke `docker-builder-run`:
+
+```text
+x command args
+    ↓
+run.sh command args
+    ↓
+docker-builder-run command args
+    ↓
+container execution
+```
+
+This pattern enables:
+- **Script Portability**: Scripts never include `x`, work both in
+  containers and via `x` from host
+- **Directory Preservation**: Current directory is maintained through
+  the execution chain
+- **Workspace Consistency**: Always executes from correct workspace
+  context
+
 ## Integration with dev-env
 
 The `amery/dev-env` project depends on docker-builder:
 
 1. **Base Image**: Uses `quay.io/amery/docker-apptly-builder:latest`
-2. **Run Script**: Leverages `bin/docker-builder-run` for execution
+2. **Runtime Scripts**: Uses both `bin/docker-builder-run` and `bin/x`
 3. **DevContainer**: Extends the VS Code base images
 
 When updating docker-builder:
 
 - Changes to `ubuntu-vsc-base` affect all VS Code environments
-- Updates to `bin/docker-builder-run` impact container execution behavior
+- Updates to `bin/docker-builder-run` or `bin/x` impact execution
 - New environment variables need coordination with dev-env
 
 ## Development Workflow
