@@ -21,7 +21,7 @@ development environments including VS Code DevContainers.
 mkdir -p ~/projects/docker
 cd ~/projects/docker
 git clone https://github.com/amery/docker-builder
-ln -s $PWD/docker-builder/docker/run.sh ~/bin/docker-builder-run
+ln -s $PWD/docker-builder/bin/docker-builder-run ~/bin/docker-builder-run
 ```
 
 ### Building Images
@@ -133,9 +133,10 @@ make quay.io/amery/docker-micrologic-builder push-docker-micrologic-builder
 docker-builder/
 ├── Makefile              # Main build orchestrator
 ├── config.mk            # User configuration
+├── bin/
+│   └── docker-builder-run  # Container runtime wrapper
 ├── scripts/             # Build automation scripts
 ├── docker/              # Image definitions
-│   ├── run.sh          # Container runtime wrapper
 │   ├── ubuntu/         # Base Ubuntu images
 │   ├── golang/         # Go development images
 │   ├── nodejs/         # Node.js images

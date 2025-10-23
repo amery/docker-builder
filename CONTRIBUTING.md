@@ -175,7 +175,7 @@ When adding tools with Python dependencies:
 
    ```bash
    DOCKER_ID=quay.io/amery/docker-<name>-builder:<version> \
-       ./docker/run.sh your-command
+       docker-builder-run your-command
    ```
 
 4. **Verify no regressions** in dependent images if modifying base images

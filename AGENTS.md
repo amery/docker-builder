@@ -13,7 +13,7 @@ Changes here affect all dependent projects.
 - **Build System**: GNU Make with dynamic rule generation
 - **Script Directory**: `scripts/` contains build automation tools
 - **Image Templates**: `docker/*/Dockerfile` defines various base images
-- **Run Script**: `docker/run.sh` provides container execution wrapper
+- **Run Script**: `bin/docker-builder-run` provides container execution wrapper
 - **Base Images**: Ubuntu, Node.js, Go, Android, Poky, and combinations
 
 ## Architecture Overview
@@ -23,7 +23,7 @@ docker-builder is a sophisticated Docker image build system that:
 1. **Generates Dynamic Makefiles**: Creates build rules based on discovered
    Dockerfiles
 2. **Manages Image Tags**: Tracks current and obsolete image tags
-3. **Provides Run Wrapper**: `docker/run.sh` for consistent container
+3. **Provides Run Wrapper**: `bin/docker-builder-run` for consistent container
    execution
 4. **Supports Multiple Stacks**: Ubuntu, Node.js, Go, Android, X11, VS Code
 
@@ -113,7 +113,7 @@ The system tracks image tags across three files:
 
 ## The docker-builder-run Script
 
-Located at `docker/run.sh`, this script provides intelligent container
+Located at `bin/docker-builder-run`, this script provides intelligent container
 execution:
 
 ### Key Features
@@ -138,16 +138,16 @@ execution:
 
 ```bash
 # Run with automatic detection
-./docker/run.sh make build
+docker-builder-run make build
 
 # Force rebuild
-DOCKER_BUILD_FORCE=true ./docker/run.sh
+DOCKER_BUILD_FORCE=true docker-builder-run
 
 # With custom volumes
-DOCKER_RUN_VOLUMES="/data" ./docker/run.sh
+DOCKER_RUN_VOLUMES="/data" docker-builder-run
 
 # Expose ports
-./docker/run.sh -p 8080 npm start
+docker-builder-run -p 8080 npm start
 ```
 
 ## Integration with dev-env
@@ -155,13 +155,13 @@ DOCKER_RUN_VOLUMES="/data" ./docker/run.sh
 The `amery/dev-env` project depends on docker-builder:
 
 1. **Base Image**: Uses `quay.io/amery/docker-apptly-builder:latest`
-2. **Run Script**: Leverages docker-builder's `run.sh` for execution
+2. **Run Script**: Leverages `bin/docker-builder-run` for execution
 3. **DevContainer**: Extends the VS Code base images
 
 When updating docker-builder:
 
 - Changes to `ubuntu-vsc-base` affect all VS Code environments
-- Updates to `run.sh` impact container execution behavior
+- Updates to `bin/docker-builder-run` impact container execution behavior
 - New environment variables need coordination with dev-env
 
 ## Development Workflow
@@ -369,11 +369,11 @@ make DOCKER_BUILD_OPT="--no-cache" quay.io/amery/docker-<name>-builder
 ### Runtime Issues
 
 ```bash
-# Test run.sh directly
-DOCKER_ID=ubuntu:24.04 ./docker/run.sh bash
+# Test docker-builder-run directly
+DOCKER_ID=ubuntu:24.04 docker-builder-run bash
 
 # Check detected environment
-./docker/run.sh -V
+docker-builder-run -V
 
 # Inspect image labels
 docker inspect <image> | jq '.[] | .Config.Labels'

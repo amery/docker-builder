@@ -1,1 +1,1 @@
-../../run.sh
+../../../bin/docker-builder-run
