@@ -71,6 +71,7 @@ x echo "hello"
 ```
 
 The `x` script searches for `run.sh` by checking:
+
 1. Git/repo workspace root for `run.sh`
 2. Parent directories for executable `run.sh`
 3. Falls back to direct command execution if none found
@@ -114,7 +115,10 @@ The build system provides several make targets for managing images:
 
 #### Build Targets
 
-- `make quay.io/amery/docker-<name>-builder` - Build a specific image
+- `make quay.io/amery/docker-<name>-builder` - Build all versions of an
+  image
+- `make quay.io/amery/docker-<name>-builder-<version>` - Build one
+  version
 - Images are automatically tagged as both `:latest` and `:<version>`
   (e.g., `:24.04`)
 
@@ -126,15 +130,28 @@ The build system provides several make targets for managing images:
 #### Examples
 
 ```bash
-# Build the micrologic builder image
-make quay.io/amery/docker-micrologic-builder
+# Build all versions of an image
+make quay.io/amery/docker-ubuntu-builder
+
+# Build one specific version
+make quay.io/amery/docker-ubuntu-builder-24.04
 
 # Push the image to registry
-make push-docker-micrologic-builder
+make push-docker-ubuntu-builder
 
 # Build and push in sequence
-make quay.io/amery/docker-micrologic-builder push-docker-micrologic-builder
+make quay.io/amery/docker-ubuntu-builder push-docker-ubuntu-builder
+
+# Force rebuild with clean Docker layers (single version)
+make FORCE=1 quay.io/amery/docker-golang-builder-1.25
+
+# Force complete rebuild of ALL versions bypassing all caches
+make -B FORCE=1 quay.io/amery/docker-golang-builder
 ```
+
+For detailed information about the build system mechanics, caching behavior,
+and troubleshooting, see
+[AGENTS.md Build System Mechanics](./AGENTS.md#build-system-mechanics).
 
 ## Environment Variables
 
