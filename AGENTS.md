@@ -13,7 +13,7 @@ Changes here affect all dependent projects.
 - **Build System**: GNU Make with dynamic rule generation
 - **Script Directory**: `scripts/` contains build automation tools
 - **Image Templates**: `docker/*/Dockerfile` defines various base images
-- **Run Script**: `docker/run.sh` provides container execution wrapper
+- **Runtime Scripts**: `bin/docker-builder-run` and `bin/x`
 - **Base Images**: Ubuntu, Node.js, Go, Android, Poky, and combinations
 
 ## Architecture Overview
@@ -23,8 +23,8 @@ docker-builder is a sophisticated Docker image build system that:
 1. **Generates Dynamic Makefiles**: Creates build rules based on discovered
    Dockerfiles
 2. **Manages Image Tags**: Tracks current and obsolete image tags
-3. **Provides Run Wrapper**: `docker/run.sh` for consistent container
-   execution
+3. **Provides Runtime Scripts**: `bin/docker-builder-run` and `bin/x` for
+   container execution
 4. **Supports Multiple Stacks**: Ubuntu, Node.js, Go, Android, X11, VS Code
 
 ### Build System Components
@@ -82,6 +82,247 @@ The system tracks image tags across three files:
 - `.tags-all`: All tags in local Docker
 - `.tags-obsolete`: Tags to be garbage collected
 
+## Build System Mechanics
+
+Understanding the build system's caching behavior is critical for efficient
+development and troubleshooting stuck builds.
+
+### Two-Level Caching
+
+The build system employs two independent caching layers:
+
+#### 1. Make Layer (Marker Files)
+
+- **Files**: `.image-*` marker files in the build directory
+- **Purpose**: Track what make has already built to avoid redundant work
+- **Behavior**: If marker exists and dependencies unchanged, skip rebuild
+- **Control**: Use `-B` flag or delete marker files
+
+#### 2. Docker Layer (Build Cache)
+
+- **Files**: Docker's internal layer cache
+- **Purpose**: Reuse unchanged layers during docker build
+- **Behavior**: Each Dockerfile instruction creates a cached layer
+- **Control**: Use `FORCE=1` variable (adds `--no-cache` flag)
+
+### Build Control Options
+
+| Command | Make Cache | Docker Cache | Use When |
+|---------|------------|--------------|----------|
+| `make <target>` | ✓ Used | ✓ Used | Normal incremental builds |
+| `make FORCE=1 <target>` | ✓ Used | ✗ Bypassed | Changed Dockerfile, want clean layer rebuild |
+| `make -B <target>` | ✗ Bypassed | ✓ Used | Marker file stale, dependencies should rebuild |
+| `make -B FORCE=1 <target>` | ✗ Bypassed | ✗ Bypassed | Complete clean rebuild from scratch |
+
+### Target Types: Version-Specific vs Aggregate
+
+The build system generates two types of targets for each image:
+
+#### Version-Specific Targets
+
+Build a single image from one Dockerfile:
+
+```bash
+make quay.io/amery/docker-golang-builder-1.25    # Just golang 1.25
+make quay.io/amery/docker-ubuntu-builder-24.04   # Just ubuntu 24.04
+```
+
+#### Aggregate Targets
+
+Build all versions of an image family:
+
+```bash
+make quay.io/amery/docker-golang-builder    # ALL golang versions
+# Builds: 1.18, 1.19, 1.20, 1.21, 1.22, 1.23, 1.24, 1.25, latest, multi
+
+make quay.io/amery/docker-ubuntu-builder    # ALL ubuntu versions
+# Builds: 16.04, 18.04, 20.04, 22.04, 24.04, latest
+```
+
+#### When to Use Each
+
+- **Version-specific**: Changed one Dockerfile, want to rebuild just that
+  image
+- **Aggregate**: Base image changed, need to rebuild entire image family
+
+#### How to Identify
+
+```text
+docker/<name>/<version>/  → quay.io/amery/docker-<name>-builder-<version>
+                          ↓
+                          quay.io/amery/docker-<name>-builder (aggregate)
+```
+
+### Common Scenarios
+
+#### Scenario: Changed a Dockerfile
+
+```bash
+# Changed docker/golang/1.25/Dockerfile - rebuild just that version
+make FORCE=1 quay.io/amery/docker-golang-builder-1.25
+```
+
+#### Scenario: Make thinks it's built but it hasn't
+
+```bash
+# Marker file exists but image was deleted or you want to rebuild all versions
+make -B quay.io/amery/docker-ubuntu-builder
+```
+
+#### Scenario: Completely stuck build state
+
+```bash
+# Nuclear option: bypass all caching
+make -B FORCE=1 quay.io/amery/docker-golang-builder
+```
+
+#### Scenario: Just regenerate rules
+
+```bash
+# Added new Dockerfile, need rules.mk/images.mk regenerated
+make files
+```
+
+### Marker File Lifecycle
+
+Marker files prevent redundant builds:
+
+```bash
+# Building creates marker
+make quay.io/amery/docker-ubuntu-builder-24.04
+# Creates: .image-docker-ubuntu-builder-24.04
+
+# Subsequent call skips build
+make quay.io/amery/docker-ubuntu-builder-24.04
+# Output: make: Nothing to be done for '...'
+
+# Force rebuild by removing marker
+rm .image-docker-ubuntu-builder-24.04
+make quay.io/amery/docker-ubuntu-builder-24.04
+# Rebuilds
+```
+
+### Target Name Patterns
+
+Understanding target naming helps navigate the build system:
+
+#### Directory Structure to Target Names
+
+```text
+docker/<name>/<version>/Dockerfile
+    ↓
+quay.io/amery/docker-<name>-builder                    # All versions
+quay.io/amery/docker-<name>-builder-<version>          # Specific version
+push-docker-<name>-builder                             # Push all versions
+push-docker-<name>-builder-<version>                   # Push specific
+```
+
+#### Examples
+
+```bash
+docker/ubuntu/24.04/Dockerfile
+    → quay.io/amery/docker-ubuntu-builder-24.04
+
+docker/ubuntu/latest → 24.04 (symlink)
+    → quay.io/amery/docker-ubuntu-builder-latest
+```
+
+#### Symlink Handling
+
+Symlinked version directories (e.g., `latest → 24.04`) create tagging targets,
+not build targets:
+
+```bash
+# Directory structure
+docker/ubuntu/24.04/Dockerfile    # Real directory with Dockerfile
+docker/ubuntu/latest → 24.04      # Symlink to directory
+
+# Generated targets
+make quay.io/amery/docker-ubuntu-builder-24.04    # Builds from Dockerfile
+make quay.io/amery/docker-ubuntu-builder-latest   # Tags 24.04 as :latest
+```
+
+The `latest` target does not build anything - it depends on the real version
+being built first, then tags it:
+
+<!-- markdownlint-disable MD010 -->
+
+```makefile
+# Generated rule for symlink
+.image-docker-ubuntu-builder-latest:
+	docker tag quay.io/amery/docker-ubuntu-builder:24.04 \
+	           quay.io/amery/docker-ubuntu-builder:latest
+	touch $@
+```
+
+<!-- markdownlint-enable MD010 -->
+
+### Makefile Generation
+
+The build system generates makefiles dynamically:
+
+#### Generation Triggers
+
+1. **rules.mk**: Regenerates when templates change
+
+   ```bash
+   scripts/gen_rules_mk.sh > rules.mk
+   ```
+
+2. **images.mk**: Regenerates when Dockerfiles are added/removed
+
+   ```bash
+   scripts/gen_images_mk.sh > images.mk
+   ```
+
+3. **.tag-dirs**: Always checks for new directories
+
+   ```bash
+   scripts/gen_tag_dirs.sh > .tag-dirs
+   ```
+
+#### Force Regeneration
+
+```bash
+make files              # Regenerate all makefiles
+make clean              # Remove markers and generated files
+```
+
+### Debugging Build Issues
+
+#### Check what would be built
+
+```bash
+cat .tag-dirs           # List discovered image directories
+cat images.mk | grep docker-ubuntu-builder  # Find specific targets
+```
+
+#### Verify marker state
+
+```bash
+ls -la .image-*         # List all marker files
+make -n <target>        # Dry run, show what would execute
+```
+
+#### Force complete rebuild
+
+```bash
+make clean              # Remove all markers
+make -B FORCE=1         # Build everything from scratch
+```
+
+#### Check Docker build arguments
+
+```bash
+# With FORCE=1
+make FORCE=1 <target>
+# Uses: --rm --progress=plain --no-cache
+
+# Without FORCE=1
+make <target>
+# Uses: --rm --progress=plain
+```
+
 ## Docker Images Provided
 
 ### Base Images
@@ -113,10 +354,10 @@ The system tracks image tags across three files:
 
 ## The docker-builder-run Script
 
-Located at `docker/run.sh`, this script provides intelligent container
+Located at `bin/docker-builder-run`, this script provides intelligent container
 execution:
 
-### Key Features
+### `docker-builder-run` Key Features
 
 1. **Workspace Detection**: Finds project root via `.repo` or `.git`
 2. **Volume Management**: Intelligently mounts required directories
@@ -134,34 +375,103 @@ execution:
 - `DOCKER_RUN_WS`: Override workspace detection
 - `DOCKER_EXPOSE`: Ports to expose
 
-### Usage Examples
+### `docker-builder-run` Usage Examples
 
 ```bash
 # Run with automatic detection
-./docker/run.sh make build
+docker-builder-run make build
 
 # Force rebuild
-DOCKER_BUILD_FORCE=true ./docker/run.sh
+DOCKER_BUILD_FORCE=true docker-builder-run
 
 # With custom volumes
-DOCKER_RUN_VOLUMES="/data" ./docker/run.sh
+DOCKER_RUN_VOLUMES="/data" docker-builder-run
 
 # Expose ports
-./docker/run.sh -p 8080 npm start
+docker-builder-run -p 8080 npm start
 ```
+
+## The `x` Script
+
+Located at `bin/x`, this script provides workspace-aware command
+execution by automatically locating and invoking `run.sh`.
+
+### `x` Script Key Features
+
+1. **Workspace Detection**: Finds project root via `.repo` or `.git`
+2. **Script Discovery**: Locates executable `run.sh` in workspace
+3. **Transparent Execution**: Passes commands through to `run.sh`
+4. **Fallback Mode**: Executes directly if no `run.sh` found
+
+### Workspace Detection Algorithm
+
+The script searches for `run.sh` using a multi-step approach:
+
+1. **Repo Tool Workspaces**: Searches for `.repo` directory via
+   brute-force parent directory traversal
+2. **Git Workspace**: If no `.repo` found, tries:
+   - `git rev-parse --show-superproject-working-tree` for submodules
+   - `git rev-parse --show-toplevel` for regular repositories
+3. **Brute Force**: If no VCS found, searches parent directories for
+   executable `run.sh`
+
+Once workspace root is found, checks for executable `run.sh` at that
+location. If not found, searches parent directories iteratively.
+
+### `x` Script Usage Examples
+
+```bash
+# Find workspace root
+x --root
+
+# Execute command via run.sh
+x make build
+x go test ./...
+
+# Works from any subdirectory
+cd src/myproject
+x make  # Still finds workspace root run.sh
+
+# Fallback: pass through if no run.sh
+x echo "hello"
+```
+
+### Integration Pattern
+
+The `x` script is designed to work with project-specific `run.sh`
+wrappers that invoke `docker-builder-run`:
+
+```text
+x command args
+    ↓
+run.sh command args
+    ↓
+docker-builder-run command args
+    ↓
+container execution
+```
+
+This pattern enables:
+
+- **Script Portability**: Scripts never include `x`, work both in
+  containers and via `x` from host
+- **Directory Preservation**: Current directory is maintained through
+  the execution chain
+- **Workspace Consistency**: Always executes from correct workspace
+  context
 
 ## Integration with dev-env
 
 The `amery/dev-env` project depends on docker-builder:
 
 1. **Base Image**: Uses `quay.io/amery/docker-apptly-builder:latest`
-2. **Run Script**: Leverages docker-builder's `run.sh` for execution
+2. **Runtime Scripts**: Uses both `bin/docker-builder-run` and `bin/x`
 3. **DevContainer**: Extends the VS Code base images
 
 When updating docker-builder:
 
 - Changes to `ubuntu-vsc-base` affect all VS Code environments
-- Updates to `run.sh` impact container execution behavior
+- Updates to `bin/docker-builder-run` or `bin/x` impact execution
 - New environment variables need coordination with dev-env
 
 ## Development Workflow
@@ -369,11 +679,11 @@ make DOCKER_BUILD_OPT="--no-cache" quay.io/amery/docker-<name>-builder
 ### Runtime Issues
 
 ```bash
-# Test run.sh directly
-DOCKER_ID=ubuntu:24.04 ./docker/run.sh bash
+# Test docker-builder-run directly
+DOCKER_ID=ubuntu:24.04 docker-builder-run bash
 
 # Check detected environment
-./docker/run.sh -V
+docker-builder-run -V
 
 # Inspect image labels
 docker inspect <image> | jq '.[] | .Config.Labels'

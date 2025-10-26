@@ -155,18 +155,64 @@ When adding tools with Python dependencies:
 
 ## Testing Your Changes
 
-1. **Build the image**:
+### Build Workflows
 
-   ```bash
-   make quay.io/amery/docker-<name>-builder
-   ```
+The build system uses two-level caching (Make markers + Docker layers). Here
+are the most common workflows:
+
+#### Normal Development
+
+```bash
+# First build
+make quay.io/amery/docker-<name>-builder-<version>
+
+# Make changes to Dockerfile
+# Rebuild with clean Docker layers (bypasses Docker cache)
+make FORCE=1 quay.io/amery/docker-<name>-builder-<version>
+```
+
+#### Stuck Build Issues
+
+```bash
+# Make says "Nothing to be done" but you need rebuild
+make -B quay.io/amery/docker-<name>-builder
+
+# Complete clean rebuild (bypasses all caching)
+make -B FORCE=1 quay.io/amery/docker-<name>-builder
+```
+
+#### Added New Dockerfiles
+
+```bash
+# Regenerate build rules to discover new images
+make files
+
+# Build the new image
+make quay.io/amery/docker-<newname>-builder
+```
+
+#### Quick Reference
+
+| Changed | Command |
+|---------|---------|
+| Modified existing Dockerfile | `make FORCE=1 <target>` |
+| Added new Dockerfile | `make files && make <target>` |
+| Build seems stuck | `make -B <target>` |
+| Complete rebuild needed | `make -B FORCE=1 <target>` |
+
+For detailed explanation of the build system mechanics, see
+[AGENTS.md Build System Mechanics](./AGENTS.md#build-system-mechanics).
+
+### Testing the Built Image
+
+1. **Build the image** (using appropriate workflow above)
 
 2. **Test basic functionality**:
 
    ```bash
    # Test interactive shell
    docker run --rm -it quay.io/amery/docker-<name>-builder:<version> bash
-   
+
    # Test specific commands
    docker run --rm quay.io/amery/docker-<name>-builder:<version> tool --version
    ```
@@ -175,7 +221,7 @@ When adding tools with Python dependencies:
 
    ```bash
    DOCKER_ID=quay.io/amery/docker-<name>-builder:<version> \
-       ./docker/run.sh your-command
+       docker-builder-run your-command
    ```
 
 4. **Verify no regressions** in dependent images if modifying base images

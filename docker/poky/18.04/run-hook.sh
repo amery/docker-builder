@@ -33,13 +33,14 @@ done
 
 # DL_DIR
 #
-if [ -z "${DL_DIR:-}" ]; then
-	x="$WS/downloads"
-	if [ -L "$x" ]; then
-		if y="$(readlink -m "$x")"; then
-			x="$y"
-		fi
-	fi
-	DL_DIR="$x"
-fi
+[ -n "${DL_DIR:-}" ] || DL_DIR="$WS/downloads"
 mkdir -p "$DL_DIR"
+
+# Export for docker-builder-run
+# These will be:
+# 1. Passed to container via -e (because of LABEL)
+# 2. DL_DIR will be mounted (because we set DOCKER_RUN_VOLUMES below)
+export OEROOT BUILDDIR DL_DIR
+
+# Request DL_DIR mounting
+export DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES }DL_DIR"
