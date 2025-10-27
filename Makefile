@@ -16,6 +16,7 @@ GET_VARS_SH = $(CURDIR)/scripts/get_vars.sh
 GEN_RULES_MK_SH = $(CURDIR)/scripts/gen_rules_mk.sh
 GEN_IMAGES_MK_SH = $(CURDIR)/scripts/gen_images_mk.sh
 GEN_TAG_DIRS_SH = $(CURDIR)/scripts/gen_tag_dirs.sh
+GEN_ENTRYPOINT_SH = $(CURDIR)/scripts/gen_entrypoint.sh
 
 # generated outputs
 #
@@ -26,6 +27,7 @@ IMAGE_MK_VARS = $(shell $(GET_VARS_SH) $(TEMPLATES))
 RULES_MK = rules.mk
 CONFIG_MK = config.mk
 IMAGES_MK = images.mk
+ENTRYPOINT_MK = entrypoint.mk
 TAG_DIRS = .tag-dirs
 TAGS_FILE = .tags-current
 TAGS_ALL_FILE = .tags-all
@@ -35,10 +37,10 @@ TAGS_GC_FILE = .tags-obsolete
 
 all: images
 
-files: $(RULES_MK) $(CONFIG_MK) $(IMAGES_MK) $(TAG_DIRS)
+files: $(RULES_MK) $(CONFIG_MK) $(IMAGES_MK) $(ENTRYPOINT_MK) $(TAG_DIRS)
 
 clean:
-	rm -f $(B)/.image-* $(RULES_MK) $(IMAGES_MK) $(TAG_DIRS) *~
+	rm -f $(B)/.image-* $(RULES_MK) $(IMAGES_MK) $(ENTRYPOINT_MK) $(TAG_DIRS) *~
 
 .PHONY: FORCE
 FORCE:
@@ -58,7 +60,13 @@ $(IMAGES_MK): $(GEN_IMAGES_MK_SH) $(TAG_DIRS) $(CONFIG_MK) Makefile
 	$< $(PREFIX) $(TAG_DIRS) > $@~
 	mv $@~ $@
 
+# Generate entrypoint.mk with copy rules from golden sources
+$(ENTRYPOINT_MK): $(GEN_ENTRYPOINT_SH) FORCE
+	$(GEN_ENTRYPOINT_SH) > $@~
+	if ! cmp -s $@~ $@; then diff -u $@ $@~ || true; mv $@~ $@; else rm $@~; fi
+
 include $(IMAGES_MK)
+include $(ENTRYPOINT_MK)
 
 images: files $(IMAGES)
 push: files $(PUSHERS)

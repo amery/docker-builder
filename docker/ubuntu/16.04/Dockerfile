@@ -64,6 +64,5 @@ COPY builder_version.sh /usr/local/bin/builder_version
 
 # trampoline
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]

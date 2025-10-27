@@ -1,5 +1,21 @@
 # vim: set ft=sh et! ts=8 sw=8:
 
+TAB=$(printf '\t')
+
+get_dockerfile() {
+	local dir="$1"
+
+	if [ ! -d "$dir" ]; then
+		return 1
+	elif [ -s "$dir/Dockerfile.in" ]; then
+		echo "$dir/Dockerfile.in"
+	elif [ -s "$dir/Dockerfile" ]; then
+		echo "$dir/Dockerfile"
+	else
+		return 1
+	fi
+}
+
 sort_uV() {
 	local x=
 	for x; do

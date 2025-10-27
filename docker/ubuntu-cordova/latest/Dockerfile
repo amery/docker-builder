@@ -31,8 +31,8 @@ RUN npm i -g \
 		pnpm@latest \
 	&& rm -rf ~/.npm
 
-COPY node.sh /etc/entrypoint.d/
-COPY node-pnpm.sh /etc/entrypoint.d/
+COPY 10-node.sh /etc/entrypoint.d/
+COPY 20-node-pnpm.sh /etc/entrypoint.d/
 
 #
 # cordova

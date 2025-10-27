@@ -20,4 +20,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl https://storage.googleapis.com/git-repo-downloads/repo > /usr/local/bin/repo \
 	&& chmod +x /usr/local/bin/repo
 
-COPY android.sh /etc/entrypoint.d/
+COPY 10-android.sh /etc/entrypoint.d/

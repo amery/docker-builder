@@ -20,4 +20,4 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-re
 	texinfo \
 	&& apt-get clean
 
-COPY entrypoint.sh /etc/entrypoint.d/20-poky.sh
+COPY 30-poky.sh /etc/entrypoint.d/30-poky.sh

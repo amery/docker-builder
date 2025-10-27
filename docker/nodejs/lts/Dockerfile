@@ -10,11 +10,13 @@ CMD [ ]
 
 # dependencies
 RUN apk --update --no-cache add \
+	bash \
 	g++ \
 	git \
 	make \
 	openssh \
-	python3
+	python3 \
+	su-exec
 
 # update npm and install corepack, yarn and pnpm
 #
@@ -31,12 +33,11 @@ COPY builder_version.sh /usr/local/bin/builder_version
 
 # runtime environment
 #
-COPY node.sh /etc/entrypoint.d/
-COPY node-pnpm.sh /etc/entrypoint.d/
+COPY 10-node.sh /etc/entrypoint.d/
+COPY 20-node-pnpm.sh /etc/entrypoint.d/
 
 # and inject entrypoint to deal with -e USER_*
 #
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT [ "/entrypoint.sh" ]

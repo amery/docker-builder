@@ -6,8 +6,6 @@ PREFIX="$1"
 OWN="$2"
 shift 2
 
-TAB="$(printf '\t')"
-
 . "$(dirname "$0")/common.in"
 
 #
@@ -23,10 +21,8 @@ get_3rd_party() {
 	while read tag dir; do
 		if [ ! -d "$dir" ]; then
 			df=
-		elif [ -s "$dir/Dockerfile.in" ]; then
-			df="$dir/Dockerfile.in"
 		else
-			df="$dir/Dockerfile"
+			df=$(get_dockerfile "$dir")
 		fi
 
 		if [ -n "$df" ]; then
@@ -44,16 +40,23 @@ get_3rd_party() {
 }
 
 gen_image_files() {
-	local dir="$1" x=
+	local dir="$1" df x
 	shift
+
+	df=$(get_dockerfile "$dir")
 
 	(
 	for x; do
 		echo "$x"
 	done
 
-	find "$dir" ! -type d -a ! -name Dockerfile -a ! -name Dockerfile.in
+	# Extract files from COPY commands
+	sed -n "s:^COPY[ \t]\+\([^ \t]\+\).*$:$dir/\1:p" "$df"
+
+	# Include .in templates
 	find "$dir" ! -type d -a -name '*.in' | sed -e 's|\.in$||'
+
+	# Include Dockerfile itself
 	echo "$dir/Dockerfile"
 
 	) | sed -e "s|^$PWD/||" -e "s|^./||" | sort -uV
@@ -141,17 +144,11 @@ done
 while read tag dir; do
 	if [ ! -d "$dir" ]; then
 		df=
-	elif [ -s "$dir/Dockerfile.in" ]; then
-		df="$dir/Dockerfile.in"
-	else
-		df="$dir/Dockerfile"
-	fi
-
-	if [ -n "$df" ]; then
-		from="$(sed -n -e 's:^[ \t]*FROM[ \t]\+\([^ ]\+\).*$:\1:p' "$df")"
-	else
 		from=$dir
 		dir=
+	else
+		df=$(get_dockerfile "$dir")
+		from="$(sed -n -e 's:^[ \t]*FROM[ \t]\+\([^ ]\+\).*$:\1:p' "$df")"
 	fi
 
 	if grep -q "^${from#$PREFIX} " "$OWN"; then

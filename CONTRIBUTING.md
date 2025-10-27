@@ -72,17 +72,26 @@ Common action verbs:
 
    ```dockerfile
    FROM base-image:tag
-   
+
    # Use environment variables for versions
    ENV TOOL_VERSION=1.2.3
-   
+
    # Install dependencies
    RUN apt-get update && apt-get install --no-install-recommends -y \
        package1 \
        package2 \
        && apt-get clean \
        && rm -rf /var/lib/apt/lists/*
+
+   # If base image (not extending docker-builder image)
+   COPY entrypoint.sh /entrypoint.sh
+   ENTRYPOINT ["/entrypoint.sh"]
    ```
+
+   **Note:** When creating a base image that uses `COPY entrypoint.sh`,
+   the file will be automatically generated from canonical sources
+   (`docker/entrypoint/ubuntu.sh` or `docker/entrypoint/alpine.sh`) based
+   on the FROM line. Run `make files` to generate it.
 
 3. Test your image locally:
 
@@ -127,6 +136,37 @@ Common action verbs:
    ENV TOOL_VENV=/opt/tool-env
    ```
 
+### entrypoint.d Scripts
+
+When adding environment-specific setup, use `/etc/entrypoint.d/` scripts:
+
+1. **Naming convention** - Use numbered prefixes:
+
+   - `05-*.sh` - Low-level system setup (X11, display)
+   - `10-*.sh` - Primary feature setup (golang, node, android)
+   - `20-*.sh` - Feature extensions (pnpm, additional tools)
+   - `30-*.sh` - Complex/specialized setup (Yocto/OE, build systems)
+
+2. **Script structure** - Output shell commands via heredoc:
+
+   ```bash
+   cat <<EOT
+   export MY_VAR="value"
+   export PATH="/opt/tool/bin:\$PATH"
+   EOT
+   ```
+
+3. **Copy to container** - Include in Dockerfile:
+
+   ```dockerfile
+   # Feature setup
+   COPY 10-mytool.sh /etc/entrypoint.d/10-mytool.sh
+   ```
+
+**Key principle:** Scripts are sourced during container initialization and
+their output is appended to `/etc/profile.d/Z99-docker-run.sh`. They should
+only output environment setup commands, not execute actions directly.
+
 ### Python Dependencies
 
 When adding tools with Python dependencies:
@@ -150,7 +190,8 @@ When adding tools with Python dependencies:
 3. **Update shebangs for scripts**:
 
    ```dockerfile
-   RUN sed -i "1s|^#!/usr/bin/env python3|#!$TOOL_VENV/bin/python3|" /usr/bin/script
+   RUN sed -i "1s|^#!/usr/bin/env python3|#!$TOOL_VENV/bin/python3|" \
+       /usr/bin/script
    ```
 
 ## Testing Your Changes

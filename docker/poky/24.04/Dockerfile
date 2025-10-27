@@ -44,4 +44,4 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-re
 	&& apt-get clean
 
 # OE-specific entrypoint extension
-COPY entrypoint.sh /etc/entrypoint.d/20-poky.sh
+COPY 30-poky.sh /etc/entrypoint.d/30-poky.sh

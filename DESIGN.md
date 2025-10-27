@@ -59,9 +59,16 @@ Each mode adds appropriate volumes and configuration automatically.
 **`entrypoint.d`:**
 
 - Executed inside container during initialization
-- Files sourced in alphanumeric order
+- Files sourced in alphanumeric order by numbered prefix
 - Output appended to `/etc/profile.d/Z99-docker-run.sh`
 - Enables image-specific environment setup
+
+**Numbering scheme:**
+
+- `05-*.sh` - Low-level system setup (X11, display)
+- `10-*.sh` - Primary feature setup (golang, node, android)
+- `20-*.sh` - Feature extensions (pnpm, additional tools)
+- `30-*.sh` - Complex/specialized setup (Yocto/OE, build systems)
 
 ## Image Integration Patterns
 
@@ -99,6 +106,23 @@ Image-specific initialization inside container:
 - Exports necessary environment variables
 - Sets up PATH for tool availability
 - Outputs commands to profile (not direct execution)
+
+**Naming convention:** Use numbered prefixes to control execution order:
+
+```dockerfile
+# Low-level setup (05)
+COPY 05-display.sh /etc/entrypoint.d/05-display.sh
+
+# Primary features (10)
+COPY 10-golang.sh /etc/entrypoint.d/10-golang.sh
+COPY 10-node.sh /etc/entrypoint.d/10-node.sh
+
+# Feature extensions (20)
+COPY 20-node-pnpm.sh /etc/entrypoint.d/20-node-pnpm.sh
+
+# Specialized setup (30)
+COPY 30-poky.sh /etc/entrypoint.d/30-poky.sh
+```
 
 **Key principle:** Output minimal, essential setup only.
 
@@ -215,6 +239,23 @@ Build on docker-builder ecosystem:
 - Base images provide user creation, `entrypoint` framework
 - `docker-builder-run` provides mounting, environment, detection
 - Extension points customize without modifying core
+
+**Entrypoint Golden Copy System:**
+
+Base images use generated entrypoint.sh from canonical sources:
+
+- `docker/entrypoint/ubuntu.sh` - Ubuntu/Debian pattern (114 lines)
+- `docker/entrypoint/alpine.sh` - Alpine pattern (78 lines)
+
+The build system automatically:
+
+- Detects which golden copy to use based on FROM line
+- Generates entrypoint.mk with copy rules
+- Updates entrypoint.sh files when golden copy changes
+- Ensures consistency across all base images
+
+To use: Include `COPY entrypoint.sh /entrypoint.sh` in Dockerfile, run
+`make files` to generate.
 
 ### 4. Extension Not Modification
 

@@ -33,8 +33,8 @@ RUN npm i -g \
 		pnpm@latest \
 	&& rm -rf ~/.npm
 
-COPY node.sh /etc/entrypoint.d/
-COPY node-pnpm.sh /etc/entrypoint.d/
+COPY 10-node.sh /etc/entrypoint.d/
+COPY 20-node-pnpm.sh /etc/entrypoint.d/
 
 #
 # golang - with architecture detection
@@ -59,7 +59,7 @@ RUN ARCH=$(dpkg --print-architecture) \
 	&& mv /opt/go /opt/golang \
 	&& /opt/golang/bin/go install -v -a ...
 
-COPY golang.sh /etc/entrypoint.d/
+COPY 10-golang.sh /etc/entrypoint.d/
 
 ENV PATH=/opt/golang/bin:${PATH}
 

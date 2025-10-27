@@ -8,12 +8,15 @@ ENV CGO_ENABLED=0
 RUN go install -v -a ...
 
 RUN apk --update --no-cache add \
+	bash \
 	git \
 	graphviz \
-	make
+	make \
+	su-exec
 
 # extra helpers
-RUN go install -v golang.org/x/tools/cmd/godoc@v0.18
+ENV GODOC_VERSION=v0.18
+RUN go install -v golang.org/x/tools/cmd/godoc@${GODOC_VERSION}
 
 # dynamic version
 #
@@ -21,10 +24,9 @@ COPY builder_version.sh /usr/local/bin/builder_version
 
 # runtime environment
 #
-COPY golang.sh /etc/entrypoint.d/
+COPY 10-golang.sh /etc/entrypoint.d/
 
 # and inject entrypoint to deal with -e USER_*
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]

@@ -6,7 +6,6 @@ RUN GO_VERSION=$(go version | sed -e 's|.* go\([1-9][^ ]\+\) .*|\1|') \
 	;
 
 RUN apk --update --no-cache --virtual /tmp/.build-deps add \
-		bash \
 		curl \
 		gcc \
 		musl-dev \
