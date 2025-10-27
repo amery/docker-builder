@@ -27,6 +27,9 @@ docker-builder is a sophisticated Docker image build system that:
    container execution
 4. **Supports Multiple Stacks**: Ubuntu, Node.js, Go, Android, X11, VS Code
 
+For detailed architecture internals and design patterns, see
+[DESIGN.md][design-file].
+
 ### Build System Components
 
 ```text
@@ -342,7 +345,7 @@ make <target>
 
 - **android/11**: Android SDK development
 - **ubuntu-android-studio**: Android Studio with SDK
-- **poky/latest**: Yocto Project build environment
+- **poky/{18.04,24.04}**: Yocto/OE builds (latest→24.04)
 - **micrologic/latest**: Custom micrologic environment
 - **apptly/latest**: Apptly development base
 
@@ -602,6 +605,7 @@ The nanopb tool requires specific protobuf versions:
 ```dockerfile
 ENV NANOPB_VERSION=0.4.9.1
 ENV NANOPB_VENV=/opt/nanopb-env
+ENV NANOPB_SITE_PACKAGES=$NANOPB_VENV/lib/python3.12/site-packages
 
 RUN python3 -m venv $NANOPB_VENV \
     && $NANOPB_VENV/bin/pip install --no-cache-dir \
@@ -611,7 +615,7 @@ RUN python3 -m venv $NANOPB_VENV \
         https://github.com/nanopb/nanopb /usr/src/nanopb \
     && cd /usr/src/nanopb \
     && cmake -DCMAKE_INSTALL_PREFIX=/usr \
-        -Dnanopb_PYTHON_INSTDIR_OVERRIDE=$NANOPB_VENV/lib/python3.12/site-packages \
+        -Dnanopb_PYTHON_INSTDIR_OVERRIDE=$NANOPB_SITE_PACKAGES \
         . \
     && make && make install
 ```
@@ -777,4 +781,5 @@ docker run --rm <image> bash -c "source /etc/profile.d/*.sh && which python3"
 - Clean package manager caches in the same layer
 
 [readme-file]: ./README.md
+[design-file]: ./DESIGN.md
 [dev-env]: https://github.com/amery/dev-env

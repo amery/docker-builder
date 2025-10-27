@@ -104,7 +104,7 @@ container.
 
 - **android/11** - Android SDK development
 - **ubuntu-android-studio/latest** - Android Studio with SDK
-- **poky/latest** - Yocto Project builds
+- **poky/{18.04,24.04}** - Yocto/OE builds (latest→24.04)
 - **apptly/latest** - Apptly development base
 
 ## Build System
@@ -214,7 +214,8 @@ When building images that require Python packages (e.g., nanopb, sphinx):
 3. **Update script shebangs** to use venv Python:
 
    ```dockerfile
-   RUN sed -i "1s|^#!/usr/bin/env python3|#!$TOOL_VENV/bin/python3|" /usr/bin/script
+   RUN sed -i "1s|^#!/usr/bin/env python3|#!$TOOL_VENV/bin/python3|" \
+       /usr/bin/script
    ```
 
 4. **Add venv to PATH** for runtime access:
@@ -268,7 +269,9 @@ docker-builder serves as the foundation for various development environments:
 
 - [AGENTS.md][agent-file] - Technical implementation details for AI agents
   and developers
-- [CONTRIBUTING.md][contributing-file] - Guidelines for contributing to the project
+- [DESIGN.md][design-file] - Architecture internals and design patterns
+- [CONTRIBUTING.md][contributing-file] - Guidelines for contributing to the
+  project
 - [LICENCE.txt][licence-file] - MIT License
 
 ## Contributing
@@ -281,5 +284,6 @@ MIT License - see [LICENCE.txt][licence-file] for details
 
 [dev-env]: https://github.com/amery/dev-env
 [agent-file]: ./AGENTS.md
+[design-file]: ./DESIGN.md
 [contributing-file]: ./CONTRIBUTING.md
 [licence-file]: ./LICENCE.txt
