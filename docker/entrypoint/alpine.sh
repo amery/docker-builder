@@ -65,8 +65,14 @@ if [ -n "${USER_IS_SUDO:+yes}" ]; then
 	export SUDO_UID=$USER_UID
 	export SUDO_GID=$USER_GID
 	EOT
-else
+elif [ -t 0 ]; then
+	# Interactive TTY: use su for proper session
 	set -- su - "$USER_NAME"
+else
+	# Non-TTY: use su-exec with bash to avoid stdin issues
+	# env -i clears environment like su - does
+	set -- su-exec "$USER_NAME" /bin/bash -l
+	set -- env -i HOME="$USER_HOME" USER="$USER_NAME" "$@"
 fi
 
 cat <<EOT >> "$F"

@@ -11,7 +11,8 @@ RUN apk --update --no-cache add \
 	bash \
 	git \
 	graphviz \
-	make
+	make \
+	su-exec
 
 # extra helpers
 ENV GODOC_VERSION=v0.25

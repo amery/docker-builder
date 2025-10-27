@@ -15,7 +15,8 @@ RUN apk --update --no-cache add \
 	git \
 	make \
 	openssh \
-	python3
+	python3 \
+	su-exec
 
 # update npm and install corepack, yarn and pnpm
 #
