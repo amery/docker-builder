@@ -43,4 +43,4 @@ RUN curl -LsS -o /tmp/commandlinetools-linux.zip \
 	&& rm -f /tmp/commandlinetools-linux.zip \
 	&& ls -1d latest/* | cut -d/ -f2- | xargs -rt rm -rf
 
-COPY android-sdk.sh /etc/entrypoint.d/
+COPY 10-android-sdk.sh /etc/entrypoint.d/

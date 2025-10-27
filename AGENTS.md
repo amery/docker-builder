@@ -637,6 +637,11 @@ RUN python3 -m venv $NANOPB_VENV \
 - Add LABEL metadata for tracking
 - Use environment variables for versions and paths
 - Document non-obvious decisions with comments
+- Use numbered entrypoint.d scripts for environment setup:
+  - `05-*.sh` - Low-level system setup (X11, display)
+  - `10-*.sh` - Primary feature setup (golang, node, android)
+  - `20-*.sh` - Feature extensions (pnpm, additional tools)
+  - `30-*.sh` - Complex/specialized setup (Yocto/OE, build systems)
 
 ### Makefiles
 

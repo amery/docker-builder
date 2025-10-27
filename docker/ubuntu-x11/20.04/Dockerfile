@@ -15,4 +15,4 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 	xauth \
 	&& apt-get clean
 
-COPY display.sh /etc/entrypoint.d/05-display.sh
+COPY 05-display.sh /etc/entrypoint.d/05-display.sh

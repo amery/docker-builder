@@ -54,7 +54,7 @@ RUN apt-get update && apt-get install -y \
 	&& rm -f /tmp/android-studio-linux.tar.gz \
 	&& echo ${ANDROID_STUDIO_VERSION} > $ANDROID_SDK_ROOT/android-studio/.version
 
-COPY android-sdk.sh /etc/entrypoint.d/
+COPY 10-android-sdk.sh /etc/entrypoint.d/
 
 COPY studio.sh /usr/local/bin/studio
 COPY builder_version.sh /usr/local/bin/builder_version

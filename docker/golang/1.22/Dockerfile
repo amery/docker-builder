@@ -22,7 +22,7 @@ COPY builder_version.sh /usr/local/bin/builder_version
 
 # runtime environment
 #
-COPY golang.sh /etc/entrypoint.d/
+COPY 10-golang.sh /etc/entrypoint.d/
 
 # and inject entrypoint to deal with -e USER_*
 COPY entrypoint.sh /entrypoint.sh

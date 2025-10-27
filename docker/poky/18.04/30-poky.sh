@@ -1,12 +1,12 @@
-# This file is sourced by base entrypoint as /etc/entrypoint.d/20-poky.sh
+# This file is sourced by base entrypoint as /etc/entrypoint.d/30-poky.sh
 # Its OUTPUT (via echo/cat) is appended to the profile file
 # OEROOT, DL_DIR, BUILDDIR, WS, CURDIR are all available
 
-# BB environment whitelist
-BB_ENV_PASSTHROUGH_ADDITIONS="${BB_ENV_PASSTHROUGH_ADDITIONS:+$BB_ENV_PASSTHROUGH_ADDITIONS }DL_DIR"
+# BB environment whitelist (old BitBake variable for pyro/morty era)
+BB_ENV_EXTRAWHITE="${BB_ENV_EXTRAWHITE:+$BB_ENV_EXTRAWHITE }DL_DIR"
 
 # Export OE variables
-for x in MACHINE DISTRO TCLIBC DL_DIR BB_ENV_PASSTHROUGH_ADDITIONS; do
+for x in MACHINE DISTRO TCLIBC DL_DIR BB_ENV_EXTRAWHITE; do
 	v="$(eval "echo \"\${$x:-}\"")"
 	if [ -n "$v" ]; then
 		echo "export $x='$v'"
@@ -37,8 +37,6 @@ cat <<EOT
 cd '$WS'
 export OEROOT='$OEROOT'
 ${builddir:+export BUILDDIR='$WS/$builddir'}
-${builddir:+export BBPATH='$WS/$builddir'}
-export PYTHONPATH="$OEROOT/bitbake/lib:\${PYTHONPATH:-}"
 export PATH="$OEROOT/bitbake/bin:$OEROOT/scripts:\$PATH"
 ${builddir:+cd '$builddir'}
 EOT
