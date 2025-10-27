@@ -36,16 +36,22 @@ For detailed architecture internals and design patterns, see
 Makefile              # Main entry point
 ├── config.mk        # User configuration (PREFIX)
 ├── rules.mk         # Generated rules for file processing
-└── images.mk        # Generated image build targets
+├── images.mk        # Generated image build targets
+└── entrypoint.mk    # Generated entrypoint.sh copy rules
 
 scripts/
-├── gen_rules_mk.sh  # Generates rules.mk from templates
-├── gen_images_mk.sh # Generates images.mk from tag directories
-├── gen_tag_dirs.sh  # Discovers and lists image directories
-├── get_files.sh     # Finds files matching patterns
-├── get_vars.sh      # Extracts variables from templates
-├── get_aliases.sh   # Retrieves image aliases
-└── filter-out-tags.sh # Filters obsolete tags for GC
+├── gen_rules_mk.sh     # Generates rules.mk from templates
+├── gen_images_mk.sh    # Generates images.mk from tag directories
+├── gen_tag_dirs.sh     # Discovers and lists image directories
+├── gen_entrypoint.sh   # Generates entrypoint.mk from golden copies
+├── get_files.sh        # Finds files matching patterns
+├── get_vars.sh         # Extracts variables from templates
+├── get_aliases.sh      # Retrieves image aliases
+└── filter-out-tags.sh  # Filters obsolete tags for GC
+
+docker/entrypoint/
+├── ubuntu.sh        # Canonical Ubuntu/Debian entrypoint
+└── alpine.sh        # Canonical Alpine entrypoint
 ```
 
 ## How the Build System Works
@@ -77,7 +83,20 @@ done
 - Creates push/pull targets
 - Handles tag aliases and latest symlinks
 
-### 4. Tag Management
+### 4. Entrypoint Generation
+
+`gen_entrypoint.sh` manages entrypoint.sh files from golden copies:
+
+- Scans Dockerfiles for `COPY entrypoint.sh` commands
+- Detects base image type from FROM line (Alpine vs Ubuntu)
+- Generates entrypoint.mk with dependency rules
+- Copies canonical sources to image directories when they change
+- Uses `cmp` to detect changes, only copies when different
+
+Golden copies at `docker/entrypoint/{ubuntu.sh,alpine.sh}` serve as the
+single source of truth for all base images.
+
+### 5. Tag Management
 
 The system tracks image tags across three files:
 
@@ -278,7 +297,13 @@ The build system generates makefiles dynamically:
    scripts/gen_images_mk.sh > images.mk
    ```
 
-3. **.tag-dirs**: Always checks for new directories
+3. **entrypoint.mk**: Regenerates when Dockerfiles change
+
+   ```bash
+   scripts/gen_entrypoint.sh > entrypoint.mk
+   ```
+
+4. **.tag-dirs**: Always checks for new directories
 
    ```bash
    scripts/gen_tag_dirs.sh > .tag-dirs
@@ -287,7 +312,8 @@ The build system generates makefiles dynamically:
 #### Force Regeneration
 
 ```bash
-make files              # Regenerate all makefiles
+make files              # Regenerate all makefiles and entrypoint.sh
+make entrypoint         # Regenerate just entrypoint.sh files
 make clean              # Remove markers and generated files
 ```
 
@@ -492,13 +518,23 @@ When updating docker-builder:
    ```dockerfile
    FROM ubuntu:24.04
    # Your customizations
+   COPY entrypoint.sh /entrypoint.sh  # If base image
+   ENTRYPOINT ["/entrypoint.sh"]
    ```
+
+   **Note:** If creating a base image (not extending an existing
+   docker-builder image), include `COPY entrypoint.sh /entrypoint.sh` in
+   the Dockerfile. The entrypoint.sh file will be automatically generated
+   from canonical sources when you run `make files` or `make entrypoint`.
 
 3. Run make to generate rules:
 
    ```bash
    make files
    ```
+
+   This generates entrypoint.sh from golden copies if Dockerfile includes
+   `COPY entrypoint.sh`.
 
 4. Build the image:
 

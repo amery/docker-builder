@@ -72,17 +72,26 @@ Common action verbs:
 
    ```dockerfile
    FROM base-image:tag
-   
+
    # Use environment variables for versions
    ENV TOOL_VERSION=1.2.3
-   
+
    # Install dependencies
    RUN apt-get update && apt-get install --no-install-recommends -y \
        package1 \
        package2 \
        && apt-get clean \
        && rm -rf /var/lib/apt/lists/*
+
+   # If base image (not extending docker-builder image)
+   COPY entrypoint.sh /entrypoint.sh
+   ENTRYPOINT ["/entrypoint.sh"]
    ```
+
+   **Note:** When creating a base image that uses `COPY entrypoint.sh`,
+   the file will be automatically generated from canonical sources
+   (`docker/entrypoint/ubuntu.sh` or `docker/entrypoint/alpine.sh`) based
+   on the FROM line. Run `make files` to generate it.
 
 3. Test your image locally:
 

@@ -240,6 +240,23 @@ Build on docker-builder ecosystem:
 - `docker-builder-run` provides mounting, environment, detection
 - Extension points customize without modifying core
 
+**Entrypoint Golden Copy System:**
+
+Base images use generated entrypoint.sh from canonical sources:
+
+- `docker/entrypoint/ubuntu.sh` - Ubuntu/Debian pattern (114 lines)
+- `docker/entrypoint/alpine.sh` - Alpine pattern (78 lines)
+
+The build system automatically:
+
+- Detects which golden copy to use based on FROM line
+- Generates entrypoint.mk with copy rules
+- Updates entrypoint.sh files when golden copy changes
+- Ensures consistency across all base images
+
+To use: Include `COPY entrypoint.sh /entrypoint.sh` in Dockerfile, run
+`make files` to generate.
+
 ### 4. Extension Not Modification
 
 Customize via hooks rather than forking:

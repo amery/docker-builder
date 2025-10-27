@@ -25,6 +25,5 @@ COPY 10-golang.sh /etc/entrypoint.d/
 
 # and inject entrypoint to deal with -e USER_*
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]

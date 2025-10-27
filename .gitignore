@@ -4,3 +4,8 @@
 .image-*
 images.mk
 rules.mk
+entrypoint.mk
+docker/golang/*/entrypoint.sh
+docker/nodejs/*/entrypoint.sh
+docker/ubuntu/*/entrypoint.sh
+docker/ubuntu-vsc-base/*/entrypoint.sh
