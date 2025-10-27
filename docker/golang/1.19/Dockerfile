@@ -15,7 +15,8 @@ RUN apk --update --no-cache add \
 	su-exec
 
 # extra helpers
-RUN go install -v golang.org/x/tools/cmd/godoc@v0.18
+ENV GODOC_VERSION=v0.18
+RUN go install -v golang.org/x/tools/cmd/godoc@${GODOC_VERSION}
 
 # dynamic version
 #
