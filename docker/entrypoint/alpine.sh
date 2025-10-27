@@ -30,7 +30,7 @@ fi
 
 # create workspace-friendly user
 addgroup -S -g "$USER_GID" "$USER_NAME"
-adduser -s /bin/sh -S -h "$USER_HOME" \
+adduser -s /bin/bash -S -h "$USER_HOME" \
 	-G "$USER_NAME" -u "$USER_UID" \
 	"$USER_NAME"
 

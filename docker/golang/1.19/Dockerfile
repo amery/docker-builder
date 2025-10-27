@@ -8,6 +8,7 @@ ENV CGO_ENABLED=0
 RUN go install -v -a ...
 
 RUN apk --update --no-cache add \
+	bash \
 	git \
 	graphviz \
 	make
