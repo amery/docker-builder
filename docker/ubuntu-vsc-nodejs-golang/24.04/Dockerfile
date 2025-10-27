@@ -1,6 +1,6 @@
 FROM quay.io/amery/docker-ubuntu-vsc-nodejs-builder:24.04
 
-ENV GO_VERSION=1.25.0
+ENV GO_VERSION=1.25.3
 
 #
 # update world
