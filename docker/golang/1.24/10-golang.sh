@@ -1,7 +1,8 @@
 cat <<EOT
 # Go
+export PATH="/usr/local/go/bin:\$PATH"
 export GOPATH="\${GOPATH:-\${WS:-\$HOME/go}}"
-[ "x\$GOPATH" = "\${WS:-}" ] || export PATH="\$GOPATH/bin:\$PATH"
+[ "\$GOPATH" = "\${WS:-}" ] || export PATH="\$GOPATH/bin:\$PATH"
 export CGO_ENABLED=0
 ${GO111MODULE:+export GO111MODULE=${GO111MODULE}
 }${GOINSECURE:+export GOINSECURE=${GOINSECURE}
