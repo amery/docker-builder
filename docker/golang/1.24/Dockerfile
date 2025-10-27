@@ -14,7 +14,8 @@ RUN apk --update --no-cache add \
 	make
 
 # extra helpers
-RUN go install -v golang.org/x/tools/cmd/godoc@latest
+ENV GODOC_VERSION=v0.36
+RUN go install -v golang.org/x/tools/cmd/godoc@${GODOC_VERSION}
 
 # dynamic version
 #
