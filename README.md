@@ -60,11 +60,14 @@ Workspace-aware script finder and executor that locates and calls
 `run.sh`:
 
 ```bash
-# Execute project's run.sh from anywhere in workspace
+# Execute run.sh from anywhere in the workspace
 x make test
 
 # Find workspace root
 x --root
+
+# Run commands in a different workspace
+x -C /path/to/workspace make test
 
 # Pass through if no run.sh found
 x echo "hello"
