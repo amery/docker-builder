@@ -427,7 +427,7 @@ execution by automatically locating and invoking `run.sh`.
 
 ### `x` Script Key Features
 
-1. **Workspace Detection**: Finds project root via `.repo` or `.git`
+1. **Workspace Detection**: Finds workspace root via `.repo` or `.git`
 2. **Script Discovery**: Locates executable `run.sh` in workspace
 3. **Transparent Execution**: Passes commands through to `run.sh`
 4. **Fallback Mode**: Executes directly if no `run.sh` found
@@ -449,10 +449,9 @@ location. If not found, searches parent directories iteratively.
 
 ### `x` Script Usage Examples
 
-```bash
-# Find workspace root
-x --root
+#### Basic Usage
 
+```bash
 # Execute command via run.sh
 x make build
 x go test ./...
@@ -461,9 +460,59 @@ x go test ./...
 cd src/myproject
 x make  # Still finds workspace root run.sh
 
+# Find workspace root (see Workspace Detection Algorithm)
+x --root
+
 # Fallback: pass through if no run.sh
 x echo "hello"
 ```
+
+#### Options
+
+**`-C <directory>`**
+
+Changes to the specified directory before workspace detection begins. This
+enables operating on workspaces without physically navigating to them.
+
+- Requires exactly one argument (the directory path)
+- Directory must exist and be accessible
+- Accepts both relative and absolute paths
+- Can be combined with `--root` in any order
+
+**`--root`**
+
+Outputs the workspace root directory path instead of executing commands.
+
+**`--`**
+
+Stops option parsing; remaining arguments are passed through as-is.
+
+**Examples:**
+
+```bash
+# Run commands in a different workspace
+x -C /path/to/workspace make build
+
+# Options can be in any order
+x --root -C /path/to/workspace
+x -C /path/to/workspace --root
+
+# Use -- to pass options to the command
+x -C /path/to/workspace -- command --root
+
+# Operate on multiple workspaces from a script
+for ws in ~/projects/*/; do
+    x -C "$ws" make test
+done
+
+# Relative paths work too
+x -C ../other-workspace make build
+```
+
+**Common use cases:**
+- Build automation scripts managing multiple workspaces
+- CI/CD pipelines operating on different project directories
+- Makefiles that need to invoke commands in sibling projects
 
 ### Integration Pattern
 

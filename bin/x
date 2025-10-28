@@ -2,6 +2,11 @@
 
 set -eu
 
+die() {
+	echo "x: $*" >&2
+	exit 1
+}
+
 brute_find() {
 	local op="$1" cue="$2" dir="$3"
 
@@ -57,10 +62,32 @@ find_run_sh() {
 	done
 }
 
+# Parse options
+show_root=false
+while [ $# -gt 0 ]; do
+	case "$1" in
+	-C)
+		[ $# -ge 2 ] || die "-C requires a directory argument"
+		cd "$2" 2>/dev/null || die "$2: invalid directory"
+		shift 2
+		;;
+	--root)
+		show_root=true
+		shift
+		;;
+	--)
+		shift
+		break
+		;;
+	*)
+		break
+		;;
+	esac
+done
+
 run_sh="$(find_run_sh)"
 
-if test "x--root" = "x${1:-}"; then
-
+if $show_root; then
 	if [ -x "$run_sh" ]; then
 		# found
 		echo "$(dirname "$run_sh")"
