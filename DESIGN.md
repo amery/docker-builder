@@ -5,7 +5,7 @@ usage information, see [README.md](./README.md). For development
 workflows, see [CONTRIBUTING.md](./CONTRIBUTING.md). For AI agents, see
 [AGENTS.md](./AGENTS.md).
 
-## docker-builder-run Architecture
+## `docker-builder-run` Architecture
 
 ### Volume System
 
@@ -87,14 +87,44 @@ Workspace `run.sh` delegates to `docker-builder-run`:
 - Consistent behavior across workspaces
 - Minimal maintenance burden
 
-### Workspace Detection Pattern (run-hook.sh)
+### Workspace Detection Pattern (`run-hook.sh`)
 
-Template copied to workspaces for environment detection:
+Template embedded in images; `docker-builder-run` auto-updates in workspaces:
 
 - Searches for workspace markers (`conf/local.conf`, `oe-init-build-env`)
 - Detects paths relative to workspace root
 - Exports variables for `docker-builder-run`
 - Requests additional volume mounts
+
+**Automatic Updates:**
+
+Images embed `run-hook.sh` at `/usr/local/share/docker-builder/run-hook.sh`
+and include a `docker-builder.run-hook.sha256` label. When
+`docker-builder-run` executes, it:
+
+1. Reads the SHA256 label from the image
+2. Compares with workspace `$DOCKER_DIR/run-hook.sh`
+3. Updates on mismatch via `docker run IMAGE --run-hook`
+4. Handles `CRLF` line endings
+
+This ensures `run-hook.sh` matches the image version, maintaining
+consistency between image expectations and workspace configuration.
+
+**Warning:** Local modifications are overwritten.
+
+**To disable autoupdate** in workspace Dockerfile:
+
+```dockerfile
+LABEL docker-builder.run-hook.sha256="-"
+```
+
+Or use: `""`, `"disabled"`
+
+**Manual extraction** (for offline deployment):
+
+```bash
+docker run --rm IMAGE --run-hook > docker/run-hook.sh
+```
 
 **Key principle:** Extend `DOCKER_RUN_VOLUMES`, don't replace it.
 

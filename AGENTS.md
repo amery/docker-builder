@@ -381,18 +381,44 @@ make <target>
 - **ubuntu-vsc-nodejs/24.04**: Node.js development in VS Code
 - **ubuntu-vsc-nodejs-golang/24.04**: Combined stack for VS Code
 
-## The docker-builder-run Script
+## The `docker-builder-run` Script
 
 Located at `bin/docker-builder-run`, this script provides intelligent container
 execution:
 
 ### `docker-builder-run` Key Features
 
-1. **Workspace Detection**: Finds project root via `.repo` or `.git`
+1. **Workspace Detection**: Finds workspace root via `.repo` or `.git`
 2. **Volume Management**: Intelligently mounts required directories
 3. **Environment Preservation**: Passes through necessary variables
 4. **Mode Detection**: Configures for Go, Node.js, or X11 as needed
 5. **User Identity**: Preserves UID/GID in container
+6. **Template Updates**: Automatically updates `run-hook.sh` from images
+
+### Automatic `run-hook.sh` Updates
+
+Some images (e.g., `docker-poky-builder`) embed `run-hook.sh` at
+`/usr/local/share/docker-builder/run-hook.sh` with a
+`docker-builder.run-hook.sha256` label.
+
+`docker-builder-run` compares the label's SHA256 with
+`$DOCKER_DIR/run-hook.sh` and automatically updates on mismatch.
+
+**Warning:** Local modifications are overwritten.
+
+**To disable autoupdate** in workspace Dockerfile:
+
+```dockerfile
+LABEL docker-builder.run-hook.sha256="-"
+```
+
+Or use: `""`, `"disabled"`
+
+**Manual extraction** (for offline deployment):
+
+```bash
+docker run --rm IMAGE --run-hook > docker/run-hook.sh
+```
 
 ### Environment Variables
 
@@ -510,6 +536,7 @@ x -C ../other-workspace make build
 ```
 
 **Common use cases:**
+
 - Build automation scripts managing multiple workspaces
 - CI/CD pipelines operating on different project directories
 - Makefiles that need to invoke commands in sibling projects
