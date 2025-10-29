@@ -13,22 +13,30 @@ for x in MACHINE DISTRO TCLIBC DL_DIR BB_ENV_PASSTHROUGH_ADDITIONS; do
 	fi
 done
 
-# Find existing build directory from CURDIR
-x="$CURDIR"
-while true; do
-	if [ -s "$x/conf/local.conf" ]; then
-		builddir="${x#$WS/}"
-		break
-	elif [ "$WS" = "${x:-/}" ]; then
-		break
+# Find existing build directory
+# If BUILDDIR already set (from run-hook.sh), use it
+if [ -n "${BUILDDIR:-}" ]; then
+	builddir="${BUILDDIR#$WS/}"
+else
+	# Get path relative to workspace
+	x="${CURDIR#$WS/}"
+	if [ "$x" != "$CURDIR" ]; then
+		# We're inside workspace, extract first component
+		x="${x%%/*}"
+		# Check if it's a build directory with conf/local.conf
+		if [ -s "$WS/$x/conf/local.conf" ]; then
+			builddir="$x"
+		fi
 	fi
 
-	x="${x%/*}"
-done
-
-# If not found and we're in a potential builddir, extract it
-if [ -z "${builddir:-}" -a "$CURDIR" != "$WS" ]; then
-	builddir="$(echo "${CURDIR#$WS/}" | sed -n -e 's:\(^[^/]*build[^/]*\).*:\1:p')"
+	# If not in a build directory, search for one
+	if [ -z "${builddir:-}" ]; then
+		x="$(ls -1d "$WS"/*[Bb]uild*/conf/local.conf 2>/dev/null | head -1)"
+		if [ -n "$x" ]; then
+			builddir="${x%/conf/local.conf}"
+			builddir="${builddir#$WS/}"
+		fi
+	fi
 fi
 
 # Setup OE/BitBake environment (replicate oe-buildenv-internal essentials)

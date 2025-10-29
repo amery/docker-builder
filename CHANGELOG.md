@@ -1,10 +1,23 @@
 # Changelog
+<!-- markdownlint-configure-file { "MD024": { "siblings_only": true } } -->
 
 All notable changes to docker-builder will be documented in this file.
+
+## [Unreleased]
+
+### Changed
+
+- `docker-poky-builder`: Improved `BUILDDIR` detection
+  - Detects build directory from workspace-relative path
+  <!-- cSpell:disable-next-line -->
+  - Falls back to searching workspace for `*[Bb]uild*/conf/local.conf`
+  - Works from any subdirectory in workspace (not just build dir)
+  - `30-poky.sh` now uses `BUILDDIR` from `run-hook.sh` when available
 
 ## [1.21.0] - 2025-10-29
 
 ### Added
+
 - `bin/x`: `-C` option for directory change before workspace detection (#5)
   - Options can appear in any order before command
   - Added `--` to stop option parsing
@@ -18,6 +31,7 @@ All notable changes to docker-builder will be documented in this file.
 - `docker-poky-builder`: Embedded `run-hook.sh` templates in 18.04 and 24.04
 
 ### Changed
+
 - `docker-golang-builder`: Updated to Go 1.23.12, 1.24.9, 1.25.3
 - `docker-golang-builder`: Use `GODOC_VERSION` env var for Go 1.18-1.19
 - `docker-golang-builder`: Pin godoc to v0.36 for Go 1.23-1.25
@@ -28,6 +42,7 @@ All notable changes to docker-builder will be documented in this file.
 - Entrypoint.d scripts: Standardize numbering (05-, 10-, 20-, 30- prefixes)
 
 ### Fixed
+
 - Alpine images: Fix command execution hang in non-TTY mode
 - `docker-builder-run`: Fix pipeline hazard with trap-protected helpers
 - `bin/x`: Fix directory validation and error handling
@@ -36,6 +51,7 @@ All notable changes to docker-builder will be documented in this file.
 - Ubuntu builder: Fix entrypoint pipeline exit status bug
 
 ### Documentation
+
 - Add DESIGN.md for architecture internals
 - Add CONTRIBUTING.md with guidelines
 - Add comprehensive `x` script documentation

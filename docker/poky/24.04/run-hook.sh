@@ -1,16 +1,23 @@
 # BUILDDIR
 #
-x="$(pwd)"
-while true; do
-	if [ -s "$x/conf/local.conf" ]; then
-		BUILDDIR="$x"
-		break
-	elif [ "$WS" = "${x:-/}" ]; then
-		break
+# Get path relative to workspace
+x="${PWD#$WS/}"
+if [ "$x" != "$PWD" ]; then
+	# We're inside workspace, extract first component
+	x="${x%%/*}"
+	# Check if it's a build directory with conf/local.conf
+	if [ -s "$WS/$x/conf/local.conf" ]; then
+		BUILDDIR="$WS/$x"
 	fi
+fi
 
-	x="${x%/*}"
-done
+# If not in a build directory, search for one
+if [ -z "${BUILDDIR:-}" ]; then
+	x="$(ls -1d "$WS"/*[Bb]uild*/conf/local.conf 2>/dev/null | head -1)"
+	if [ -n "$x" ]; then
+		BUILDDIR="${x%/conf/local.conf}"
+	fi
+fi
 
 # OEROOT
 #
