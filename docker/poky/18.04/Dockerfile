@@ -21,3 +21,8 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-re
 	&& apt-get clean
 
 COPY 30-poky.sh /etc/entrypoint.d/30-poky.sh
+
+# Embed run-hook.sh template for workspace deployment
+ARG RUN_HOOK_SHA256
+COPY run-hook.sh /usr/local/share/docker-builder/run-hook.sh
+LABEL docker-builder.run-hook.sha256="${RUN_HOOK_SHA256}"

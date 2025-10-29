@@ -39,7 +39,7 @@ make tags-gc           # Clean up obsolete tags
 
 docker-builder provides two complementary scripts in `bin/`:
 
-#### docker-builder-run
+#### `docker-builder-run`
 
 Intelligent Docker container execution wrapper:
 
@@ -51,8 +51,18 @@ docker-builder-run make test
 DOCKER_BUILD_FORCE=true docker-builder-run npm install
 
 # Use specific image
-DOCKER_ID=ubuntu:24.04 docker-builder-run bash
+DOCKER_ID=quay.io/amery/docker-ubuntu-builder:24.04 docker-builder-run bash
+
+# Extract run-hook.sh template from image (replace IMAGE with image name)
+docker run --rm IMAGE --run-hook > docker/run-hook.sh
 ```
+
+`docker-builder-run` automatically updates embedded `run-hook.sh`
+templates when SHA256 mismatches are detected.
+
+**Warning:** Local modifications to `run-hook.sh` are overwritten.
+
+To disable: `LABEL docker-builder.run-hook.sha256="-"` (or `""`, `"disabled"`)
 
 #### `x`
 
