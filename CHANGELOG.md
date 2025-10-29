@@ -14,6 +14,13 @@ All notable changes to docker-builder will be documented in this file.
   - Works from any subdirectory in workspace (not just build dir)
   - `30-poky.sh` now uses `BUILDDIR` from `run-hook.sh` when available
 
+### Fixed
+
+- `gen_images_mk.sh`: Symlink targets now depend on their real target
+  <!-- cSpell:disable-next-line -->
+  - Fixes automatic retagging when underlying image is rebuilt
+  - Example: `:latest` now properly depends on `:24.04`
+
 ## [1.21.0] - 2025-10-29
 
 ### Added

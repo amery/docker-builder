@@ -165,7 +165,7 @@ while read tag dir; do
 	s1=$(sentinel $tag)
 
 	if [ -z "$dir" ]; then
-		files=
+		files="$s0"
 	else
 		from=
 		files="$(gen_image_files "$dir" "$s0" '$(IMAGE_MK)')"
