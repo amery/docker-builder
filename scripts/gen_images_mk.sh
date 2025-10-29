@@ -8,6 +8,8 @@ shift 2
 
 . "$(dirname "$0")/common.in"
 
+DOLLAR="\$\$"
+
 #
 #
 get_images() {
@@ -189,11 +191,23 @@ $(list_target $s1 $files)
 EOT
 
 if [ -d "$dir" ]; then
+	# Assemble docker build command
+	build_cmd="\$(DOCKER) build \$(DOCKER_BUILD_OPT)"
+
+	# Add build arg for run-hook.sh SHA256 if it exists
+	if [ -f "$dir/run-hook.sh" ]; then
+		A="RUN_HOOK_SHA256"
+		echo "$TAB$A=${DOLLAR}(sha256sum \"$dir/run-hook.sh\" | cut -d' ' -f1); \\"
+		build_cmd="$build_cmd --build-arg $A=${DOLLAR}$A"
+	fi
+
+	build_cmd="$build_cmd -t \$(PREFIX)$tag $dir"
+	echo "$TAB$build_cmd"
+
 	cat <<EOT
-	\$(DOCKER) build \$(DOCKER_BUILD_OPT) -t \$(PREFIX)$tag $dir
 	@\$(SCRIPTS)/get_aliases.sh \$(PREFIX)$tag | while read x; do \\
-		\$(DOCKER) tag \$(PREFIX)$tag \$\$x; \\
-		echo "Successfully tagged \$\$x"; \\
+		\$(DOCKER) tag \$(PREFIX)$tag ${DOLLAR}x; \\
+		echo "Successfully tagged ${DOLLAR}x"; \\
 	done
 EOT
 else

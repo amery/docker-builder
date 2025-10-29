@@ -26,6 +26,15 @@ if [ "x${1:-}" = "x--version" ]; then
 	exit
 fi
 
+if [ "x${1:-}" = "x--run-hook" ]; then
+	if [ -s /usr/local/share/docker-builder/run-hook.sh ]; then
+		cat /usr/local/share/docker-builder/run-hook.sh
+	else
+		exit 1
+	fi
+	exit
+fi
+
 [ "${USER_NAME:-root}" != "root" ] || die "Invalid \$USER_NAME (${USER_NAME})"
 
 # create workspace-friendly user
