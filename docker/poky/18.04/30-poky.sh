@@ -3,7 +3,7 @@
 # OEROOT, DL_DIR, BUILDDIR, WS, CURDIR are all available
 
 # BB environment whitelist (old BitBake variable for pyro/morty era)
-BB_ENV_EXTRAWHITE="${BB_ENV_EXTRAWHITE:+$BB_ENV_EXTRAWHITE }DL_DIR"
+BB_ENV_EXTRAWHITE="${BB_ENV_EXTRAWHITE:+$BB_ENV_EXTRAWHITE }MACHINE DISTRO TCLIBC DL_DIR"
 
 # Export OE variables
 for x in MACHINE DISTRO TCLIBC DL_DIR BB_ENV_EXTRAWHITE; do
