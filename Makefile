@@ -1,9 +1,26 @@
 DOCKER ?= docker
 
-ifneq ($(FORCE),)
-DOCKER_BUILD_OPT ?= --rm --progress=plain --no-cache
+# Multi-architecture support
+# PLATFORM: target platform(s) - e.g., linux/arm64, linux/amd64,linux/arm64
+# PUSH: set to 1 to build and push to registry (required for multi-platform)
+PLATFORM ?=
+PUSH ?=
+
+ifeq ($(PUSH),1)
+DOCKER_BUILD ?= $(DOCKER) buildx build --push
 else
-DOCKER_BUILD_OPT ?= --rm --progress=plain
+DOCKER_BUILD ?= $(DOCKER) buildx build --load
+endif
+
+ifneq ($(FORCE),)
+DOCKER_BUILD_OPT ?= --progress=plain --no-cache
+else
+DOCKER_BUILD_OPT ?= --progress=plain
+endif
+
+# Add platform flag when PLATFORM is specified
+ifneq ($(PLATFORM),)
+DOCKER_BUILD_OPT += --platform $(PLATFORM)
 endif
 
 B = $(CURDIR)

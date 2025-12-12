@@ -192,7 +192,7 @@ EOT
 
 if [ -d "$dir" ]; then
 	# Assemble docker build command
-	build_cmd="\$(DOCKER) build \$(DOCKER_BUILD_OPT)"
+	build_cmd="\$(DOCKER_BUILD) \$(DOCKER_BUILD_OPT)"
 
 	# Add build arg for run-hook.sh SHA256 if it exists
 	if [ -f "$dir/run-hook.sh" ]; then

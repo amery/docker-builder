@@ -162,9 +162,30 @@ make FORCE=1 quay.io/amery/docker-golang-builder-1.25
 make -B FORCE=1 quay.io/amery/docker-golang-builder
 ```
 
+#### Cross-Architecture Builds
+
+Cross-platform builds require a multi-platform buildx builder and QEMU
+emulation. See [Prerequisites for Cross-Platform Builds][cross-platform-prereq]
+for setup instructions.
+
+```bash
+# Build for arm64 (stores locally)
+make PLATFORM=linux/arm64 quay.io/amery/docker-ubuntu-builder-24.04
+
+# Build for arm64 and push to registry
+make PUSH=1 PLATFORM=linux/arm64 quay.io/amery/docker-ubuntu-builder-24.04
+
+# Multi-architecture manifest (amd64 + arm64), pushes to registry
+make PUSH=1 PLATFORM=linux/amd64,linux/arm64 \
+    quay.io/amery/docker-ubuntu-builder-24.04
+
+# Build on remote arm64 host via Docker context
+make DOCKER="docker --context myarm64host" \
+    quay.io/amery/docker-ubuntu-builder-24.04
+```
+
 For detailed information about the build system mechanics, caching behavior,
-and troubleshooting, see
-[AGENTS.md Build System Mechanics](./AGENTS.md#build-system-mechanics).
+and troubleshooting, see [Build System Mechanics][build-system-mechanics].
 
 ## Environment Variables
 
@@ -174,8 +195,10 @@ and troubleshooting, see
 |----------------------|-----------------------------------------------------------
 | `DOCKER_DIR`         | Directory containing Dockerfile to build
 | `DOCKER_ID`          | Pre-built image ID to use instead of building
-| `DOCKER_BUILD_OPT`   | Additional arguments for `docker build` (default: --rm)
+| `DOCKER_BUILD_OPT`   | Additional arguments for `docker buildx build` (default: --progress=plain)
 | `DOCKER_BUILD_FORCE` | Force rebuild/repull of the image
+| `PLATFORM`           | Target platform(s) for cross-arch builds (e.g., `linux/arm64`)
+| `PUSH`               | Set to 1 to push to registry (required for multi-platform)
 
 ### Runtime Configuration
 
@@ -297,6 +320,8 @@ MIT License - see [LICENCE.txt][licence-file] for details
 
 [dev-env]: https://github.com/amery/dev-env
 [agent-file]: ./AGENTS.md
+[build-system-mechanics]: ./AGENTS.md#build-system-mechanics
+[cross-platform-prereq]: ./AGENTS.md#prerequisites-for-cross-platform-builds
 [design-file]: ./DESIGN.md
 [contributing-file]: ./CONTRIBUTING.md
 [licence-file]: ./LICENCE.txt

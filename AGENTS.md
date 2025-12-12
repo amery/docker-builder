@@ -130,11 +130,134 @@ The build system employs two independent caching layers:
 ### Build Control Options
 
 | Command | Make Cache | Docker Cache | Use When |
-|---------|------------|--------------|----------|
+| ------- | ---------- | ------------ | -------- |
 | `make <target>` | ✓ Used | ✓ Used | Normal incremental builds |
 | `make FORCE=1 <target>` | ✓ Used | ✗ Bypassed | Changed Dockerfile, want clean layer rebuild |
 | `make -B <target>` | ✗ Bypassed | ✓ Used | Marker file stale, dependencies should rebuild |
 | `make -B FORCE=1 <target>` | ✗ Bypassed | ✗ Bypassed | Complete clean rebuild from scratch |
+
+### Multi-Architecture Builds
+
+The build system uses `docker buildx` for all builds, enabling cross-platform
+image creation.
+
+#### Build Variables
+
+| Variable | Purpose | Example |
+| -------- | ------- | ------- |
+| `PLATFORM` | Target platform(s) | `linux/arm64`, `linux/amd64,linux/arm64` |
+| `PUSH` | Push to registry (required for multi-platform) | `1` |
+| `DOCKER` | Docker command override | `docker --context myhost` |
+
+#### Build Modes
+
+| Command | Behavior |
+| ------- | -------- |
+| `make <target>` | Native arch, stored locally (`buildx --load`) |
+| `make PLATFORM=linux/arm64 <target>` | arm64, stored locally |
+| `make PUSH=1 <target>` | Native arch, pushed to registry |
+| `make PUSH=1 PLATFORM=linux/arm64 <target>` | arm64, pushed to registry |
+| `make PUSH=1 PLATFORM=linux/amd64,linux/arm64 <target>` | Multi-arch manifest, pushed |
+
+#### Notes
+
+- **Single-platform builds** use `--load` to store images in the local Docker
+  daemon. The two-step workflow (`make` then `make push`) still works.
+- **Multi-platform builds** require `PUSH=1` because multi-arch manifests
+  cannot be stored locally—they must be pushed to a registry.
+- **Remote builds** can use Docker contexts:
+  `make DOCKER="docker --context myarm64host" <target>`
+
+#### Prerequisites for Cross-Platform Builds
+
+Cross-platform builds (e.g., building arm64 on an amd64 host) require additional
+setup beyond the default Docker installation.
+
+**1. Create a multi-platform builder:**
+
+The default Docker builder doesn't support cross-platform builds. Create one
+with the `docker-container` driver:
+
+```bash
+docker buildx create --name multiarch \
+    --driver docker-container --bootstrap --use
+```
+
+**2. Install QEMU emulation (for cross-arch):**
+
+To build for architectures other than your host (e.g., arm64 on amd64):
+
+```bash
+docker run --privileged --rm tonistiigi/binfmt --install arm64
+```
+
+After installing QEMU, recreate the builder to pick up the new platforms:
+
+```bash
+docker buildx rm multiarch
+docker buildx create --name multiarch \
+    --driver docker-container --bootstrap --use
+```
+
+**3. Verify platform support:**
+
+```bash
+docker buildx inspect --bootstrap | grep Platforms
+# Should show: linux/amd64, linux/arm64, ...
+```
+
+#### Using SSH Remote Builders for Native Builds
+
+QEMU emulation can be 8x slower than native builds. For better performance, use
+a remote arm64 machine via SSH.
+
+**1. Configure SSH on the remote arm64 host:**
+
+Ensure passwordless SSH access works, then enable user environment in
+`/etc/ssh/sshd_config`:
+
+```text
+PermitUserEnvironment yes
+```
+
+Create `~/.ssh/environment` on the remote host:
+
+```text
+PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin
+```
+
+Restart sshd and verify Docker is accessible:
+
+```bash
+docker -H ssh://user@arm64-host info
+```
+
+**2. Create a multi-node builder with SSH:**
+
+```bash
+# Create builder with docker-container driver (required for multi-node)
+docker buildx create --name multiarch-native \
+    --driver docker-container --platform linux/amd64
+
+# Append remote arm64 node via SSH
+docker buildx create --name multiarch-native --append \
+    --platform linux/arm64 ssh://user@arm64-host
+
+# Activate and verify
+docker buildx use multiarch-native
+docker buildx inspect --bootstrap
+```
+
+**3. Build using native nodes:**
+
+```bash
+# Each platform builds on its native architecture
+make PUSH=1 PLATFORM=linux/amd64,linux/arm64 \
+    quay.io/amery/docker-ubuntu-builder-24.04
+```
+
+Buildx automatically routes each platform to the appropriate node and merges the
+manifest.
 
 ### Target Types: Version-Specific vs Aggregate
 
@@ -343,13 +466,21 @@ make -B FORCE=1         # Build everything from scratch
 #### Check Docker build arguments
 
 ```bash
-# With FORCE=1
-make FORCE=1 <target>
-# Uses: --rm --progress=plain --no-cache
-
-# Without FORCE=1
+# Default build (native arch, local storage)
 make <target>
-# Uses: --rm --progress=plain
+# Uses: docker buildx build --load --progress=plain
+
+# With FORCE=1 (bypass Docker cache)
+make FORCE=1 <target>
+# Uses: docker buildx build --load --progress=plain --no-cache
+
+# Cross-platform build
+make PLATFORM=linux/arm64 <target>
+# Uses: docker buildx build --load --progress=plain --platform linux/arm64
+
+# Build and push to registry
+make PUSH=1 <target>
+# Uses: docker buildx build --push --progress=plain
 ```
 
 ## Docker Images Provided
