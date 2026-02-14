@@ -158,33 +158,40 @@ architecture, and registry authentication.
 
 #### Prerequisites for Cross-Platform Builds
 
-Cross-platform builds (e.g., building arm64 on an amd64 host) require additional
-setup beyond the default Docker installation.
+Cross-platform builds (e.g., building arm64 on an amd64 host)
+require additional setup beyond the default Docker installation.
 
 **1. Create a multi-platform builder:**
 
-The default Docker builder doesn't support cross-platform builds. Create one
-with the `docker-container` driver:
+The default Docker builder doesn't support cross-platform builds.
+Create one with the `docker-container` driver:
 
 ```bash
 docker buildx create --name multiarch \
-    --driver docker-container --bootstrap --use
+    --driver docker-container \
+    --driver-opt "network=host" \
+    --bootstrap --use
 ```
 
 **2. Install QEMU emulation (for cross-arch):**
 
-To build for architectures other than your host (e.g., arm64 on amd64):
+To build for architectures other than your host
+(e.g., arm64 on amd64):
 
 ```bash
-docker run --privileged --rm tonistiigi/binfmt --install arm64
+docker run --privileged --rm \
+    tonistiigi/binfmt --install arm64
 ```
 
-After installing QEMU, recreate the builder to pick up the new platforms:
+After installing QEMU, recreate the builder to pick up
+the new platforms:
 
 ```bash
 docker buildx rm multiarch
 docker buildx create --name multiarch \
-    --driver docker-container --bootstrap --use
+    --driver docker-container \
+    --driver-opt "network=host" \
+    --bootstrap --use
 ```
 
 **3. Verify platform support:**
@@ -223,13 +230,18 @@ docker -H ssh://user@arm64-host info
 **2. Create a multi-node builder with SSH:**
 
 ```bash
-# Create builder with docker-container driver (required for multi-node)
+# Create builder with docker-container driver
 docker buildx create --name multiarch-native \
-    --driver docker-container --platform linux/amd64
+    --driver docker-container \
+    --driver-opt "network=host" \
+    --platform linux/amd64
 
 # Append remote arm64 node via SSH
-docker buildx create --name multiarch-native --append \
-    --platform linux/arm64 ssh://user@arm64-host
+docker buildx create \
+    --name multiarch-native --append \
+    --driver-opt "network=host" \
+    --platform linux/arm64 \
+    ssh://user@arm64-host
 
 # Activate and verify
 docker buildx use multiarch-native
@@ -239,12 +251,28 @@ docker buildx inspect --bootstrap
 **3. Build using native nodes:**
 
 ```bash
-# Each platform builds on its native architecture (default behavior)
 make quay.io/amery/docker-ubuntu-builder-24.04
 ```
 
-Buildx automatically routes each platform to the appropriate node and merges the
-manifest.
+Buildx routes each platform to the appropriate node
+and merges the manifest.
+
+#### Why `network=host`
+
+The `docker-container` driver uses bridge networking by
+default. This causes intermittent HTTP 400 errors during
+`apt-get` operations, particularly `unminimize`. The root
+cause is APT's HTTP pipelining interacting badly with the
+bridge NAT layer.
+
+Two measures work together to prevent these errors:
+
+- **Builder**: `--driver-opt "network=host"` bypasses
+  bridge networking
+- **Dockerfiles**: `Acquire::http::Pipeline-Depth "0"`
+  disables APT's request pipelining
+
+Neither is sufficient alone. Both are already in place.
 
 #### Per-Image Architecture Exclusions
 

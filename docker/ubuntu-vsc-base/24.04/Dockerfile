@@ -1,20 +1,23 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
+# work around apt pipelining issues in buildkit containers
+RUN echo 'Acquire::http::Pipeline-Depth "0";' > /etc/apt/apt.conf.d/99no-pipeline
+
 #
 # foundation
 #
-RUN apt-get update \
-	&& apt-get dist-upgrade -y \
+RUN apt-get update && apt-get dist-upgrade -y \
 	&& apt-get install --no-install-recommends -y \
 		ca-certificates \
 		language-pack-en \
 		unminimize \
-	&& apt-get clean \
-	&& rm -rf /var/lib/apt/lists/*
+	&& apt-get clean
 
 # This system has been minimized by removing packages and content that are
 # not required on a system that users do not log into.
-RUN yes | unminimize
+RUN apt-get update && apt-get dist-upgrade -y \
+	&& yes | unminimize \
+	&& apt-get clean
 
 ENV LANG=en_GB.UTF-8
 RUN update-locale LANG=$LANG LC_MESSAGES=POSIX

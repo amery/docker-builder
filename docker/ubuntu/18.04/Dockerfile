@@ -3,7 +3,12 @@ FROM ubuntu:18.04
 LABEL docker-builder.version.ubuntu=18.04
 
 # UK mirror
-RUN sed -i 's|http://archive.ubuntu.com|http://gb.archive.ubuntu.com|' /etc/apt/sources.list
+RUN sed -i \
+	-e 's|http://archive.ubuntu.com|http://gb.archive.ubuntu.com|' \
+	/etc/apt/sources.list
+
+# work around apt pipelining issues in buildkit containers
+RUN echo 'Acquire::http::Pipeline-Depth "0";' > /etc/apt/apt.conf.d/99no-pipeline
 
 # reduce apt-get install warnings
 ENV TERM=xterm
@@ -19,7 +24,9 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-re
 
 # This system has been minimized by removing packages and content that are
 # not required on a system that users do not log into.
-RUN yes | unminimize
+RUN apt-get update && apt-get dist-upgrade -y \
+	&& yes | unminimize \
+	&& apt-get clean
 
 # use a locale with utf-8 support
 #
@@ -28,7 +35,7 @@ RUN update-locale LANG=$LANG LC_MESSAGES=POSIX
 
 # build essentials and basic interactivity
 #
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-recommends -y \
 	autoconf \
 	autoconf-archive \
 	automake \
@@ -53,7 +60,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 
 # extra development and debugging tools
 #
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-recommends -y \
 	cscope \
 	gdb \
 	git \
