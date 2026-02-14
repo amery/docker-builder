@@ -196,6 +196,17 @@ When adding tools with Python dependencies:
 
 ## Testing Your Changes
 
+### Build Prerequisites
+
+All builds produce multi-architecture manifests (amd64 + arm64)
+and push to registry. Before
+building:
+
+1. **Registry login**: `docker login quay.io`
+2. **Multi-arch builder**: A `multiarch-native` buildx builder with
+   native nodes (see
+   [AGENTS.md](./AGENTS.md#using-ssh-remote-builders-for-native-builds))
+
 ### Build Workflows
 
 The build system uses two-level caching (Make markers + Docker layers). Here
@@ -204,7 +215,7 @@ are the most common workflows:
 #### Normal Development
 
 ```bash
-# First build
+# First build (amd64+arm64, pushed to registry)
 make quay.io/amery/docker-<name>-builder-<version>
 
 # Make changes to Dockerfile
@@ -235,7 +246,7 @@ make quay.io/amery/docker-<newname>-builder
 #### Quick Reference
 
 | Changed | Command |
-|---------|---------|
+| ------- | ------- |
 | Modified existing Dockerfile | `make FORCE=1 <target>` |
 | Added new Dockerfile | `make files && make <target>` |
 | Build seems stuck | `make -B <target>` |

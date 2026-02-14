@@ -1,16 +1,18 @@
 DOCKER ?= docker
 
 # Multi-architecture support
-# PLATFORM: target platform(s) - e.g., linux/arm64, linux/amd64,linux/arm64
-# PUSH: set to 1 to build and push to registry (required for multi-platform)
-PLATFORM ?=
-PUSH ?=
+BUILDER ?= multiarch-native
+PLATFORM := linux/amd64,linux/arm64
 
-ifeq ($(PUSH),1)
-DOCKER_BUILD ?= $(DOCKER) buildx build --push
+ifneq ($(BUILDER),)
+BUILDER_OPT = --builder $(BUILDER)
 else
-DOCKER_BUILD ?= $(DOCKER) buildx build --load
+BUILDER_OPT =
 endif
+
+DOCKER_TAG ?= $(DOCKER) buildx imagetools create $(BUILDER_OPT)
+
+DOCKER_BUILD ?= $(DOCKER) buildx build $(BUILDER_OPT) --push
 
 ifneq ($(FORCE),)
 DOCKER_BUILD_OPT ?= --progress=plain --no-cache
@@ -18,12 +20,9 @@ else
 DOCKER_BUILD_OPT ?= --progress=plain
 endif
 
-# Add platform flag when PLATFORM is specified
-ifneq ($(PLATFORM),)
-DOCKER_BUILD_OPT += --platform $(PLATFORM)
-endif
-
 B = $(CURDIR)
+
+BUILD_SYS = Makefile $(CONFIG_MK) $(IMAGES_MK)
 
 # scripts
 #
@@ -57,7 +56,7 @@ all: images
 files: $(RULES_MK) $(CONFIG_MK) $(IMAGES_MK) $(ENTRYPOINT_MK) $(TAG_DIRS)
 
 clean:
-	rm -f $(B)/.image-* $(RULES_MK) $(IMAGES_MK) $(ENTRYPOINT_MK) $(TAG_DIRS) *~
+	rm -f $(B)/.image-* $(B)/.alias-* $(RULES_MK) $(IMAGES_MK) $(ENTRYPOINT_MK) $(TAG_DIRS) *~
 
 .PHONY: FORCE
 FORCE:
@@ -86,8 +85,8 @@ include $(IMAGES_MK)
 include $(ENTRYPOINT_MK)
 
 images: files $(IMAGES)
-push: files $(PUSHERS)
-push-all: files $(ALL_PUSHERS)
+push: images
+push-all: images
 pull: files $(PULLERS)
 
 .PHONY: tags tags-to-delete

@@ -31,7 +31,6 @@ ln -s $PWD/docker-builder/bin/x ~/bin/x
 cd docker-builder
 make                    # Build all images
 make golang/latest      # Build specific image
-make push              # Push to registry
 make tags-gc           # Clean up obsolete tags
 ```
 
@@ -135,11 +134,6 @@ The build system provides several make targets for managing images:
 - Images are automatically tagged as both `:latest` and `:<version>`
   (e.g., `:24.04`)
 
-#### Pushing Images
-
-- `make push-docker-<name>-builder` - Push image to registry
-- Requires authentication to quay.io registry
-
 #### Examples
 
 ```bash
@@ -149,39 +143,28 @@ make quay.io/amery/docker-ubuntu-builder
 # Build one specific version
 make quay.io/amery/docker-ubuntu-builder-24.04
 
-# Push the image to registry
-make push-docker-ubuntu-builder
-
-# Build and push in sequence
-make quay.io/amery/docker-ubuntu-builder push-docker-ubuntu-builder
-
-# Force rebuild with clean Docker layers (single version)
+# Force rebuild (single version)
 make FORCE=1 quay.io/amery/docker-golang-builder-1.25
 
-# Force complete rebuild of ALL versions bypassing all caches
+# Force complete rebuild of ALL versions
 make -B FORCE=1 quay.io/amery/docker-golang-builder
 ```
 
-#### Cross-Architecture Builds
+#### Multi-Architecture Builds
 
-Cross-platform builds require a multi-platform buildx builder and QEMU
-emulation. See [Prerequisites for Cross-Platform Builds][cross-platform-prereq]
-for setup instructions.
+All builds produce multi-architecture manifests (amd64 + arm64)
+and push to registry. This requires a `multiarch-native` buildx
+builder and registry authentication (`docker login quay.io`).
+
+See [Prerequisites for Cross-Platform Builds][cross-platform-prereq]
+for builder setup instructions.
 
 ```bash
-# Build for arm64 (stores locally)
-make PLATFORM=linux/arm64 quay.io/amery/docker-ubuntu-builder-24.04
+# Default: builds amd64+arm64, pushes to registry
+make quay.io/amery/docker-ubuntu-builder-24.04
 
-# Build for arm64 and push to registry
-make PUSH=1 PLATFORM=linux/arm64 quay.io/amery/docker-ubuntu-builder-24.04
-
-# Multi-architecture manifest (amd64 + arm64), pushes to registry
-make PUSH=1 PLATFORM=linux/amd64,linux/arm64 \
-    quay.io/amery/docker-ubuntu-builder-24.04
-
-# Build on remote arm64 host via Docker context
-make DOCKER="docker --context myarm64host" \
-    quay.io/amery/docker-ubuntu-builder-24.04
+# Use a different builder
+make BUILDER=mybuilder quay.io/amery/docker-ubuntu-builder-24.04
 ```
 
 For detailed information about the build system mechanics, caching behavior,
@@ -189,21 +172,21 @@ and troubleshooting, see [Build System Mechanics][build-system-mechanics].
 
 ## Environment Variables
 
-### Build Configuration
+### Make Variables
+
+| Variable           | Purpose
+|--------------------|-----------------------------------------------------
+| `FORCE`            | Bypass Docker layer cache (`--no-cache`)
+| `BUILDER`          | Buildx builder name (default: `multiarch-native`)
+| `DOCKER_BUILD_OPT` | Extra `docker buildx build` args (default: `--progress=plain`)
+
+### `docker-builder-run` Configuration
 
 | Variable             | Purpose
 |----------------------|-----------------------------------------------------------
 | `DOCKER_DIR`         | Directory containing Dockerfile to build
 | `DOCKER_ID`          | Pre-built image ID to use instead of building
-| `DOCKER_BUILD_OPT`   | Additional arguments for `docker buildx build` (default: --progress=plain)
 | `DOCKER_BUILD_FORCE` | Force rebuild/repull of the image
-| `PLATFORM`           | Target platform(s) for cross-arch builds (e.g., `linux/arm64`)
-| `PUSH`               | Set to 1 to push to registry (required for multi-platform)
-
-### Runtime Configuration
-
-| Variable             | Purpose
-|----------------------|-----------------------------------------------------------
 | `DOCKER_RUN_ENV`     | Environment variables to pass through to container
 | `DOCKER_RUN_VOLUMES` | Additional directories to mount in container
 | `DOCKER_RUN_WS`      | Override automatic workspace detection

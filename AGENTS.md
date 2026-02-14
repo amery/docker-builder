@@ -79,8 +79,8 @@ done
 
 `gen_images_mk.sh` creates targets for each discovered image:
 
-- Generates `.image-<name>` marker files
-- Creates push/pull targets
+- Generates `.image-<name>` and `.alias-<name>` marker files
+- Creates pull targets
 - Handles tag aliases and latest symlinks
 
 ### 4. Entrypoint Generation
@@ -115,9 +115,9 @@ The build system employs two independent caching layers:
 
 #### 1. Make Layer (Marker Files)
 
-- **Files**: `.image-*` marker files in the build directory
-- **Purpose**: Track what make has already built to avoid redundant work
-- **Behavior**: If marker exists and dependencies unchanged, skip rebuild
+- **Files**: `.image-*` (build) and `.alias-*` (tag) markers
+- **Purpose**: Track build and alias completion separately
+- **Behavior**: If marker exists and deps unchanged, skip
 - **Control**: Use `-B` flag or delete marker files
 
 #### 2. Docker Layer (Build Cache)
@@ -138,35 +138,23 @@ The build system employs two independent caching layers:
 
 ### Multi-Architecture Builds
 
-The build system uses `docker buildx` for all builds, enabling cross-platform
-image creation.
+All builds produce multi-architecture manifests (amd64 + arm64)
+and push to registry. This requires a
+`multiarch-native` buildx builder with native nodes for each
+architecture, and registry authentication.
+
+#### Prerequisites
+
+1. **Registry login**: `docker login quay.io`
+2. **Multi-arch builder**: See
+   [SSH Remote Builders](#using-ssh-remote-builders-for-native-builds)
 
 #### Build Variables
 
-| Variable | Purpose | Example |
+| Variable | Default | Purpose |
 | -------- | ------- | ------- |
-| `PLATFORM` | Target platform(s) | `linux/arm64`, `linux/amd64,linux/arm64` |
-| `PUSH` | Push to registry (required for multi-platform) | `1` |
-| `DOCKER` | Docker command override | `docker --context myhost` |
-
-#### Build Modes
-
-| Command | Behavior |
-| ------- | -------- |
-| `make <target>` | Native arch, stored locally (`buildx --load`) |
-| `make PLATFORM=linux/arm64 <target>` | arm64, stored locally |
-| `make PUSH=1 <target>` | Native arch, pushed to registry |
-| `make PUSH=1 PLATFORM=linux/arm64 <target>` | arm64, pushed to registry |
-| `make PUSH=1 PLATFORM=linux/amd64,linux/arm64 <target>` | Multi-arch manifest, pushed |
-
-#### Notes
-
-- **Single-platform builds** use `--load` to store images in the local Docker
-  daemon. The two-step workflow (`make` then `make push`) still works.
-- **Multi-platform builds** require `PUSH=1` because multi-arch manifests
-  cannot be stored locally—they must be pushed to a registry.
-- **Remote builds** can use Docker contexts:
-  `make DOCKER="docker --context myarm64host" <target>`
+| `BUILDER` | `multiarch-native` | Buildx builder name |
+| `DOCKER` | `docker` | Docker command override |
 
 #### Prerequisites for Cross-Platform Builds
 
@@ -251,9 +239,8 @@ docker buildx inspect --bootstrap
 **3. Build using native nodes:**
 
 ```bash
-# Each platform builds on its native architecture
-make PUSH=1 PLATFORM=linux/amd64,linux/arm64 \
-    quay.io/amery/docker-ubuntu-builder-24.04
+# Each platform builds on its native architecture (default behavior)
+make quay.io/amery/docker-ubuntu-builder-24.04
 ```
 
 Buildx automatically routes each platform to the appropriate node and merges the
@@ -333,18 +320,20 @@ make files
 Marker files prevent redundant builds:
 
 ```bash
-# Building creates marker
+# Building creates markers
 make quay.io/amery/docker-ubuntu-builder-24.04
 # Creates: .image-docker-ubuntu-builder-24.04
+#          .alias-docker-ubuntu-builder-24.04
 
 # Subsequent call skips build
 make quay.io/amery/docker-ubuntu-builder-24.04
 # Output: make: Nothing to be done for '...'
 
-# Force rebuild by removing marker
+# Force rebuild by removing markers
 rm .image-docker-ubuntu-builder-24.04
+rm .alias-docker-ubuntu-builder-24.04
 make quay.io/amery/docker-ubuntu-builder-24.04
-# Rebuilds
+# Rebuilds and re-aliases
 ```
 
 ### Target Name Patterns
@@ -356,10 +345,10 @@ Understanding target naming helps navigate the build system:
 ```text
 docker/<name>/<version>/Dockerfile
     ↓
-quay.io/amery/docker-<name>-builder                    # All versions
-quay.io/amery/docker-<name>-builder-<version>          # Specific version
-push-docker-<name>-builder                             # Push all versions
-push-docker-<name>-builder-<version>                   # Push specific
+quay.io/amery/docker-<name>-builder             # All versions
+quay.io/amery/docker-<name>-builder-<version>   # Specific
+pull-docker-<name>-builder                      # Pull all
+pull-docker-<name>-builder-<version>            # Pull specific
 ```
 
 #### Examples
@@ -387,16 +376,19 @@ make quay.io/amery/docker-ubuntu-builder-24.04    # Builds from Dockerfile
 make quay.io/amery/docker-ubuntu-builder-latest   # Tags 24.04 as :latest
 ```
 
-The `latest` target does not build anything - it depends on the real version
-being built first, then tags it:
+The `latest` target does not build anything — it depends on the
+real version's alias sentinel, then creates a registry-side tag:
 
 <!-- markdownlint-disable MD010 -->
 
 ```makefile
 # Generated rule for symlink
-.image-docker-ubuntu-builder-latest:
-	docker tag quay.io/amery/docker-ubuntu-builder:24.04 \
-	           quay.io/amery/docker-ubuntu-builder:latest
+.image-docker-ubuntu-builder-latest: .alias-docker-ubuntu-builder-24.04
+	$(DOCKER_TAG) -t $(PREFIX)docker-ubuntu-builder:latest \
+	              $(PREFIX)docker-ubuntu-builder:24.04
+	touch $@
+
+.alias-docker-ubuntu-builder-latest: .image-docker-ubuntu-builder-latest
 	touch $@
 ```
 
@@ -452,7 +444,7 @@ cat images.mk | grep docker-ubuntu-builder  # Find specific targets
 #### Verify marker state
 
 ```bash
-ls -la .image-*         # List all marker files
+ls -la .image-* .alias-*  # List all marker files
 make -n <target>        # Dry run, show what would execute
 ```
 
@@ -466,21 +458,16 @@ make -B FORCE=1         # Build everything from scratch
 #### Check Docker build arguments
 
 ```bash
-# Default build (native arch, local storage)
+# Default build (multi-arch, pushed to registry)
 make <target>
-# Uses: docker buildx build --load --progress=plain
+# Uses: docker buildx build --builder multiarch-native --push
+#        --progress=plain --platform linux/amd64,linux/arm64
 
 # With FORCE=1 (bypass Docker cache)
 make FORCE=1 <target>
-# Uses: docker buildx build --load --progress=plain --no-cache
-
-# Cross-platform build
-make PLATFORM=linux/arm64 <target>
-# Uses: docker buildx build --load --progress=plain --platform linux/arm64
-
-# Build and push to registry
-make PUSH=1 <target>
-# Uses: docker buildx build --push --progress=plain
+# Uses: docker buildx build --builder multiarch-native --push
+#        --progress=plain --no-cache
+#        --platform linux/amd64,linux/arm64
 ```
 
 ## Docker Images Provided
@@ -758,12 +745,6 @@ When updating docker-builder:
    make FORCE=1
    ```
 
-3. Push to registry:
-
-   ```bash
-   make push
-   ```
-
 ### Garbage Collection
 
 Remove obsolete tags:
@@ -776,17 +757,15 @@ make tags-gc
 
 ### Image-Specific Targets
 
-For each image (e.g., `micrologic`), the following targets are available:
+For each image (e.g., `micrologic`), the following targets
+are available:
 
 ```bash
-# Build the image
+# Build and push to registry
 make quay.io/amery/docker-micrologic-builder
 
-# Push to registry
-make push-docker-micrologic-builder
-
-# Build and push
-make quay.io/amery/docker-micrologic-builder push-docker-micrologic-builder
+# Pull from registry
+make pull-docker-micrologic-builder
 ```
 
 ### Global Targets
@@ -795,8 +774,8 @@ make quay.io/amery/docker-micrologic-builder push-docker-micrologic-builder
 # Build all images
 make
 
-# Push all images
-make push
+# Pull all images
+make pull
 
 # Clean obsolete tags
 make tags-gc
