@@ -1,5 +1,7 @@
 FROM quay.io/amery/docker-ubuntu-builder:24.04
 
+# build: !arm64
+
 # Point to run-hook.sh URL for documentation (not yet used by docker-builder-run)
 LABEL docker-builder.run-hook="https://raw.githubusercontent.com/amery/docker-builder/master/docker/poky/24.04/run-hook.sh"
 

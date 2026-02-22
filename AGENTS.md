@@ -246,6 +246,25 @@ make quay.io/amery/docker-ubuntu-builder-24.04
 Buildx automatically routes each platform to the appropriate node and merges the
 manifest.
 
+#### Per-Image Architecture Exclusions
+
+Some Dockerfiles cannot build for all architectures
+(e.g., hardcoded amd64 paths or amd64-only downloads).
+These opt out with a directive comment:
+
+```dockerfile
+# build: !arm64
+```
+
+The generator computes a per-image `PLATFORM` value,
+filtering out excluded architectures.
+
+Multiple exclusions are supported:
+
+```dockerfile
+# build: !arm64 !s390x
+```
+
 ### Target Types: Version-Specific vs Aggregate
 
 The build system generates two types of targets for each image:

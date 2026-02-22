@@ -6,9 +6,37 @@ PREFIX="$1"
 OWN="$2"
 shift 2
 
+ARCHS="amd64 arm64"
+
 . "$(dirname "$0")/common.in"
 
 DOLLAR="\$\$"
+
+get_arch_exclusions() {
+	local df="$1"
+
+	if [ -n "$df" ]; then
+		grep '^# build:' "$df" 2>/dev/null \
+			| grep -o '![a-z0-9_]*' \
+			| sed 's/!//' \
+			| tr '\n' ' ' \
+			| sed 's/ *$//'
+	fi
+}
+
+get_platform() {
+	local excl=" $1 "
+	local arch sep="" result=""
+
+	for arch in $ARCHS; do
+		case "$excl" in
+		*" $arch "*) continue ;;
+		esac
+		result="${result}${sep}linux/${arch}"
+		sep=","
+	done
+	echo "$result"
+}
 
 #
 #
@@ -164,6 +192,9 @@ while read tag dir; do
 		files="$(gen_image_files "$dir" "$s0" '$(BUILD_SYS)')"
 	fi
 
+	excl=$(get_arch_exclusions "$df")
+	platform=$(get_platform "$excl")
+
 	cat <<EOT
 
 # $tag
@@ -175,6 +206,7 @@ while read tag dir; do
 $d1:
 	\$(DOCKER) pull \$(PREFIX)$tag
 
+$s1: PLATFORM = $platform
 $(list_target $s1 $files)
 EOT
 

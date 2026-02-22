@@ -1,5 +1,7 @@
 FROM quay.io/amery/docker-ubuntu-builder:22.04
 
+# build: !arm64
+
 ENV OPENJDK_VERSION="19"
 ENV ANDROID_API_VERSIONS="33 34"
 ENV ANDROID_CMD_VERSION="10406996_latest"

@@ -2,7 +2,6 @@ DOCKER ?= docker
 
 # Multi-architecture support
 BUILDER ?= multiarch-native
-PLATFORM := linux/amd64,linux/arm64
 
 ifneq ($(BUILDER),)
 BUILDER_OPT = --builder $(BUILDER)

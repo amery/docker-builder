@@ -1,5 +1,7 @@
 FROM quay.io/amery/docker-ubuntu-android-builder:latest
 
+# build: !arm64
+
 ENV NODE_VERSION="18.x"
 
 LABEL docker-builder.version.nodejs="$NODE_VERSION"
