@@ -1,3 +1,19 @@
+gen_npm_prefix() {
+	if [ -n "${NPM_CONFIG_PREFIX:-}" ]; then
+		cat <<EOF
+	export NPM_CONFIG_PREFIX="$NPM_CONFIG_PREFIX"
+EOF
+	else
+		cat <<EOF
+	if [ -d "$WS/node_modules" ]; then
+		export NPM_CONFIG_PREFIX="$WS"
+	else
+		export NPM_CONFIG_PREFIX="\$HOME/.local/share/npm"
+	fi
+EOF
+	fi
+}
+
 cat <<EOT
 
 if [ -s "\$HOME/.nvm/nvm.sh" ]; then
@@ -11,9 +27,13 @@ if [ -s "\$HOME/.nvm/nvm.sh" ]; then
 		. "\$NVM_DIR/bash_completion"
 	fi
 else
-	export NPM_CONFIG_PREFIX="${NPM_CONFIG_PREFIX:-$WS}"
+	mkdir -p "\$HOME/.local/share/npm/bin"
+	export PATH="\$HOME/.local/share/npm/bin:\$PATH"
+
+$(gen_npm_prefix)
 fi
 EOT
+unset gen_npm_prefix
 
 npm_needs() {
 	if [ $# -gt 0 ]; then
