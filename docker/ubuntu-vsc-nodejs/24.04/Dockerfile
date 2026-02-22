@@ -2,6 +2,8 @@ FROM quay.io/amery/docker-ubuntu-vsc-base-builder:24.04
 
 ENV NODE_VERSION="22.x"
 
+LABEL docker-builder.run-env.npm="NPM_CONFIG_PREFIX"
+
 #
 # update world
 #
@@ -26,3 +28,6 @@ RUN npm i -g \
 	yarn@latest \
 	pnpm@latest \
 	&& rm -rf ~/.npm
+
+COPY 10-node.sh /etc/entrypoint.d/
+COPY 20-node-pnpm.sh /etc/entrypoint.d/
