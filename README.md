@@ -101,7 +101,7 @@ container.
 
 ### Development Environments
 
-- **golang/{1.18-1.25}** - Go development environments
+- **golang/{1.18-1.26}** - Go development environments
 - **nodejs/{lts,current}** - Node.js with pnpm
 - **ubuntu-nodejs-golang/{22.04,24.04}** - Combined Go + Node.js
 

@@ -312,7 +312,7 @@ Build all versions of an image family:
 
 ```bash
 make quay.io/amery/docker-golang-builder    # ALL golang versions
-# Builds: 1.18, 1.19, 1.20, 1.21, 1.22, 1.23, 1.24, 1.25, latest, multi
+# Builds: 1.18, 1.19, 1.20, 1.21, 1.22, 1.23, 1.24, 1.25, 1.26, latest, multi
 
 make quay.io/amery/docker-ubuntu-builder    # ALL ubuntu versions
 # Builds: 16.04, 18.04, 20.04, 22.04, 24.04, latest
@@ -528,7 +528,7 @@ make FORCE=1 <target>
 
 ### Development Stacks
 
-- **golang/{1.18-1.25}**: Go development environments
+- **golang/{1.18-1.26}**: Go development environments
 - **nodejs/{lts,current}**: Node.js with pnpm support
 - **ubuntu-nodejs-golang/{22.04,24.04}**: Combined Node.js + Go
 
