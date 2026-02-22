@@ -3,7 +3,9 @@ FROM quay.io/amery/docker-ubuntu-builder:22.04
 #
 # update world
 #
-RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
+RUN apt-get update \
+	&& DEBIAN_FRONTEND="noninteractive" apt-get dist-upgrade -y \
+	&& apt-get clean
 
 #
 # android dependencies

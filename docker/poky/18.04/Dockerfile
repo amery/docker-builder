@@ -9,7 +9,9 @@ LABEL docker-builder.run-env.oe="MACHINE DISTRO TCLIBC OEROOT DL_DIR BUILDDIR BB
 #
 # update world
 #
-RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
+RUN apt-get update \
+	&& DEBIAN_FRONTEND="noninteractive" apt-get dist-upgrade -y \
+	&& apt-get clean
 
 # OE/Yocto dependencies for pyro (2.3) era
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-recommends -y \

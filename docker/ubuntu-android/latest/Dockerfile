@@ -9,7 +9,9 @@ ENV ANDROID_CMD_VERSION="10406996_latest"
 #
 # update world
 #
-RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
+RUN apt-get update \
+	&& DEBIAN_FRONTEND="noninteractive" apt-get dist-upgrade -y \
+	&& apt-get clean
 
 #
 # Java

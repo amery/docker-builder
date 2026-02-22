@@ -7,7 +7,9 @@ LABEL docker-builder.run-hook="https://raw.githubusercontent.com/amery/docker-bu
 LABEL docker-builder.run-env.oe="MACHINE DISTRO TCLIBC OEROOT DL_DIR BUILDDIR BB_ENV_PASSTHROUGH_ADDITIONS"
 
 # Update world
-RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
+RUN apt-get update \
+	&& DEBIAN_FRONTEND="noninteractive" apt-get dist-upgrade -y \
+	&& apt-get clean
 
 # OE/Yocto core dependencies
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-recommends -y \
