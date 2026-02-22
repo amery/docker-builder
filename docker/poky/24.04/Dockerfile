@@ -1,7 +1,5 @@
 FROM quay.io/amery/docker-ubuntu-builder:24.04
 
-# build: !arm64
-
 # Point to run-hook.sh URL for documentation (not yet used by docker-builder-run)
 LABEL docker-builder.run-hook="https://raw.githubusercontent.com/amery/docker-builder/master/docker/poky/24.04/run-hook.sh"
 
@@ -33,11 +31,13 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-re
 	python3-pexpect \
 	&& apt-get clean
 
-# Architecture support for 32-bit builds
-RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-recommends -y \
+# Architecture support for 32-bit builds (amd64 only)
+RUN if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
+	apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-recommends -y \
 	gcc-multilib \
 	g++-multilib \
-	&& apt-get clean
+	&& apt-get clean \
+	; fi
 
 # Compression tools
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-recommends -y \
