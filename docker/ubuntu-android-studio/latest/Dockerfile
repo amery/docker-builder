@@ -2,7 +2,7 @@ FROM quay.io/amery/docker-ubuntu-vscode-builder:22.04
 
 # build: !arm64
 
-ENV OPENJDK_VERSION="19"
+ENV OPENJDK_VERSION="21"
 ENV ANDROID_API_VERSIONS="33 34"
 ENV ANDROID_STUDIO_VERSION="2022.3.1.19"
 ENV ANDROID_CMD_VERSION="10406996_latest"
@@ -10,7 +10,9 @@ ENV ANDROID_CMD_VERSION="10406996_latest"
 #
 # update world
 #
-RUN apt-get update && apt-get dist-upgrade -y && apt-get clean
+RUN apt-get update \
+	&& DEBIAN_FRONTEND="noninteractive" apt-get dist-upgrade -y \
+	&& apt-get clean
 
 #
 # Java
