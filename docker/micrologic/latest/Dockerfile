@@ -24,7 +24,6 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-re
 RUN apt-get update && apt-get dist-upgrade -y \
 	&& apt-get install -y \
 		python3-full \
-		python3-venv \
 		python3-dev \
 		libclang-dev \
 		libclang-cpp14 \

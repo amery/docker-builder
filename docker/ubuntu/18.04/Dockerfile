@@ -54,6 +54,7 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-re
 	psmisc \
 	python3-pip \
 	python3-setuptools \
+	python3-venv \
 	time \
 	vim \
 	&& apt-get clean
@@ -72,6 +73,8 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-re
 # dynamic version
 #
 COPY builder_version.sh /usr/local/bin/builder_version
+
+COPY 10-python.sh /etc/entrypoint.d/
 
 # trampoline
 COPY entrypoint.sh /entrypoint.sh

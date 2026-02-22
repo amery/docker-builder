@@ -40,6 +40,7 @@ RUN apt-get update && apt-get dist-upgrade -y \
 		python-is-python3 \
 		python3-pip \
 		python3-setuptools \
+		python3-venv \
 		time \
 		vim \
 	&& apt-get clean
@@ -115,6 +116,7 @@ COPY builder_version.sh /usr/local/bin/builder_version
 #
 # entrypoint
 #
+COPY 10-python.sh /etc/entrypoint.d/
 COPY entrypoint.sh /entrypoint.sh
 COPY devcontainer.sh /devcontainer-init.sh
 
