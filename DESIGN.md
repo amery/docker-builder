@@ -42,7 +42,7 @@ variables through to the container.
 Workspace type detected automatically:
 
 - **golang**: Via `GOPATH` presence, sets up Go workspace structure
-- **nodejs**: Via `NPM_CONFIG_PREFIX`, configures npm directories
+- **nodejs**: Via `NPM_CONFIG_PREFIX`, mounts npm directories
 - **x11**: Via `DISPLAY`, mounts X11 socket and sound device
 
 Each mode adds appropriate volumes and configuration automatically.
