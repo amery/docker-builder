@@ -218,9 +218,8 @@ are the most common workflows:
 # First build (amd64+arm64, pushed to registry)
 make quay.io/amery/docker-<name>-builder-<version>
 
-# Make changes to Dockerfile
-# Rebuild with clean Docker layers (bypasses Docker cache)
-make FORCE=1 quay.io/amery/docker-<name>-builder-<version>
+# Make changes to Dockerfile, then rebuild
+make quay.io/amery/docker-<name>-builder-<version>
 ```
 
 #### Stuck Build Issues
@@ -247,7 +246,7 @@ make quay.io/amery/docker-<newname>-builder
 
 | Changed | Command |
 | ------- | ------- |
-| Modified existing Dockerfile | `make FORCE=1 <target>` |
+| Modified existing Dockerfile | `make <target>` |
 | Added new Dockerfile | `make files && make <target>` |
 | Build seems stuck | `make -B <target>` |
 | Complete rebuild needed | `make -B FORCE=1 <target>` |
@@ -290,10 +289,10 @@ For detailed explanation of the build system mechanics, see
    ```bash
    # Rebase on latest upstream
    git fetch upstream
-   git rebase upstream/master
+   git rebase upstream/main
    
    # Squash related commits if needed
-   git rebase -i upstream/master
+   git rebase -i upstream/main
    ```
 
 3. **Create pull request**:

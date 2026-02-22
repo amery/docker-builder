@@ -30,7 +30,7 @@ ln -s $PWD/docker-builder/bin/x ~/bin/x
 ```bash
 cd docker-builder
 make                    # Build all images
-make golang/latest      # Build specific image
+make quay.io/amery/docker-golang-builder-latest  # Build specific image
 make tags-gc           # Clean up obsolete tags
 ```
 
@@ -143,10 +143,10 @@ make quay.io/amery/docker-ubuntu-builder
 # Build one specific version
 make quay.io/amery/docker-ubuntu-builder-24.04
 
-# Force rebuild (single version)
+# Bypass Docker layer cache (e.g. refresh base images)
 make FORCE=1 quay.io/amery/docker-golang-builder-1.25
 
-# Force complete rebuild of ALL versions
+# Bypass all caching
 make -B FORCE=1 quay.io/amery/docker-golang-builder
 ```
 

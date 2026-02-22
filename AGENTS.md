@@ -132,7 +132,7 @@ The build system employs two independent caching layers:
 | Command | Make Cache | Docker Cache | Use When |
 | ------- | ---------- | ------------ | -------- |
 | `make <target>` | ✓ Used | ✓ Used | Normal incremental builds |
-| `make FORCE=1 <target>` | ✓ Used | ✗ Bypassed | Changed Dockerfile, want clean layer rebuild |
+| `make FORCE=1 <target>` | ✓ Used | ✗ Bypassed | Refresh base images or upstream packages |
 | `make -B <target>` | ✗ Bypassed | ✓ Used | Marker file stale, dependencies should rebuild |
 | `make -B FORCE=1 <target>` | ✗ Bypassed | ✗ Bypassed | Complete clean rebuild from scratch |
 
@@ -338,7 +338,7 @@ docker/<name>/<version>/  → quay.io/amery/docker-<name>-builder-<version>
 
 ```bash
 # Changed docker/golang/1.25/Dockerfile - rebuild just that version
-make FORCE=1 quay.io/amery/docker-golang-builder-1.25
+make quay.io/amery/docker-golang-builder-1.25
 ```
 
 #### Scenario: Make thinks it's built but it hasn't
@@ -786,10 +786,10 @@ When updating docker-builder:
 ### Updating Existing Images
 
 1. Modify the Dockerfile
-2. Force rebuild:
+2. Rebuild:
 
    ```bash
-   make FORCE=1
+   make <target>
    ```
 
 ### Garbage Collection
@@ -941,17 +941,14 @@ Examples:
 ### Build Issues
 
 ```bash
-# Verbose build output
-make DOCKER_BUILD_OPT="--progress=plain"
-
 # Show generated rules
 cat rules.mk images.mk
 
 # List discovered images
 cat .tag-dirs
 
-# Check specific image build
-make DOCKER_BUILD_OPT="--no-cache" quay.io/amery/docker-<name>-builder
+# Bypass Docker layer cache (e.g. refresh base images)
+make FORCE=1 quay.io/amery/docker-<name>-builder
 ```
 
 ### Runtime Issues
