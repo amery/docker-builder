@@ -453,7 +453,7 @@ The build system generates makefiles dynamically:
    scripts/gen_rules_mk.sh > rules.mk
    ```
 
-2. **images.mk**: Regenerates when Dockerfiles are added/removed
+2. **images.mk**: Always regenerates, updates only when content changes
 
    ```bash
    scripts/gen_images_mk.sh > images.mk

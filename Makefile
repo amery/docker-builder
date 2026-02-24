@@ -71,9 +71,9 @@ $(TAG_DIRS): $(GEN_TAG_DIRS_SH) FORCE
 	$(GEN_TAG_DIRS_SH) > $@~
 	if ! cmp -s $@~ $@; then mv $@~ $@; else rm $@~; fi
 
-$(IMAGES_MK): $(GEN_IMAGES_MK_SH) $(TAG_DIRS) $(CONFIG_MK) Makefile
+$(IMAGES_MK): $(GEN_IMAGES_MK_SH) $(TAG_DIRS) FORCE
 	$< $(PREFIX) $(TAG_DIRS) > $@~
-	mv $@~ $@
+	if ! cmp -s $@~ $@; then diff -u $@ $@~ || true; mv $@~ $@; else rm $@~; fi
 
 # Generate entrypoint.mk with copy rules from golden sources
 $(ENTRYPOINT_MK): $(GEN_ENTRYPOINT_SH) FORCE
