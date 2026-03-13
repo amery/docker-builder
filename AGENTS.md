@@ -593,6 +593,8 @@ docker run --rm IMAGE --run-hook > docker/run-hook.sh
 - `DOCKER_RUN_ENV`: Variables to pass through
 - `DOCKER_RUN_VOLUMES`: Extra directories to mount
 - `DOCKER_RUN_WS`: Override workspace detection
+- `DOCKER_EXTRA_OPTS`: Raw Docker flags (capabilities, devices,
+  security options) — typically set in `run-hook.sh`, not `run.sh`
 - `DOCKER_EXPOSE`: Ports to expose
 
 ### `docker-builder-run` Usage Examples

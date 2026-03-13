@@ -51,3 +51,6 @@ export OEROOT BUILDDIR DL_DIR
 
 # Request DL_DIR mounting
 export DOCKER_RUN_VOLUMES="${DOCKER_RUN_VOLUMES:+$DOCKER_RUN_VOLUMES }DL_DIR"
+
+# BitBake needs SYS_ADMIN for user namespace network isolation
+export DOCKER_EXTRA_OPTS="${DOCKER_EXTRA_OPTS:+$DOCKER_EXTRA_OPTS }--cap-add SYS_ADMIN"

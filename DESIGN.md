@@ -56,6 +56,15 @@ Each mode adds appropriate volumes and configuration automatically.
 - Allows workspace-specific detection (`OEROOT`, `BUILDDIR`, `DL_DIR`)
 - Can modify `DOCKER_RUN_VOLUMES`, `DOCKER_RUN_ENV`, `DOCKER_EXTRA_OPTS`
 
+`DOCKER_EXTRA_OPTS` passes raw Docker flags to the container. This
+is how image-specific requirements (capabilities, devices, security
+options) are declared — in `run-hook.sh`, not in workspace `run.sh`:
+
+```sh
+# Example: grant capability needed by build system
+export DOCKER_EXTRA_OPTS="${DOCKER_EXTRA_OPTS:+$DOCKER_EXTRA_OPTS }--cap-add SYS_ADMIN"
+```
+
 **`entrypoint.d`:**
 
 - Executed inside container during initialization
@@ -176,6 +185,22 @@ Optional convenience wrapper that transforms arguments:
 **Alternative considered:** Combined `run.sh`/`bb.sh` using basename
 detection. Rejected because mixing concerns reduces clarity despite saving
 lines.
+
+### Container Capabilities
+
+BitBake (kirkstone+) uses user namespaces for network isolation
+during tasks like `do_unpack`. This requires writing to
+`/proc/self/uid_map`, which needs `CAP_SYS_ADMIN` inside the
+container.
+
+The poky `run-hook.sh` adds `--cap-add SYS_ADMIN` via
+`DOCKER_EXTRA_OPTS`. Without this, builds fail with
+`PermissionError` on hosts where
+`kernel.apparmor_restrict_unprivileged_userns=1` (Ubuntu 24.04+
+default, re-applied on reboot).
+
+**Key principle:** Container capability requirements belong in
+`run-hook.sh` (image-distributed), not in workspace `run.sh`.
 
 ### Quiet Environment Setup
 
