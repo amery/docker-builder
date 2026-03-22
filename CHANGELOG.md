@@ -5,21 +5,76 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+## [1.22.0] - 2026-03-22
+
+### Added
+
+- Multi-architecture build support using docker buildx
+  - All builds produce amd64 + arm64 manifests by default
+  - Per-image architecture exclusions via `# build: !arm64`
+    directive comments
+  - `BUILDER` variable to select buildx builder
+    (default: `multiarch-native`)
+- `docker-builder-run`: Use buildx when available
+  - `docker_build()` abstracts build method selection
+  - Uses `--builder default` for local builds
+  - Falls back to legacy `docker build` when buildx is
+    not installed
+  - `--iidfile` replaces double-build pattern for image
+    ID capture
+- `docker-golang-builder`: Add Go 1.26.0, `go1.X` directory
+  symlinks, and Go 1.26.0 to multi image
+- `docker-apptly-builder`: Add chromium, xvfb, and
+  international fonts for headless browser automation
+- `docker-ubuntu-builder`: Add python venv auto-setup
+- `docker-ubuntu-vsc-nodejs-builder`: Add npm and pnpm
+  entrypoint hooks
+- `docker-poky-builder`: Add SYS_ADMIN capability for
+  BitBake network isolation
+- `docker-poky-builder`: Add MACHINE, DISTRO, TCLIBC to
+  BitBake environment whitelist
+- `docker-poky-builder`: Enable arm64 with conditional
+  multilib
+- `docker-micrologic-builder`: Install all buf cmd tools
+- MIT licence file
+
 ### Changed
 
+- `docker-builder-run`: Stop defaulting `NPM_CONFIG_PREFIX`
+  to workspace root
+- `10-node`: Use `~/.local/share/npm` as default
+  `NPM_CONFIG_PREFIX`
+- `20-node-pnpm`: Always set up `~/.local/share/pnpm`
+  environment
+- `docker-golang-builder`: Update Go 1.24 to 1.24.13 and
+  Go 1.25 to 1.25.7
+- `docker-android-builder`: Switch from OpenJDK 19 to 21
 - `docker-poky-builder`: Improved `BUILDDIR` detection
   - Detects build directory from workspace-relative path
   <!-- cSpell:disable-next-line -->
-  - Falls back to searching workspace for `*[Bb]uild*/conf/local.conf`
-  - Works from any subdirectory in workspace (not just build dir)
-  - `30-poky.sh` now uses `BUILDDIR` from `run-hook.sh` when available
+  - Falls back to searching workspace for
+    `*[Bb]uild*/conf/local.conf`
+  - Works from any subdirectory in workspace
+  - `30-poky.sh` now uses `BUILDDIR` from `run-hook.sh`
+    when available
+- `docker`: Harden apt usage across all ubuntu-based images
+- `docker`: Apply noninteractive dist-upgrade across all
+  images
+- `Makefile`: Always regenerate images.mk using FORCE+cmp
 
 ### Fixed
 
-- `gen_images_mk.sh`: Symlink targets now depend on their real target
+- `gen_images_mk.sh`: Symlink targets now depend on their
+  real target
   <!-- cSpell:disable-next-line -->
-  - Fixes automatic retagging when underlying image is rebuilt
+  - Fixes automatic retagging when underlying image is
+    rebuilt
   - Example: `:latest` now properly depends on `:24.04`
+
+### Documentation
+
+- Document `DOCKER` and `DOCKER_BUILD_OPT` variables
+- Fix build guidance and other documentation bugs
 
 ## [1.21.0] - 2025-10-29
 
