@@ -176,6 +176,7 @@ and troubleshooting, see [Build System Mechanics][build-system-mechanics].
 
 | Variable           | Purpose
 |--------------------|-----------------------------------------------------
+| `DOCKER`           | Docker command (default: `docker`)
 | `FORCE`            | Bypass Docker layer cache (`--no-cache`)
 | `BUILDER`          | Buildx builder name (default: `multiarch-native`)
 | `DOCKER_BUILD_OPT` | Extra `docker buildx build` args (default: `--progress=plain`)
@@ -190,6 +191,7 @@ and troubleshooting, see [Build System Mechanics][build-system-mechanics].
 | `DOCKER_RUN_ENV`     | Environment variables to pass through to container
 | `DOCKER_RUN_VOLUMES` | Additional directories to mount in container
 | `DOCKER_RUN_WS`      | Override automatic workspace detection
+| `DOCKER_BUILD_OPT`   | Extra `docker build` args (default: `--rm`)
 | `DOCKER_EXTRA_OPTS`  | Extra options to pass to `docker run`
 | `DOCKER_EXPOSE`      | Ports to expose (e.g., "8080" or "8080:8080/tcp")
 
