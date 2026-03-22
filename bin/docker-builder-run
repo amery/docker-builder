@@ -51,6 +51,37 @@ get_run_hook() {
 }
 
 #
+# docker_build <dir>
+# Builds image from Dockerfile in <dir>, sets DOCKER_ID on success.
+# Uses buildx when available, falls back to legacy docker build.
+#
+docker_build() {
+	local dir="$1"
+	local iidfile="$(mktemp)"
+	local rc=0
+
+	set -- --iidfile "$iidfile"
+
+	if [ -n "${DOCKER_BUILD_FORCE:-}" ]; then
+		set -- "$@" --pull --no-cache
+	fi
+
+	if docker buildx version >/dev/null 2>&1; then
+		set -- docker buildx build --builder default "$@" ${DOCKER_BUILD_OPT:-}
+	else
+		set -- docker build "$@" ${DOCKER_BUILD_OPT:---rm}
+	fi
+
+	"$@" "$dir" || rc=$?
+
+	if [ $rc -eq 0 ]; then
+		DOCKER_ID="$(cat "$iidfile")"
+	fi
+	rm -f "$iidfile"
+	return $rc
+}
+
+#
 #
 builder_brute_find() {
 	local op="$1" cue="$2"
@@ -350,8 +381,7 @@ if [ -z "${DOCKER_ID:-}" ]; then
 	DOCKER_DIR="$(builder_find_docker_dir "$0" "${DOCKER_DIR:-}")"
 
 	if [ -d "$DOCKER_DIR" ]; then
-		docker build ${DOCKER_BUILD_FORCE:+--pull --no-cache }${DOCKER_BUILD_OPT:---rm} "$DOCKER_DIR"
-		DOCKER_ID="$(docker build -q --rm "$DOCKER_DIR")"
+		docker_build "$DOCKER_DIR"
 	fi
 elif [ -n "${DOCKER_BUILD_FORCE:-}" ]; then
 	docker pull "$DOCKER_ID"
