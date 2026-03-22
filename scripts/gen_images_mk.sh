@@ -221,6 +221,8 @@ if [ -d "$dir" ]; then
 		build_cmd="$build_cmd --build-arg $A=${DOLLAR}$A"
 	fi
 
+	build_cmd="$build_cmd --cache-to type=inline"
+	build_cmd="$build_cmd --cache-from type=registry,ref=\$(PREFIX)$tag"
 	build_cmd="$build_cmd -t \$(PREFIX)$tag $dir"
 	echo "$TAB$build_cmd"
 	echo "${TAB}touch \$@"

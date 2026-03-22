@@ -5,6 +5,11 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Build system: Enable registry-backed inline cache for layer
+  reuse across rebuilds, even when base image digests change
+
 ## [1.22.0] - 2026-03-22
 
 ### Added
