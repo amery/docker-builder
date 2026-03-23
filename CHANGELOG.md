@@ -9,6 +9,12 @@ All notable changes to docker-builder will be documented in this file.
 
 - Build system: Enable registry-backed inline cache for layer
   reuse across rebuilds, even when base image digests change
+- `docker-golang-builder`: Update Go 1.25 to 1.25.8 and
+  Go 1.26 to 1.26.1
+- `docker-golang-builder`: Make Go 1.26 the default
+  - Update latest symlink from 1.25 to 1.26
+  - Rebase multi image on 1.26, build 1.25 inside
+- `docker`: Update ubuntu-based golang images to Go 1.26.1
 
 ## [1.22.0] - 2026-03-22
 
