@@ -1,6 +1,6 @@
 FROM quay.io/amery/docker-ubuntu-vsc-base-builder:24.04
 
-ENV NODE_VERSION="22.x"
+ENV NODE_VERSION="24.x"
 
 LABEL docker-builder.run-env.npm="NPM_CONFIG_PREFIX"
 

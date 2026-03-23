@@ -15,6 +15,7 @@ All notable changes to docker-builder will be documented in this file.
   - Update latest symlink from 1.25 to 1.26
   - Rebase multi image on 1.26, build 1.25 inside
 - `docker`: Update ubuntu-based golang images to Go 1.26.1
+- `docker`: Update Node.js from 20.x/22.x to 24.x LTS
 
 ## [1.22.0] - 2026-03-22
 
