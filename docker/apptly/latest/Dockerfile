@@ -1,5 +1,14 @@
 FROM quay.io/amery/docker-ubuntu-vsc-nodejs-golang-builder:24.04
 
+# xtradeb PPA provides real .deb chromium (Ubuntu's is a snap)
+RUN apt-get update && apt-get dist-upgrade -y \
+	&& apt-get install -y --no-install-recommends \
+		software-properties-common \
+	&& add-apt-repository -y ppa:xtradeb/apps \
+	&& apt-get purge -y \
+		software-properties-common \
+	&& apt-get clean
+
 # Chromium and headless browser support for MCP browser automation.
 #
 # Supports two MCP servers:
@@ -19,19 +28,17 @@ FROM quay.io/amery/docker-ubuntu-vsc-nodejs-golang-builder:24.04
 #     - launch own browser or connect via --browserUrl / --wsEndpoint
 #         npx chrome-devtools-mcp
 #
-RUN apt-get update \
-        && apt-get dist-upgrade -y \
-        && apt-get install -y --no-install-recommends \
-        chromium \
-        xvfb \
-        fonts-ipafont-gothic \
-        fonts-noto-color-emoji \
-        fonts-tlwg-loma-otf \
-        fonts-unifont \
-        fonts-wqy-zenhei \
-        xfonts-cyrillic \
-        xfonts-scalable \
-        && apt-get clean
+RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
+	chromium \
+	xvfb \
+	fonts-ipafont-gothic \
+	fonts-noto-color-emoji \
+	fonts-tlwg-loma-otf \
+	fonts-unifont \
+	fonts-wqy-zenhei \
+	xfonts-cyrillic \
+	xfonts-scalable \
+	&& apt-get clean
 
 # tools
 #
