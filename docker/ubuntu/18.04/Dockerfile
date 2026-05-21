@@ -74,6 +74,7 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-re
 #
 COPY builder_version.sh /usr/local/bin/builder_version
 
+COPY 05-gnupg.sh /etc/entrypoint.d/
 COPY 10-python.sh /etc/entrypoint.d/
 
 # trampoline
