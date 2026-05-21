@@ -834,6 +834,36 @@ make tags-gc
 make files
 ```
 
+## Updating Toolchain Versions
+
+Go and Node.js versions are pinned in multiple places using three
+different mechanisms. Patch bumps must touch every relevant pin.
+
+### Go
+
+| Location | Mechanism | What to change |
+| -------- | --------- | -------------- |
+| `docker/golang/<X.Y>/Dockerfile` | Upstream `golang:X.Y.Z-alpine` base image | `FROM` tag |
+| `docker/golang/multi/Dockerfile` | Builds older Go versions from source, bootstrapped from the `FROM docker-golang-builder:<latest>` image | The version strings in the `for GO_VERSION in …` loop (the current series comes via `FROM` and does not appear in the loop) |
+| `docker/ubuntu-*-golang/*/Dockerfile`, `docker/ubuntu-vsc-*-golang/*/Dockerfile` | Downloads `https://golang.org/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz` to `/opt/golang` | `ENV GO_VERSION=X.Y.Z` |
+
+For a single-series patch bump, grep for the old version:
+
+```bash
+grep -RlE "1\.26\.[0-9]+" docker/
+```
+
+Edit every match; symlinked `latest` directories share the file with
+their target version and do not need a separate edit.
+
+### Node.js
+
+Node.js is pinned to a NodeSource major (e.g. `24.x`) via
+`ENV NODE_VERSION=` in `docker/ubuntu-*-nodejs*/Dockerfile` and
+`docker/ubuntu-vsc-nodejs*/Dockerfile`. Patch and minor releases
+flow in automatically on rebuild; only major-version moves require
+editing these files.
+
 ## Managing Python Dependencies
 
 When building images with Python tools, special care is needed to avoid
