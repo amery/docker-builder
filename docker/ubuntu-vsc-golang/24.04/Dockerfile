@@ -1,6 +1,6 @@
 FROM quay.io/amery/docker-ubuntu-vsc-base-builder:24.04
 
-ENV GO_VERSION=1.26.1
+ENV GO_VERSION=1.26.3
 
 #
 # update world
