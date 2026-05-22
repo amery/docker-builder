@@ -5,17 +5,40 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+## [1.22.1] - 2026-05-22
+
+### Added
+
+- `docker-ubuntu-builder`: Forward gpg-agent sockets on entry
+  - New `05-gnupg.sh` snippet fixes `/run/user/$UID` ownership
+    when bind-mounted from the host
+  - Symlinks `S.gpg-agent*` into `~/.gnupg` so tools using
+    the legacy path find them
+  - Covers both `docker-builder-run` (root-time chown) and
+    devcontainer (login-time re-assert via passwordless sudo)
+
 ### Changed
 
 - Build system: Enable registry-backed inline cache for layer
   reuse across rebuilds, even when base image digests change
-- `docker-golang-builder`: Update Go 1.25 to 1.25.8 and
-  Go 1.26 to 1.26.1
+- `docker-golang-builder`: Update Go 1.25 to 1.25.10 and
+  Go 1.26 to 1.26.3
 - `docker-golang-builder`: Make Go 1.26 the default
   - Update latest symlink from 1.25 to 1.26
   - Rebase multi image on 1.26, build 1.25 inside
-- `docker`: Update ubuntu-based golang images to Go 1.26.1
+- `docker`: Update ubuntu-based golang images to Go 1.26.3
 - `docker`: Update Node.js from 20.x/22.x to 24.x LTS
+- `docker-apptly-builder`: Install chromium from the xtradeb
+  PPA instead of Ubuntu's snap-based package, which doesn't
+  work in containers
+- `docker-micrologic-builder`: Rebase on `docker-apptly-builder`
+  to inherit xtradeb chromium without losing existing tooling
+
+### Documentation
+
+- `AGENTS.md`: Document Go and Node.js version pinning across
+  the three loading mechanisms (`FROM golang:`, source build
+  loop, `ENV GO_VERSION=` tarball)
 
 ## [1.22.0] - 2026-03-22
 
