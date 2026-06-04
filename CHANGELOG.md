@@ -23,6 +23,11 @@ All notable changes to docker-builder will be documented in this file.
   `/usr/local/go` and `/opt/golang`) instead of hardcoding
   `/usr/local/go`, so one golden copy serves both the `golang` and
   `ubuntu-nodejs-golang` images
+- Entrypoint: the per-invocation `cd $CURDIR` / `exec $CMD` now runs in
+  the dispatch tail instead of the sourced `Z99-docker-run.sh` profile,
+  so a `docker exec` login shell into a persistent container lands at
+  its own CURDIR and command instead of the values frozen at container
+  start
 
 ### Fixed
 
@@ -44,6 +49,10 @@ All notable changes to docker-builder will be documented in this file.
   prefix already present, so overlap between the base `/opt/*/bin`
   sweep and the sourced plugins (and nested `su -`/`bash -l` logins)
   stops compounding `PATH`
+- Alpine non-TTY entrypoint: resolve `su-exec` to an absolute path
+  before `env -i` clears `PATH`; the default search path excludes
+  `/sbin`, so a bare `su-exec` failed with exit 127 on non-interactive
+  sessions
 
 ## [1.22.1] - 2026-05-22
 

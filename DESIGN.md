@@ -79,6 +79,26 @@ export DOCKER_EXTRA_OPTS="${DOCKER_EXTRA_OPTS:+$DOCKER_EXTRA_OPTS }--cap-add SYS
 - `20-*.sh` - Feature extensions (pnpm, additional tools)
 - `30-*.sh` - Complex/specialized setup (Yocto/OE, build systems)
 
+## Entrypoint Runtime
+
+The generated `entrypoint.sh` is the container's `ENTRYPOINT`. It runs
+once, as PID 1, at container start: it prepares the login environment,
+then dispatches the requested session as the workspace user.
+
+The login environment lives in `/etc/profile.d/Z99-docker-run.sh`, which
+holds **environment only** — `PATH` setup and the sourced `entrypoint.d`
+plugins. Because that profile is sourced by every login shell, including
+each `docker exec` into a running container, the per-invocation parts —
+navigating to `$CURDIR` and running the requested command — are kept
+**out** of it and run only from the start-time dispatch.
+
+**Key principle:** navigation and command belong to the single
+container-start invocation, not the sourced profile. Were they in `Z99`,
+every later `docker exec` login would be pinned to the directory and
+command frozen at container start; keeping them in the once-only
+dispatch lets a persistent container's exec sessions land at their own
+directory and run their own command.
+
 ## Image Integration Patterns
 
 ### Minimal Wrapper Pattern

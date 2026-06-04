@@ -116,9 +116,17 @@ else
 	CMD=
 fi
 
-if [ -n "${USER_IS_SUDO:+yes}" ]; then
-	set -- /bin/bash -l
+# Per-invocation navigation and command. Kept OUT of the sourced
+# profile above so a `docker exec` login shell into a persistent
+# container lands at its own CURDIR and runs its own command,
+# instead of inheriting the values frozen at container start.
+if [ -n "$CMD" ]; then
+	LOGIN="cd '$CURDIR' && exec $CMD"
+else
+	LOGIN="cd '$CURDIR'; exec /bin/bash -il"
+fi
 
+if [ -n "${USER_IS_SUDO:+yes}" ]; then
 	cat <<-EOT >> "$F"
 
 	export SUDO_COMMAND="${CMD:-/bin/bash}"
@@ -126,14 +134,8 @@ if [ -n "${USER_IS_SUDO:+yes}" ]; then
 	export SUDO_UID=$USER_UID
 	export SUDO_GID=$USER_GID
 	EOT
+
+	exec /bin/bash -lc "$LOGIN"
 else
-	set -- su - "$USER_NAME"
+	exec su - "$USER_NAME" -c "$LOGIN"
 fi
-
-cat <<EOT >> "$F"
-
-cd '$CURDIR'
-${CMD:+exec $CMD}
-EOT
-
-"$@"
