@@ -89,9 +89,14 @@ done
 
 - Scans Dockerfiles for `COPY entrypoint.sh` commands
 - Detects base image type from FROM line (Alpine vs Ubuntu)
+- Also discovers `COPY <name> /etc/entrypoint.d/...` lines and, for any
+  with a golden copy under `docker/entrypoint/plugins/`, generates the
+  per-image copy from it so the plugin is single-sourced too; plugins
+  without one stay hand-maintained
 - Generates entrypoint.mk with dependency rules
 - Copies canonical sources to image directories when they change
-- Uses `cmp` to detect changes, only copies when different
+- Uses `cmp` to detect changes; on a content match it settles the copy
+  to the golden copy's mtime (`touch -r`) so the rule does not re-fire
 
 Golden copies at `docker/entrypoint/{ubuntu.sh,alpine.sh}` serve as the
 single source of truth for all base images.

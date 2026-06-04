@@ -5,10 +5,20 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Entrypoint generation: `gen_entrypoint.sh` discovers
+  `/etc/entrypoint.d` plugin `COPY` lines and single-sources any
+  plugin with a golden copy under `docker/entrypoint/plugins/`, matching
+  the existing base `entrypoint.sh` mechanism
+
 ### Fixed
 
 - `ubuntu-vsc-base`: Fix `err()`/`die()` dropping their message —
   the non-stdin branch echoed a literal `$` instead of `$*`
+- Entrypoint generation: settle an unchanged copy to its golden
+  copy's mtime (`touch -r`) instead of the current time, so a content
+  match no longer cascades image rebuilds
 
 ## [1.22.1] - 2026-05-22
 

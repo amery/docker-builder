@@ -9,6 +9,7 @@ set -eu
 
 UBUNTU_GOLDEN="docker/entrypoint/ubuntu.sh"
 ALPINE_GOLDEN="docker/entrypoint/alpine.sh"
+PLUGIN_GOLDEN_DIR="docker/entrypoint/plugins"
 
 get_bases() {
 	local dir df from
@@ -47,9 +48,32 @@ get_base_entrypoints() {
 	done
 }
 
+# Discover plugin copies: any "COPY <name>.sh /etc/entrypoint.d..." whose
+# golden exists under $PLUGIN_GOLDEN_DIR. Emits "<name>${TAB}<dir>/<name>.sh".
+# Plugins without a golden (golang, poky, the android singleton) are skipped
+# and stay hand-maintained.
+get_plugin_copies() {
+	local dir df name
+
+	find -P docker -name 'Dockerfile' -o -name 'Dockerfile.in' |
+		sed -e 's|/[^/]\+$||' | sort -uV |
+		while read dir; do
+			df=$(get_dockerfile "$dir") || continue
+			sed -n "s:^COPY[ \t]\+\([^ \t]\+\.sh\)[ \t]\+/etc/entrypoint.d.*:\1:p" "$df" |
+				while read name; do
+					[ -f "$PLUGIN_GOLDEN_DIR/$name" ] || continue
+					echo "$name${TAB}$dir/$name"
+				done
+		done
+}
+
 ENTRYPOINTS=$(get_base_entrypoints)
 UBUNTU_ENDPOINTS=$(echo "$ENTRYPOINTS" | sed -n 's/^ubuntu:\(.*\)$/\1/p' | sort -uV)
 ALPINE_ENDPOINTS=$(echo "$ENTRYPOINTS" | sed -n 's/^alpine:\(.*\)$/\1/p' | sort -uV)
+
+PLUGIN_COPIES=$(get_plugin_copies)
+PLUGIN_NAMES=$(echo "$PLUGIN_COPIES" | cut -f1 | sort -uV)
+PLUGIN_ENDPOINTS=$(echo "$PLUGIN_COPIES" | cut -f2 | sort -uV)
 
 # Generate Makefile
 cat <<EOT
@@ -57,16 +81,32 @@ cat <<EOT
 #
 UBUNTU_GOLDEN_ENDPOINT := $UBUNTU_GOLDEN
 ALPINE_GOLDEN_ENDPOINT := $ALPINE_GOLDEN
+PLUGIN_GOLDEN_DIR := $PLUGIN_GOLDEN_DIR
 
 $(list_key UBUNTU_ENDPOINTS $UBUNTU_ENDPOINTS)
 $(list_key ALPINE_ENDPOINTS $ALPINE_ENDPOINTS)
+$(list_key PLUGIN_ENDPOINTS $PLUGIN_ENDPOINTS)
 
 .PHONY: entrypoint
-entrypoint: \$(UBUNTU_ENDPOINTS) \$(ALPINE_ENDPOINTS)
+entrypoint: \$(UBUNTU_ENDPOINTS) \$(ALPINE_ENDPOINTS) \$(PLUGIN_ENDPOINTS)
 
 \$(UBUNTU_ENDPOINTS): \$(UBUNTU_GOLDEN_ENDPOINT)
-	@if ! cmp -s \$< \$@; then install -vpm 0755 \$< \$@; else touch \$@; fi
+	@if ! cmp -s \$< \$@; then install -vpm 0755 \$< \$@; else touch -r \$< \$@; fi
 
 \$(ALPINE_ENDPOINTS): \$(ALPINE_GOLDEN_ENDPOINT)
-	@if ! cmp -s \$< \$@; then install -vpm 0755 \$< \$@; else touch \$@; fi
+	@if ! cmp -s \$< \$@; then install -vpm 0755 \$< \$@; else touch -r \$< \$@; fi
 EOT
+
+# Per-plugin copy rules: one golden drives many image copies. Mode 0644
+# (plugins are sourced, not executed).
+for name in $PLUGIN_NAMES; do
+	copies=$(echo "$PLUGIN_COPIES" | sed -n "s:^$name${TAB}::p" | sort -uV)
+	sym=$(echo "${name%.sh}" | tr 'a-z' 'A-Z' | tr -c 'A-Z0-9\n' '_')
+
+	cat <<EOT
+
+$(list_key "PLUGIN_$sym" $copies)
+\$(PLUGIN_$sym): \$(PLUGIN_GOLDEN_DIR)/$name
+	@if ! cmp -s \$< \$@; then install -vpm 0644 \$< \$@; else touch -r \$< \$@; fi
+EOT
+done
