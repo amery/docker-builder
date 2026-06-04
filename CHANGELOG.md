@@ -5,6 +5,13 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Plugin golden copies under `docker/entrypoint/plugins/` for the shared
+  `/etc/entrypoint.d` scripts (`05-display`, `10-android-sdk`,
+  `10-node`, `10-python`, `20-node-pnpm`); the per-image copies are
+  now generated and git-ignored
+
 ### Changed
 
 - Entrypoint generation: `gen_entrypoint.sh` discovers

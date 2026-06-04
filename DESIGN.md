@@ -302,6 +302,12 @@ Base images use generated entrypoint.sh from canonical sources:
 - `docker/entrypoint/ubuntu.sh` - Ubuntu/Debian pattern (114 lines)
 - `docker/entrypoint/alpine.sh` - Alpine pattern (78 lines)
 
+The same mechanism single-sources the `/etc/entrypoint.d` plugins:
+golden copies live under `docker/entrypoint/plugins/`, and any image
+whose Dockerfile copies a matching plugin gets a generated copy.
+Plugins that genuinely differ per image (e.g. the per-version
+`30-poky`) keep no golden copy and stay hand-maintained.
+
 The build system automatically:
 
 - Detects which golden copy to use based on FROM line

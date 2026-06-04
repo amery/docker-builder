@@ -37,7 +37,7 @@ Makefile              # Main entry point
 ├── config.mk        # User configuration (PREFIX)
 ├── rules.mk         # Generated rules for file processing
 ├── images.mk        # Generated image build targets
-└── entrypoint.mk    # Generated entrypoint.sh copy rules
+└── entrypoint.mk    # Generated entrypoint.sh + plugin copy rules
 
 scripts/
 ├── gen_rules_mk.sh     # Generates rules.mk from templates
@@ -51,7 +51,8 @@ scripts/
 
 docker/entrypoint/
 ├── ubuntu.sh        # Canonical Ubuntu/Debian entrypoint
-└── alpine.sh        # Canonical Alpine entrypoint
+├── alpine.sh        # Canonical Alpine entrypoint
+└── plugins/         # Canonical /etc/entrypoint.d plugins
 ```
 
 ## How the Build System Works
@@ -99,7 +100,8 @@ done
   to the golden copy's mtime (`touch -r`) so the rule does not re-fire
 
 Golden copies at `docker/entrypoint/{ubuntu.sh,alpine.sh}` serve as the
-single source of truth for all base images.
+single source of truth for all base images, and those under
+`docker/entrypoint/plugins/` for the shared `/etc/entrypoint.d` plugins.
 
 ### 5. Tag Management
 

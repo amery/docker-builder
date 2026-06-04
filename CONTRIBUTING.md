@@ -163,6 +163,13 @@ When adding environment-specific setup, use `/etc/entrypoint.d/` scripts:
    COPY 10-mytool.sh /etc/entrypoint.d/10-mytool.sh
    ```
 
+4. **Single-source shared plugins** - If more than one image uses the
+   plugin, add it once as a golden copy under
+   `docker/entrypoint/plugins/`;
+   `make entrypoint` regenerates the per-image copies (which are
+   git-ignored). Keep a genuinely image-specific plugin in the image
+   directory, as above.
+
 **Key principle:** Scripts are sourced during container initialization and
 their output is appended to `/etc/profile.d/Z99-docker-run.sh`. They should
 only output environment setup commands, not execute actions directly.
