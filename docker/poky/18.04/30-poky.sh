@@ -45,6 +45,6 @@ cat <<EOT
 cd '$WS'
 export OEROOT='$OEROOT'
 ${builddir:+export BUILDDIR='$WS/$builddir'}
-export PATH="$OEROOT/bitbake/bin:$OEROOT/scripts:\$PATH"
+path_prepend "$OEROOT/scripts" "$OEROOT/bitbake/bin"
 ${builddir:+cd '$builddir'}
 EOT

@@ -46,9 +46,20 @@ adduser -s /bin/bash -S -h "$USER_HOME" \
 F=/etc/profile.d/Z99-docker-run.sh
 
 cat <<EOT > "$F"
+path_prepend() {
+	local p
+	for p; do
+		[ -n "\$p" ] || continue
+		case ":\$PATH:" in
+		*":\$p:"*) : ;;
+		*) export PATH="\$p:\$PATH" ;;
+		esac
+	done
+}
+
 for d in /opt/* "\$HOME/.local" "\$HOME" "$WS"; do
 	if [ -n "\$d" -a -d "\$d/bin" ]; then
-		export PATH="\$d/bin:\$PATH"
+		path_prepend "\$d/bin"
 	fi
 done
 EOT
@@ -57,6 +68,11 @@ for x in $(ls -1 /etc/entrypoint.d/*.sh 2> /dev/null | sort -V); do
 	[ -s "$x" ] || continue
 	. "$x"
 done >> "$F"
+
+cat <<EOT >> "$F"
+
+unset -f path_prepend
+EOT
 
 if [ $# -gt 0 ]; then
 	CMD="$*"

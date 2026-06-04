@@ -28,7 +28,7 @@ if [ -s "\$HOME/.nvm/nvm.sh" ]; then
 	fi
 else
 	mkdir -p "\$HOME/.local/share/npm/bin"
-	export PATH="\$HOME/.local/share/npm/bin:\$PATH"
+	path_prepend "\$HOME/.local/share/npm/bin"
 
 $(gen_npm_prefix)
 fi

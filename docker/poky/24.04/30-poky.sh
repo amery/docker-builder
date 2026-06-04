@@ -47,6 +47,6 @@ export OEROOT='$OEROOT'
 ${builddir:+export BUILDDIR='$WS/$builddir'}
 ${builddir:+export BBPATH='$WS/$builddir'}
 export PYTHONPATH="$OEROOT/bitbake/lib:\${PYTHONPATH:-}"
-export PATH="$OEROOT/bitbake/bin:$OEROOT/scripts:\$PATH"
+path_prepend "$OEROOT/scripts" "$OEROOT/bitbake/bin"
 ${builddir:+cd '$builddir'}
 EOT

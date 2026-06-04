@@ -6,5 +6,5 @@ if [ ! -d "$PYTHON_VENV/lib/python$PYTHON_VERSION/site-packages" ]; then
 	python3 -m venv "$PYTHON_VENV"
 fi
 export PYTHON_VENV="$PYTHON_VENV"
-export PATH="\$PYTHON_VENV/bin:\$PATH"
+path_prepend "\$PYTHON_VENV/bin"
 EOT

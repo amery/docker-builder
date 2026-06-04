@@ -299,8 +299,8 @@ Build on docker-builder ecosystem:
 
 Base images use generated entrypoint.sh from canonical sources:
 
-- `docker/entrypoint/ubuntu.sh` - Ubuntu/Debian pattern (114 lines)
-- `docker/entrypoint/alpine.sh` - Alpine pattern (78 lines)
+- `docker/entrypoint/ubuntu.sh` - Ubuntu/Debian pattern
+- `docker/entrypoint/alpine.sh` - Alpine pattern
 
 The same mechanism single-sources the `/etc/entrypoint.d` plugins:
 golden copies live under `docker/entrypoint/plugins/`, and any image

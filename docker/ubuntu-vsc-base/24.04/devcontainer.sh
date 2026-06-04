@@ -27,14 +27,22 @@ trap "rm -f $T" EXIT
 
 # PATH
 cat <<EOT > "$T"
+path_prepend() {
+	local p
+	for p; do
+		[ -n "\$p" ] || continue
+		case ":\$PATH:" in
+		*":\$p:"*) : ;;
+		*) export PATH="\$p:\$PATH" ;;
+		esac
+	done
+}
+
 for d in /opt/* "\$HOME/.local" "\$HOME" "\${WS:-}"; do
-	if [ -z "\$d" -o ! -d "\$d/bin" ]; then
-		:
-	elif ! echo ":\$PATH:" | grep -q ":\$d/bin:"; then
-		PATH="\$d/bin:\$PATH"
+	if [ -n "\$d" -a -d "\$d/bin" ]; then
+		path_prepend "\$d/bin"
 	fi
 done
-export PATH
 EOT
 
 # entrypoint scripts
@@ -43,6 +51,11 @@ ls -1 /etc/entrypoint.d/*.sh 2> /dev/null | sort -V |
 		echo "# $f"
 		. "$f"
 	done >> "$T"
+
+cat <<EOT >> "$T"
+
+unset -f path_prepend
+EOT
 
 mv "$T" "$F"
 trap '' EXIT

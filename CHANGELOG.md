@@ -39,6 +39,11 @@ All notable changes to docker-builder will be documented in this file.
   operand only, so the workspace-`GOPATH` test always failed and
   `$GOPATH/bin` was prepended to `PATH` even when `GOPATH` was the
   workspace
+- Entrypoint login `PATH` no longer accumulates duplicate entries: a
+  `path_prepend` helper in the generated `Z99-docker-run.sh` skips a
+  prefix already present, so overlap between the base `/opt/*/bin`
+  sweep and the sourced plugins (and nested `su -`/`bash -l` logins)
+  stops compounding `PATH`
 
 ## [1.22.1] - 2026-05-22
 
