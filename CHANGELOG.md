@@ -8,9 +8,9 @@ All notable changes to docker-builder will be documented in this file.
 ### Added
 
 - Plugin golden copies under `docker/entrypoint/plugins/` for the shared
-  `/etc/entrypoint.d` scripts (`05-display`, `10-android-sdk`,
-  `10-node`, `10-python`, `20-node-pnpm`); the per-image copies are
-  now generated and git-ignored
+  `/etc/entrypoint.d` scripts (`05-display`, `10-android-sdk`, `10-golang`,
+  `10-node`, `10-python`, `20-node-pnpm`); the per-image copies are now
+  generated and git-ignored
 
 ### Changed
 
@@ -18,6 +18,11 @@ All notable changes to docker-builder will be documented in this file.
   `/etc/entrypoint.d` plugin `COPY` lines and single-sources any
   plugin with a golden copy under `docker/entrypoint/plugins/`, matching
   the existing base `entrypoint.sh` mechanism
+- `10-golang`: Resolve the Go toolchain root at container start
+  (a pinned `GOROOT`, else `go env GOROOT`, else scanning
+  `/usr/local/go` and `/opt/golang`) instead of hardcoding
+  `/usr/local/go`, so one golden copy serves both the `golang` and
+  `ubuntu-nodejs-golang` images
 
 ### Fixed
 
@@ -29,6 +34,11 @@ All notable changes to docker-builder will be documented in this file.
 - `10-android-sdk`: Build `PATH` from `ANDROID_SDK_ROOT`, not the
   never-defined `ANDROID_SDK_PATH`, which had left a bogus
   `/cmdline-tools/latest/bin` entry
+- `10-golang` (`ubuntu-nodejs-golang`): Fix the never-matching
+  `[ "x$GOPATH" = ... ]` guard — the `x` prefix sat on the left
+  operand only, so the workspace-`GOPATH` test always failed and
+  `$GOPATH/bin` was prepended to `PATH` even when `GOPATH` was the
+  workspace
 
 ## [1.22.1] - 2026-05-22
 

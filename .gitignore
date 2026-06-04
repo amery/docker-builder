@@ -11,6 +11,7 @@ entrypoint.sh
 # generated entrypoint.d plugin copies (golden: docker/entrypoint/plugins/)
 05-display.sh
 10-android-sdk.sh
+10-golang.sh
 10-node.sh
 10-python.sh
 20-node-pnpm.sh
