@@ -9,7 +9,7 @@ err() {
 	if [ $# -eq 0 ]; then
 		cat
 	else
-		echo "$"
+		echo "$*"
 	fi | sed -e 's|^|E: |' >&2
 }
 

@@ -5,6 +5,11 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- `ubuntu-vsc-base`: Fix `err()`/`die()` dropping their message —
+  the non-stdin branch echoed a literal `$` instead of `$*`
+
 ## [1.22.1] - 2026-05-22
 
 ### Added
