@@ -26,6 +26,9 @@ All notable changes to docker-builder will be documented in this file.
 - Entrypoint generation: settle an unchanged copy to its golden
   copy's mtime (`touch -r`) instead of the current time, so a content
   match no longer cascades image rebuilds
+- `10-android-sdk`: Build `PATH` from `ANDROID_SDK_ROOT`, not the
+  never-defined `ANDROID_SDK_PATH`, which had left a bogus
+  `/cmdline-tools/latest/bin` entry
 
 ## [1.22.1] - 2026-05-22
 
