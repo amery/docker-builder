@@ -53,6 +53,10 @@ All notable changes to docker-builder will be documented in this file.
   before `env -i` clears `PATH`; the default search path excludes
   `/sbin`, so a bare `su-exec` failed with exit 127 on non-interactive
   sessions
+- `docker-golang-builder`: Replace the whitelist `.dockerignore` in
+  each golang image directory with a `top-level.mk` exclusion, so a
+  file added to the Dockerfile `COPY` set is no longer silently
+  dropped from the build context
 
 ## [1.22.1] - 2026-05-22
 

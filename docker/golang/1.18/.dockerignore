@@ -1,4 +1,2 @@
-*
-!builder_version.sh
-!entrypoint.sh
-!10-golang.sh
+# build helper include, not part of the image
+top-level.mk
