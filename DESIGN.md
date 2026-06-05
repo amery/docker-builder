@@ -92,6 +92,14 @@ each `docker exec` into a running container, the per-invocation parts —
 navigating to `$CURDIR` and running the requested command — are kept
 **out** of it and run only from the start-time dispatch.
 
+That profile is assembled in a temporary file and atomically renamed into
+place — never written incrementally onto the live file — so a nested
+`su -`/`bash -l` or a concurrent login can never source it half-written.
+Its `err`/`die` helpers and the generator that builds it come from a
+shared library installed at
+`/usr/local/lib/docker-builder/entrypoint.sh`, sourced by both
+entrypoints and the devcontainer init.
+
 **Key principle:** navigation and command belong to the single
 container-start invocation, not the sourced profile. Were they in `Z99`,
 every later `docker exec` login would be pinned to the directory and
@@ -321,6 +329,10 @@ Base images use generated entrypoint.sh from canonical sources:
 
 - `docker/entrypoint/ubuntu.sh` - Ubuntu/Debian pattern
 - `docker/entrypoint/alpine.sh` - Alpine pattern
+- `docker/entrypoint/shared.sh` - shared library (`err`/`die`, the
+  login-profile generator), installed as
+  `/usr/local/lib/docker-builder/entrypoint.sh` and sourced by both
+  entrypoints and the devcontainer init
 
 The same mechanism single-sources the `/etc/entrypoint.d` plugins:
 golden copies live under `docker/entrypoint/plugins/`, and any image

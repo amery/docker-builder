@@ -27,6 +27,7 @@ COPY builder_version.sh /usr/local/bin/builder_version
 COPY 10-golang.sh /etc/entrypoint.d/
 
 # and inject entrypoint to deal with -e USER_*
+COPY shared.sh /usr/local/lib/docker-builder/entrypoint.sh
 COPY entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]

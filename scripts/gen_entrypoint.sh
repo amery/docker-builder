@@ -9,6 +9,7 @@ set -eu
 
 UBUNTU_GOLDEN="docker/entrypoint/ubuntu.sh"
 ALPINE_GOLDEN="docker/entrypoint/alpine.sh"
+SHARED_GOLDEN="docker/entrypoint/shared.sh"
 PLUGIN_GOLDEN_DIR="docker/entrypoint/plugins"
 
 get_bases() {
@@ -71,6 +72,10 @@ ENTRYPOINTS=$(get_base_entrypoints)
 UBUNTU_ENDPOINTS=$(echo "$ENTRYPOINTS" | sed -n 's/^ubuntu:\(.*\)$/\1/p' | sort -uV)
 ALPINE_ENDPOINTS=$(echo "$ENTRYPOINTS" | sed -n 's/^alpine:\(.*\)$/\1/p' | sort -uV)
 
+# The shared library is OS-agnostic POSIX sh: one golden serves every
+# image that copies an entrypoint, ubuntu and alpine alike.
+SHARED_ENDPOINTS=$(echo "$ENTRYPOINTS" | sed -n 's|^[a-z]*:\(.*\)/entrypoint.sh$|\1/shared.sh|p' | sort -uV)
+
 PLUGIN_COPIES=$(get_plugin_copies)
 PLUGIN_NAMES=$(echo "$PLUGIN_COPIES" | cut -f1 | sort -uV)
 PLUGIN_ENDPOINTS=$(echo "$PLUGIN_COPIES" | cut -f2 | sort -uV)
@@ -81,20 +86,26 @@ cat <<EOT
 #
 UBUNTU_GOLDEN_ENDPOINT := $UBUNTU_GOLDEN
 ALPINE_GOLDEN_ENDPOINT := $ALPINE_GOLDEN
+SHARED_GOLDEN_ENDPOINT := $SHARED_GOLDEN
 PLUGIN_GOLDEN_DIR := $PLUGIN_GOLDEN_DIR
 
 $(list_key UBUNTU_ENDPOINTS $UBUNTU_ENDPOINTS)
 $(list_key ALPINE_ENDPOINTS $ALPINE_ENDPOINTS)
+$(list_key SHARED_ENDPOINTS $SHARED_ENDPOINTS)
 $(list_key PLUGIN_ENDPOINTS $PLUGIN_ENDPOINTS)
 
 .PHONY: entrypoint
-entrypoint: \$(UBUNTU_ENDPOINTS) \$(ALPINE_ENDPOINTS) \$(PLUGIN_ENDPOINTS)
+entrypoint: \$(UBUNTU_ENDPOINTS) \$(ALPINE_ENDPOINTS) \$(SHARED_ENDPOINTS) \$(PLUGIN_ENDPOINTS)
 
 \$(UBUNTU_ENDPOINTS): \$(UBUNTU_GOLDEN_ENDPOINT)
 	@if ! cmp -s \$< \$@; then install -vpm 0755 \$< \$@; else touch -r \$< \$@; fi
 
 \$(ALPINE_ENDPOINTS): \$(ALPINE_GOLDEN_ENDPOINT)
 	@if ! cmp -s \$< \$@; then install -vpm 0755 \$< \$@; else touch -r \$< \$@; fi
+
+# Mode 0644: the library is sourced, not executed.
+\$(SHARED_ENDPOINTS): \$(SHARED_GOLDEN_ENDPOINT)
+	@if ! cmp -s \$< \$@; then install -vpm 0644 \$< \$@; else touch -r \$< \$@; fi
 EOT
 
 # Per-plugin copy rules: one golden drives many image copies. Mode 0644

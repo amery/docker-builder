@@ -11,6 +11,11 @@ All notable changes to docker-builder will be documented in this file.
   `/etc/entrypoint.d` scripts (`05-display`, `10-android-sdk`, `10-golang`,
   `10-node`, `10-python`, `20-node-pnpm`); the per-image copies are now
   generated and git-ignored
+- `docker/entrypoint/shared.sh` golden — a shared entrypoint library
+  (`err`/`die` and the `gen_profile` login-profile generator) installed
+  as `/usr/local/lib/docker-builder/entrypoint.sh` and sourced by the
+  generated `entrypoint.sh` and `devcontainer.sh`, replacing the copies
+  each carried
 
 ### Changed
 
@@ -28,6 +33,12 @@ All notable changes to docker-builder will be documented in this file.
   so a `docker exec` login shell into a persistent container lands at
   its own CURDIR and command instead of the values frozen at container
   start
+- Login-profile generation single-sourced through `gen_profile`: the
+  PATH bootstrap and `/etc/entrypoint.d` plugin sourcing live in one
+  place for both the entrypoint and the devcontainer init. The
+  workspace bin is added both baked (survives the `su -` environment
+  reset at container start) and deferred via `${WS:-}` (covers the
+  devcontainer build, where WS arrives at login via containerEnv)
 
 ### Fixed
 
@@ -53,6 +64,13 @@ All notable changes to docker-builder will be documented in this file.
   before `env -i` clears `PATH`; the default search path excludes
   `/sbin`, so a bare `su-exec` failed with exit 127 on non-interactive
   sessions
+- Entrypoint: assemble the whole login profile in a temporary file and
+  rename it into place in one step, instead of writing
+  `Z99-docker-run.sh` onto the live file in two passes — the PATH
+  bootstrap and plugin output during generation, then the sudo
+  `SUDO_*` block afterwards. A nested `su -`/`bash -l` during
+  generation, or a concurrent login, could otherwise source a
+  half-written profile
 - `docker-golang-builder`: Replace the whitelist `.dockerignore` in
   each golang image directory with a `top-level.mk` exclusion, so a
   file added to the Dockerfile `COPY` set is no longer silently

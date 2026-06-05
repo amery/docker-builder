@@ -86,6 +86,7 @@ COPY 05-gnupg.sh /etc/entrypoint.d/
 COPY 10-python.sh /etc/entrypoint.d/
 
 # trampoline
+COPY shared.sh /usr/local/lib/docker-builder/entrypoint.sh
 COPY entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]

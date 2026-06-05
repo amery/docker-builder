@@ -2,18 +2,7 @@
 
 set -eu
 
-err() {
-	if [ $# -eq 0 ]; then
-		cat
-	else
-		echo "$*"
-	fi | sed -e 's|^|E:|g' >&2
-}
-
-die() {
-	err "$@"
-	exit 1
-}
+. /usr/local/lib/docker-builder/entrypoint.sh
 
 if [ "x${1:-}" = "x--version" ]; then
 	if [ -s /etc/builder_version ]; then
@@ -79,42 +68,31 @@ if [ ! -s "$USER_HOME/.profile" ]; then
 	chown "$USER_NAME:$USER_NAME" "$USER_HOME"
 fi
 
-F=/etc/profile.d/Z99-docker-run.sh
-
-cat <<EOT > "$F"
-path_prepend() {
-	local p
-	for p; do
-		[ -n "\$p" ] || continue
-		case ":\$PATH:" in
-		*":\$p:"*) : ;;
-		*) export PATH="\$p:\$PATH" ;;
-		esac
-	done
-}
-
-for d in /opt/* "\$HOME/.local" "\$HOME" "$WS"; do
-	if [ -n "\$d" -a -d "\$d/bin" ]; then
-		path_prepend "\$d/bin"
-	fi
-done
-EOT
-
-for x in $(ls -1 /etc/entrypoint.d/*.sh 2> /dev/null | sort -V); do
-	[ -s "$x" ] || continue
-	. "$x"
-done >> "$F"
-
-cat <<EOT >> "$F"
-
-unset -f path_prepend
-EOT
-
 if [ $# -gt 0 ]; then
 	CMD="$*"
 else
 	CMD=
 fi
+
+F=/etc/profile.d/Z99-docker-run.sh
+T="$F.$$"
+gen_profile > "$T"
+
+# In sudo mode the login keeps its environment, so the SUDO_* context
+# is exported from the profile. Append it to the temporary file before
+# the rename, so the published profile is always complete and lands in
+# a single atomic step instead of a second write onto the live file.
+if [ -n "${USER_IS_SUDO:+yes}" ]; then
+	cat <<-EOT >> "$T"
+
+	export SUDO_COMMAND="${CMD:-/bin/bash}"
+	export SUDO_USER=$USER_NAME
+	export SUDO_UID=$USER_UID
+	export SUDO_GID=$USER_GID
+	EOT
+fi
+
+mv "$T" "$F"
 
 # Per-invocation navigation and command. Kept OUT of the sourced
 # profile above so a `docker exec` login shell into a persistent
@@ -127,14 +105,6 @@ else
 fi
 
 if [ -n "${USER_IS_SUDO:+yes}" ]; then
-	cat <<-EOT >> "$F"
-
-	export SUDO_COMMAND="${CMD:-/bin/bash}"
-	export SUDO_USER=$USER_NAME
-	export SUDO_UID=$USER_UID
-	export SUDO_GID=$USER_GID
-	EOT
-
 	exec /bin/bash -lc "$LOGIN"
 else
 	exec su - "$USER_NAME" -c "$LOGIN"

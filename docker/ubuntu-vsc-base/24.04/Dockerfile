@@ -117,6 +117,7 @@ COPY builder_version.sh /usr/local/bin/builder_version
 # entrypoint
 #
 COPY 10-python.sh /etc/entrypoint.d/
+COPY shared.sh /usr/local/lib/docker-builder/entrypoint.sh
 COPY entrypoint.sh /entrypoint.sh
 COPY devcontainer.sh /devcontainer-init.sh
 

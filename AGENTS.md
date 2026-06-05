@@ -52,6 +52,7 @@ scripts/
 docker/entrypoint/
 ├── ubuntu.sh        # Canonical Ubuntu/Debian entrypoint
 ├── alpine.sh        # Canonical Alpine entrypoint
+├── shared.sh        # Shared library sourced by both (and devcontainer.sh)
 └── plugins/         # Canonical /etc/entrypoint.d plugins
 ```
 
@@ -94,13 +95,20 @@ done
   with a golden copy under `docker/entrypoint/plugins/`, generates the
   per-image copy from it so the plugin is single-sourced too; plugins
   without one stay hand-maintained
+- Also generates the per-image copy of the shared library
+  `docker/entrypoint/shared.sh` (installed as
+  `/usr/local/lib/docker-builder/entrypoint.sh`) for every image that
+  copies an entrypoint, so the `err`/`die` helpers and the login-profile
+  generator are single-sourced too
 - Generates entrypoint.mk with dependency rules
 - Copies canonical sources to image directories when they change
 - Uses `cmp` to detect changes; on a content match it settles the copy
   to the golden copy's mtime (`touch -r`) so the rule does not re-fire
 
 Golden copies at `docker/entrypoint/{ubuntu.sh,alpine.sh}` serve as the
-single source of truth for all base images, and those under
+single source of truth for all base images, `docker/entrypoint/shared.sh`
+for the library they source (installed as
+`/usr/local/lib/docker-builder/entrypoint.sh`), and those under
 `docker/entrypoint/plugins/` for the shared `/etc/entrypoint.d` plugins.
 
 ### 5. Tag Management

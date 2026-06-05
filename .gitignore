@@ -8,6 +8,9 @@ rules.mk
 entrypoint.mk
 # generated entrypoint copies (golden: docker/entrypoint/{ubuntu,alpine}.sh)
 entrypoint.sh
+# generated shared-library copies (golden: docker/entrypoint/shared.sh)
+shared.sh
+!docker/entrypoint/shared.sh
 # generated entrypoint.d plugin copies (golden: docker/entrypoint/plugins/)
 05-display.sh
 10-android-sdk.sh
