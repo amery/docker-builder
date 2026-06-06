@@ -80,8 +80,16 @@ gen_image_files() {
 		echo "$x"
 	done
 
-	# Extract files from COPY commands
-	sed -n "s:^COPY[ \t]\+\([^ \t]\+\).*$:$dir/\1:p" "$df"
+	# Extract files from COPY commands: skip --chown/--from/... option
+	# flags and emit every source, dropping the trailing destination.
+	awk -v dir="$dir" '
+		$1 == "COPY" {
+			n = 0
+			for (i = 2; i <= NF; i++)
+				if ($i !~ /^--/) tok[++n] = $i
+			for (j = 1; j < n; j++) print dir "/" tok[j]
+		}
+	' "$df"
 
 	# Include .in templates
 	find "$dir" ! -type d -a -name '*.in' | sed -e 's|\.in$||'
