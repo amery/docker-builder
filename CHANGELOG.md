@@ -52,6 +52,11 @@ All notable changes to docker-builder will be documented in this file.
 
 ### Fixed
 
+- `docker-ubuntu-cordova-builder`: Pin `corepack` (0.33.0) and `pnpm`
+  (10.34.1) to the last releases supporting the image's node 18.x,
+  clearing the `EBADENGINE` warnings; drop the redundant `npx@latest`
+  (bundled with npm since npm 7). The full node bump is left to the
+  android/cordova refresh
 - `ubuntu-vsc-base`: Fix `err()`/`die()` dropping their message —
   the non-stdin branch echoed a literal `$` instead of `$*`
 - Entrypoint generation: settle an unchanged copy to its golden

@@ -25,14 +25,14 @@ RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg -
 		nodejs \
 	&& apt-get clean
 
-# update npm and install npx, corepack, yarn and pnpm
+# update npm and install corepack, yarn and pnpm
+# corepack/pnpm pinned to the last releases supporting node 18.x
 #
 RUN npm i -g \
 		npm@10 \
-		npx@latest \
-		corepack@latest \
+		corepack@0.33.0 \
 		yarn@latest \
-		pnpm@latest \
+		pnpm@10.34.1 \
 	&& rm -rf ~/.npm
 
 COPY 10-node.sh /etc/entrypoint.d/
