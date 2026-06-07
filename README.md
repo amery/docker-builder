@@ -152,9 +152,11 @@ make -B FORCE=1 quay.io/amery/docker-golang-builder
 
 #### Multi-Architecture Builds
 
-All builds produce multi-architecture manifests (amd64 + arm64)
-and push to registry. This requires a `multiarch-native` buildx
-builder and registry authentication (`docker login quay.io`).
+The normal build produces a multi-architecture manifest (amd64 + arm64)
+and pushes it to the registry. This requires a `multiarch-native` buildx
+builder and registry authentication (`docker login quay.io`). While
+developing an image you can opt out with an empty `BUILDER` (see below);
+that leaves the normal build untouched.
 
 See [Prerequisites for Cross-Platform Builds][cross-platform-prereq]
 for builder setup instructions.
@@ -165,7 +167,18 @@ make quay.io/amery/docker-ubuntu-builder-24.04
 
 # Use a different builder
 make BUILDER=mybuilder quay.io/amery/docker-ubuntu-builder-24.04
+
+# Dev build: verify a change locally before committing (not pushed)
+make BUILDER= quay.io/amery/docker-ubuntu-builder-24.04
 ```
+
+An empty `BUILDER` is the development exception, for checking a change
+builds and runs before you commit it. It builds for the host
+architecture alone and loads the image into the local daemon untagged
+(its ID lands in the `.image-*` marker, so
+`DOCKER_ID="$(cat .image-<name>)" docker-builder-run bash` runs it). The
+build is single-target — base images are pulled, not rebuilt. Nothing is
+pushed and no tag persists, so `docker image prune` reclaims the image.
 
 For detailed information about the build system mechanics, caching behavior,
 and troubleshooting, see [Build System Mechanics][build-system-mechanics].
@@ -178,7 +191,7 @@ and troubleshooting, see [Build System Mechanics][build-system-mechanics].
 |--------------------|-----------------------------------------------------
 | `DOCKER`           | Docker command (default: `docker`)
 | `FORCE`            | Bypass Docker layer cache (`--no-cache`)
-| `BUILDER`          | Buildx builder name (default: `multiarch-native`)
+| `BUILDER`          | Buildx builder name (default: `multiarch-native`; empty = local build)
 | `DOCKER_BUILD_OPT` | Extra `docker buildx build` args (default: `--progress=plain`)
 
 ### `docker-builder-run` Configuration

@@ -84,6 +84,13 @@ done
 - Generates `.image-<name>` and `.alias-<name>` marker files
 - Creates pull targets
 - Handles tag aliases and latest symlinks
+- Reads each image's `FROM` line to wire base dependencies. A
+  third-party base is pre-pulled so it is present locally; an own-image
+  base is built first so its `FROM` reference resolves from local
+  storage. This base edge belongs to the normal (publish) build, so a
+  family builds in dependency order; the [local build](#local-builds)
+  exception drops the edge to stay single-target, letting buildx pull
+  whatever base is published.
 
 ### 4. Entrypoint Generation
 
@@ -153,10 +160,13 @@ The build system employs two independent caching layers:
 
 ### Multi-Architecture Builds
 
-All builds produce multi-architecture manifests (amd64 + arm64)
-and push to registry. This requires a
-`multiarch-native` buildx builder with native nodes for each
-architecture, and registry authentication.
+This is the normal build mode: every build produces a
+multi-architecture manifest (amd64 + arm64) and pushes it to the
+registry, which requires a `multiarch-native` buildx builder with
+native nodes for each architecture, and registry authentication. While
+developing an image you can opt out of both with the [Local
+Builds](#local-builds) exception; that exception leaves this mode
+untouched.
 
 #### Prerequisites
 
@@ -168,7 +178,7 @@ architecture, and registry authentication.
 
 | Variable | Default | Purpose |
 | -------- | ------- | ------- |
-| `BUILDER` | `multiarch-native` | Buildx builder name |
+| `BUILDER` | `multiarch-native` | Buildx builder name; empty selects [local builds](#local-builds) |
 | `DOCKER` | `docker` | Docker command override |
 
 #### Prerequisites for Cross-Platform Builds
@@ -308,6 +318,43 @@ Multiple exclusions are supported:
 # build: !arm64 !s390x
 ```
 
+### Local Builds
+
+Local builds are the **exception** to the normal multi-architecture
+push above — a development convenience for verifying a change builds
+and runs before committing it. They leave the normal mode untouched.
+
+Set an empty `BUILDER`:
+
+```bash
+make BUILDER= quay.io/amery/docker-ubuntu-builder-24.04
+```
+
+This builds for the host architecture alone and loads the image into
+the local daemon with `--load`, skipping the registry entirely: no
+push, no inline cache, and no alias retagging. The build is
+single-target — it does **not** rebuild base images, letting buildx
+pull whatever base is published. The image is loaded **untagged**; its
+ID is written into the `.image-*` marker via `--iidfile`, which doubles
+as the run handle. Pass that ID to `docker-builder-run` (a bare
+`docker run` fails — the entrypoint needs the `USER_NAME`/`USER_UID`/…
+environment that `docker-builder-run` sets up):
+
+```bash
+DOCKER_ID="$(cat .image-docker-ubuntu-builder-24.04)" docker-builder-run bash
+```
+
+Because a local build leaves no persistent tag, the image is dangling
+and `docker image prune` reclaims it; dev builds stay ephemeral by
+construction. Alias-only targets (e.g. `latest`) skip their retag in
+this mode, since there is no tag to copy; building one still builds the
+concrete version it points to.
+
+The mode is driven by the generated `WANTS_TAGS` flag: an empty
+`BUILDER` clears it, so the recipes take the `--load`/`--iidfile`
+branch and drop the base-image prerequisites; any builder sets it and
+the recipes push, retag, and build bases first exactly as before.
+
 ### Target Types: Version-Specific vs Aggregate
 
 The build system generates two types of targets for each image:
@@ -446,13 +493,18 @@ real version's alias sentinel, then creates a registry-side tag:
 ```makefile
 # Generated rule for symlink
 .image-docker-ubuntu-builder-latest: .alias-docker-ubuntu-builder-24.04
+ifeq ($(WANTS_TAGS),1)
 	$(DOCKER_TAG) -t $(PREFIX)docker-ubuntu-builder:latest \
 	              $(PREFIX)docker-ubuntu-builder:24.04
+endif
 	touch $@
 
 .alias-docker-ubuntu-builder-latest: .image-docker-ubuntu-builder-latest
 	touch $@
 ```
+
+In a [local build](#local-builds) (`WANTS_TAGS` empty) the retag is
+skipped and the rule collapses to `touch $@`.
 
 <!-- markdownlint-enable MD010 -->
 
@@ -530,6 +582,11 @@ make FORCE=1 <target>
 # Uses: docker buildx build --builder multiarch-native --push
 #        --progress=plain --no-cache
 #        --platform linux/amd64,linux/arm64
+
+# Local build (single-arch, loaded untagged, not pushed)
+make BUILDER= <target>
+# Uses: docker buildx build --progress=plain --load
+#        --iidfile .image-<name>
 ```
 
 ## Docker Images Provided

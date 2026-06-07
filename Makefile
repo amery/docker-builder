@@ -11,12 +11,22 @@ endif
 
 DOCKER_TAG ?= $(DOCKER) buildx imagetools create $(BUILDER_OPT)
 
-DOCKER_BUILD ?= $(DOCKER) buildx build $(BUILDER_OPT) --push
+DOCKER_BUILD ?= $(DOCKER) buildx build $(BUILDER_OPT)
 
 ifneq ($(FORCE),)
 DOCKER_BUILD_OPT ?= --progress=plain --no-cache
 else
 DOCKER_BUILD_OPT ?= --progress=plain
+endif
+
+# Build mode. With no buildx builder we build for the host alone and load the
+# image into the local daemon untagged (its ID is recorded in the sentinel);
+# with a builder we push the multi-arch manifest under the registry prefix and
+# retag its aliases. The generated recipes branch on WANTS_TAGS with ifeq.
+ifeq ($(BUILDER),)
+WANTS_TAGS ?=
+else
+WANTS_TAGS ?= 1
 endif
 
 B = $(CURDIR)

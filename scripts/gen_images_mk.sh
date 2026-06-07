@@ -181,9 +181,11 @@ while read tag dir; do
 	fi
 
 	if grep -q "^${from#$PREFIX} " "$OWN"; then
+		# Own base: its built image.
 		s0=$(sentinel "${from#$PREFIX}")
 		a0=$(aliases "${from#$PREFIX}")
 	else
+		# Third-party base: its pulled image.
 		s0=$(sentinel "$from")
 		a0=$s0
 	fi
@@ -197,7 +199,10 @@ while read tag dir; do
 		files="$a0"
 	else
 		from=
-		files="$(gen_image_files "$dir" "$s0" '$(BUILD_SYS)')"
+		# Base sentinel is intentionally absent here: it is a gated
+		# prerequisite below (publish mode only), not an unconditional
+		# build input.
+		files="$(gen_image_files "$dir" '$(BUILD_SYS)')"
 	fi
 
 	excl=$(get_arch_exclusions "$df")
@@ -219,35 +224,60 @@ $(list_target $s1 $files)
 EOT
 
 if [ -d "$dir" ]; then
-	# Assemble docker build command
-	build_cmd="\$(DOCKER_BUILD) \$(DOCKER_BUILD_OPT) --platform \$(PLATFORM)"
+	# In the normal (publish) mode the base image — own build or
+	# third-party pull — is made first so the FROM reference resolves
+	# from local storage. A dev (BUILDER=) build drops this edge to stay
+	# single-target and lets buildx pull whatever base is published.
+	cat <<EOT
+ifeq (\$(WANTS_TAGS),1)
+$s1: $s0
+endif
+EOT
 
-	# Add build arg for run-hook.sh SHA256 if it exists
+	# Optional run-hook.sh SHA256, hashed at build time and passed as a
+	# build arg. Empty for images without a run-hook.
+	RUN_HOOK_SHA256=
 	if [ -f "$dir/run-hook.sh" ]; then
-		A="RUN_HOOK_SHA256"
-		echo "$TAB$A=${DOLLAR}(sha256sum \"$dir/run-hook.sh\" | cut -d' ' -f1); \\"
-		build_cmd="$build_cmd --build-arg $A=${DOLLAR}$A"
+		RUN_HOOK_SHA256="${DOLLAR}(sha256sum \"$dir/run-hook.sh\" | cut -d' ' -f1)"
 	fi
 
-	build_cmd="$build_cmd --cache-to type=inline"
-	build_cmd="$build_cmd --cache-from type=registry,ref=\$(PREFIX)$tag"
-	build_cmd="$build_cmd -t \$(PREFIX)$tag $dir"
-	echo "$TAB$build_cmd"
-	echo "${TAB}touch \$@"
-
+	# With tags: push the multi-arch manifest and seed the registry cache.
+	# Without tags: build for the host and load it untagged, recording the
+	# image ID in the sentinel. A dev build leaves no persistent tag, so
+	# docker image prune reclaims it; reference it via $(cat sentinel).
 	cat <<EOT
+ifeq (\$(WANTS_TAGS),1)
+	\$(DOCKER_BUILD) \$(DOCKER_BUILD_OPT) --platform \$(PLATFORM) --push \\
+		${RUN_HOOK_SHA256:+--build-arg "RUN_HOOK_SHA256=$RUN_HOOK_SHA256" \\
+		}--cache-to type=inline \\
+		--cache-from type=registry,ref=\$(PREFIX)$tag \\
+		-t \$(PREFIX)$tag \\
+		$dir
+else
+	\$(DOCKER_BUILD) \$(DOCKER_BUILD_OPT) --load \\
+		${RUN_HOOK_SHA256:+--build-arg "RUN_HOOK_SHA256=$RUN_HOOK_SHA256" \\
+		}--iidfile \$@ \\
+		$dir
+endif
+	touch \$@
 
 $a1: $s1
+ifeq (\$(WANTS_TAGS),1)
 	@\$(SCRIPTS)/get_aliases.sh \$(PREFIX)$tag | while read x; do \\
 		\$(DOCKER_TAG) -t ${DOLLAR}x \$(PREFIX)$tag; \\
 	done
+endif
 	touch \$@
 EOT
 else
-	echo "$TAB\$(DOCKER_TAG) -t \$(PREFIX)$tag \$(PREFIX)$from"
-	echo "${TAB}touch \$@"
-
+	# Alias-only tag: retag the registry manifest. Local builds are
+	# untagged and single-target, so there is no tag to copy and the
+	# alias resolves to a no-op.
 	cat <<EOT
+ifeq (\$(WANTS_TAGS),1)
+	\$(DOCKER_TAG) -t \$(PREFIX)$tag \$(PREFIX)$from
+endif
+	touch \$@
 
 $a1: $s1
 	touch \$@

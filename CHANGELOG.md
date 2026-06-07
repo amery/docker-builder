@@ -7,6 +7,16 @@ All notable changes to docker-builder will be documented in this file.
 
 ### Added
 
+- Local build mode for verifying a change before committing it:
+  `make BUILDER= <target>` builds for the host architecture alone and
+  loads the image into the local daemon untagged, recording its ID in
+  the `.image-*` marker. It pushes nothing and leaves no persistent
+  tag, so `docker image prune` reclaims it; run it via
+  `DOCKER_ID="$(cat .image-<name>)" docker-builder-run`. The build is
+  single-target —
+  base images are pulled, not rebuilt. The normal mode
+  (`BUILDER=multiarch-native`) is unchanged: it still pushes the
+  multi-arch manifest, retags aliases, and builds bases first
 - Plugin golden copies under `docker/entrypoint/plugins/` for the shared
   `/etc/entrypoint.d` scripts (`05-display`, `10-android-sdk`, `10-golang`,
   `10-node`, `10-python`, `20-node-pnpm`); the per-image copies are now
