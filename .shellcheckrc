@@ -1,0 +1,14 @@
+# `local` is supported by every /bin/sh we target (dash, busybox ash,
+# bash); POSIX leaves it undefined, so silence SC3043 repo-wide instead
+# of per-file.
+disable=SC3043
+
+# `[ p -a q ]` is only ill-defined when an operand can land in operator
+# position; our uses are fixed operators over quoted values, so keep the
+# single-bracket form rather than splitting into `[ p ] && [ q ]`.
+disable=SC2166
+
+# `var=` is our deliberate empty-string initialiser in multi-var `local a=
+# b=` declarations; SC1007 only guards against an accidental space before an
+# intended value, which we never do.
+disable=SC1007

@@ -102,20 +102,35 @@ shared library installed at
 `/usr/local/lib/docker-builder/entrypoint.sh`, sourced by both
 entrypoints and the devcontainer init.
 
-Init also generates a per-OS **accessor** at `/usr/local/bin/user-exec`.
-Given a command it navigates to `$CURDIR` and runs it as the workspace
-user under a login shell — `su -` on Ubuntu; `su -` or `su-exec` by TTY
-on Alpine. The start-time one-shot ends by calling `user-exec`, and so
-does every `docker exec <container> user-exec <cmd>` reattach (which
-passes the per-attach `$CURDIR`). One definition serves both, so a
-reattached session runs as the same user, with the same login
-environment, as a fresh run.
+Init also generates an **accessor** at `/usr/local/bin/user-exec`,
+a small CLI: `user-exec [-r] [-C dir] [--] [command…]`. It chdirs to
+`-C`, then runs the command — arguments preserved as a proper argv — as
+the workspace user under a login shell (`su -` on Ubuntu; `su-exec` for
+commands on Alpine, whose busybox `su` cannot forward arguments, and
+`su -` for the interactive login). The workspace identity is baked into
+the script at init, so `-C` and the command are the only per-call
+inputs. `-r` (sudo mode) skips the drop to the workspace user —
+`user-exec` starts as root in every path — and instead adopts the
+user's environment: their HOME, so the login shell sources their
+profile, plus the `SUDO_*` identity context, with `SUDO_COMMAND` set
+per invocation. The start-time one-shot ends by calling `user-exec`,
+and so does every `docker exec <container> user-exec -C "$PWD" --
+<cmd>` reattach. One definition serves both, so a reattached session
+runs as the same user, with the same login environment, as a fresh run.
 
-**Key principle:** navigation and command belong to `user-exec`, never to
-the sourced `Z99` profile. Were they in `Z99`, every later `docker exec`
-login would be pinned to the directory and command frozen at container
-start; routing them through the accessor lets each exec session land at
-its own `$CURDIR` and run its own command.
+The generator (`gen_user_exec`) lives in the shared library: it owns
+the argument contract, the sudo-mode branch and the dispatch skeleton,
+and each entrypoint supplies only its two drop-to-user handlers —
+`gen_user_exec_cmd` and `gen_user_exec_login` — so the genuinely
+OS-specific `su`/`su-exec` lines are all an entrypoint defines.
+
+**Key principle:** per-invocation state — navigation, command, and the
+sudo `SUDO_*` context — belongs to `user-exec`, never to the sourced
+`Z99` profile. Were it in `Z99`, every later `docker exec` login would
+be pinned to the directory, command and sudo context frozen at
+container start; routing it through the accessor lets each exec session
+land at its own `$CURDIR`, run its own command, and carry a sudo
+context only when it asked for one.
 
 **Persistent containers.** `entrypoint.sh -N` runs init and then holds
 the container open as PID 1 — idle, with a `SIGTERM` trap so `docker

@@ -102,15 +102,18 @@ starting fresh:
   user, assembles the login profile) and then idles as PID 1. Paired
   with `docker run -d --rm`, the container stays up while in use and is
   removed when stopped.
-- **`user-exec`** (installed at `/usr/local/bin/user-exec`) runs a
-  command as the workspace user — login shell, at `$CURDIR` — so
-  `docker exec <container> user-exec <cmd>` lands exactly like a fresh
-  run.
+- **`user-exec [-r] [-C dir] [--] [command…]`** (installed at
+  `/usr/local/bin/user-exec`) runs the command — arguments preserved —
+  as the workspace user under a login shell, after chdir'ing to `-C`, so
+  `docker exec <container> user-exec -C "$PWD" -- <cmd>` lands exactly
+  like a fresh run. `-r` (sudo mode) runs the command as root instead,
+  keeping the workspace user's environment — their HOME and the
+  `SUDO_*` context.
 
-Both use the same `USER_NAME`/`USER_UID`/`USER_GID`/`USER_HOME` and
-`CURDIR`/`WS` environment that `docker-builder-run` already provides for
-one-shot runs (`-N` reads it at start; `user-exec` reads `CURDIR` per
-exec).
+`-N` reads the `USER_NAME`/`USER_UID`/`USER_GID`/`USER_HOME` and `WS`
+environment `docker-builder-run` already provides at start and bakes the
+identity into `user-exec`; a reattach then needs only `-C` and the
+command — no per-exec environment.
 
 ## Available Images
 

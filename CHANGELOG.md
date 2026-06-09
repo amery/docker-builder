@@ -33,14 +33,20 @@ All notable changes to docker-builder will be documented in this file.
   ephemeral `--rm` runs too
 - Entrypoint persistent-container support: `entrypoint.sh -N` runs init
   (user creation, login profile) then idles as PID 1, holding the
-  container open for reattach; init also generates a per-OS `user-exec`
-  accessor at `/usr/local/bin/user-exec` that runs a command as the
-  workspace user at `$CURDIR` under a login shell (`su -`, or `su-exec`
-  by TTY on Alpine). The start-time one-shot and every
-  `docker exec … user-exec` reattach share it, so a reattached session
-  matches a fresh run. With `docker run -d --rm` the container idles
-  until `docker stop` (a `SIGTERM` trap makes it prompt) and is then
-  auto-removed
+  container open for reattach; init also generates a
+  `user-exec [-r] [-C dir] [--] [command…]` accessor at
+  `/usr/local/bin/user-exec` that runs the command — arguments preserved
+  as a proper argv — as the workspace user under a login shell, after
+  chdir'ing to `-C` (`su -` on Ubuntu; `su-exec` for commands on Alpine,
+  whose busybox `su` cannot forward arguments). `-r` (sudo mode) skips
+  the drop to the workspace user instead — the command runs as root
+  with the user's environment: their HOME, so the login shell sources
+  their profile, plus the `SUDO_*` context, with `SUDO_COMMAND`
+  reflecting each invocation. The start-time one-shot and every
+  `docker exec … user-exec -C "$PWD"` reattach share it, so a reattached
+  session matches a fresh run. With `docker run -d --rm` the container
+  idles until `docker stop` (a `SIGTERM` trap makes it prompt) and is
+  then auto-removed
 
 ### Changed
 
@@ -58,6 +64,14 @@ All notable changes to docker-builder will be documented in this file.
   so a `docker exec` login shell into a persistent container lands at
   its own CURDIR and command instead of the values frozen at container
   start
+- Entrypoint sudo mode: the `SUDO_*` context moved from the generated
+  `Z99-docker-run.sh` profile into `user-exec -r`. The profile is
+  sourced by every login in a persistent container, so the baked block
+  — frozen at container start — would leak the sudo context into plain
+  reattach sessions; exported per invocation by the accessor, each
+  session carries a sudo context only when it asked for one, and a
+  sudo reattach works in any container, not only one started in sudo
+  mode
 - Login-profile generation single-sourced through `gen_profile`: the
   PATH bootstrap and `/etc/entrypoint.d` plugin sourcing live in one
   place for both the entrypoint and the devcontainer init. The
@@ -94,8 +108,8 @@ All notable changes to docker-builder will be documented in this file.
   before `env -i` clears `PATH`; the default search path excludes
   `/sbin`, so a bare `su-exec` failed with exit 127 on non-interactive
   sessions
-- Entrypoint: assemble the whole login profile in a temporary file and
-  rename it into place in one step, instead of writing
+- Entrypoint: install the login profile through a temporary file
+  renamed into place (`atomic_install`), instead of writing
   `Z99-docker-run.sh` onto the live file in two passes — the PATH
   bootstrap and plugin output during generation, then the sudo
   `SUDO_*` block afterwards. A nested `su -`/`bash -l` during
