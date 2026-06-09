@@ -92,6 +92,26 @@ The `x` script works with project-specific `run.sh` files that typically
 invoke `docker-builder-run`, enabling a clean execution chain from host to
 container.
 
+#### Persistent containers
+
+An image's entrypoint can hold a container open instead of running a
+single command, so subsequent `docker exec`s reuse it rather than
+starting fresh:
+
+- **`entrypoint.sh -N`** runs the normal init (creates the workspace
+  user, assembles the login profile) and then idles as PID 1. Paired
+  with `docker run -d --rm`, the container stays up while in use and is
+  removed when stopped.
+- **`user-exec`** (installed at `/usr/local/bin/user-exec`) runs a
+  command as the workspace user — login shell, at `$CURDIR` — so
+  `docker exec <container> user-exec <cmd>` lands exactly like a fresh
+  run.
+
+Both use the same `USER_NAME`/`USER_UID`/`USER_GID`/`USER_HOME` and
+`CURDIR`/`WS` environment that `docker-builder-run` already provides for
+one-shot runs (`-N` reads it at start; `user-exec` reads `CURDIR` per
+exec).
+
 ## Available Images
 
 ### Base Images

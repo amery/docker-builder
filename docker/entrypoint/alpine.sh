@@ -24,6 +24,14 @@ if [ "x${1:-}" = "x--run-hook" ]; then
 	exit
 fi
 
+# -N: run init only, then idle — keeps a persistent container open
+# (PID 1) for `docker exec` reattach instead of running a command.
+IDLE=
+if [ "x${1:-}" = "x-N" ]; then
+	IDLE=1
+	shift
+fi
+
 [ "${USER_NAME:-root}" != "root" ] || die "Invalid \$USER_NAME (${USER_NAME})"
 
 # create workspace-friendly user
@@ -58,12 +66,20 @@ fi
 
 mv "$T" "$F"
 
-# Per-invocation navigation and command. Kept OUT of the sourced
-# profile above so a `docker exec` login shell into a persistent
-# container lands at its own CURDIR and runs its own command,
-# instead of inheriting the values frozen at container start.
-if [ -n "$CMD" ]; then
-	LOGIN="cd '$CURDIR' && exec $CMD"
+# Generate the run-as-user accessor. The one-shot tail below and a
+# `docker exec` reattach into a persistent container both dispatch
+# through it, so the run-as-user path has a single definition. The
+# heredoc is quoted: CURDIR, the command, USER_NAME, USER_HOME and
+# USER_IS_SUDO are read at run time (per attach), not baked here.
+cat > /usr/local/bin/user-exec <<'EOT'
+#!/bin/sh
+
+set -eu
+
+. /usr/local/lib/docker-builder/entrypoint.sh
+
+if [ $# -gt 0 ]; then
+	LOGIN="cd '$CURDIR' && exec $*"
 else
 	LOGIN="cd '$CURDIR'; exec /bin/bash -il"
 fi
@@ -71,15 +87,28 @@ fi
 if [ -n "${USER_IS_SUDO:+yes}" ]; then
 	exec /bin/bash -lc "$LOGIN"
 elif [ -t 0 ]; then
-	# Interactive TTY: use su for proper session
+	# Interactive TTY: use su for a proper session
 	exec su - "$USER_NAME" -c "$LOGIN"
 else
-	# Non-TTY: use su-exec with bash to avoid stdin issues.
-	# env -i clears environment like su - does; CURDIR survives
+	# Non-TTY: su-exec + login bash avoids the su- stdin hang.
+	# env -i clears the environment like su - does; CURDIR survives
 	# because it is baked into $LOGIN, not read from the env.
-	# Resolve su-exec to an absolute path first: env -i wipes PATH,
-	# so a bare "su-exec" is not found in env's default search path.
+	# Resolve su-exec first: env -i wipes PATH, so a bare "su-exec"
+	# is not found in env's default search path.
 	SU_EXEC=$(command -v su-exec) || die "su-exec not found in PATH"
 	exec env -i HOME="$USER_HOME" USER="$USER_NAME" \
 		"$SU_EXEC" "$USER_NAME" /bin/bash -lc "$LOGIN"
 fi
+EOT
+chmod 0755 /usr/local/bin/user-exec
+
+# -N (persistent): init is done — hold the container open, but exit
+# cleanly on `docker stop` (SIGTERM) so --rm removes it promptly
+# instead of waiting out the stop timeout.
+if [ -n "$IDLE" ]; then
+	trap 'exit 0' TERM INT
+	tail -f /dev/null & wait
+	exit 0
+fi
+
+exec /usr/local/bin/user-exec "$@"

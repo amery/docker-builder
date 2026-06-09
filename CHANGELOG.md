@@ -26,6 +26,16 @@ All notable changes to docker-builder will be documented in this file.
   as `/usr/local/lib/docker-builder/entrypoint.sh` and sourced by the
   generated `entrypoint.sh` and `devcontainer.sh`, replacing the copies
   each carried
+- Entrypoint persistent-container support: `entrypoint.sh -N` runs init
+  (user creation, login profile) then idles as PID 1, holding the
+  container open for reattach; init also generates a per-OS `user-exec`
+  accessor at `/usr/local/bin/user-exec` that runs a command as the
+  workspace user at `$CURDIR` under a login shell (`su -`, or `su-exec`
+  by TTY on Alpine). The start-time one-shot and every
+  `docker exec … user-exec` reattach share it, so a reattached session
+  matches a fresh run. With `docker run -d --rm` the container idles
+  until `docker stop` (a `SIGTERM` trap makes it prompt) and is then
+  auto-removed
 
 ### Changed
 

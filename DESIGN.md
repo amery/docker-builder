@@ -81,16 +81,18 @@ export DOCKER_EXTRA_OPTS="${DOCKER_EXTRA_OPTS:+$DOCKER_EXTRA_OPTS }--cap-add SYS
 
 ## Entrypoint Runtime
 
-The generated `entrypoint.sh` is the container's `ENTRYPOINT`. It runs
-once, as PID 1, at container start: it prepares the login environment,
-then dispatches the requested session as the workspace user.
+The generated `entrypoint.sh` is the container's `ENTRYPOINT`. As PID 1
+at container start it runs the **init** phase once — preparing the login
+environment and creating the workspace user — then either dispatches the
+requested session as that user or, with `-N`, idles so the container
+stays open for reattach.
 
 The login environment lives in `/etc/profile.d/Z99-docker-run.sh`, which
 holds **environment only** — `PATH` setup and the sourced `entrypoint.d`
 plugins. Because that profile is sourced by every login shell, including
 each `docker exec` into a running container, the per-invocation parts —
 navigating to `$CURDIR` and running the requested command — are kept
-**out** of it and run only from the start-time dispatch.
+**out** of it.
 
 That profile is assembled in a temporary file and atomically renamed into
 place — never written incrementally onto the live file — so a nested
@@ -100,12 +102,28 @@ shared library installed at
 `/usr/local/lib/docker-builder/entrypoint.sh`, sourced by both
 entrypoints and the devcontainer init.
 
-**Key principle:** navigation and command belong to the single
-container-start invocation, not the sourced profile. Were they in `Z99`,
-every later `docker exec` login would be pinned to the directory and
-command frozen at container start; keeping them in the once-only
-dispatch lets a persistent container's exec sessions land at their own
-directory and run their own command.
+Init also generates a per-OS **accessor** at `/usr/local/bin/user-exec`.
+Given a command it navigates to `$CURDIR` and runs it as the workspace
+user under a login shell — `su -` on Ubuntu; `su -` or `su-exec` by TTY
+on Alpine. The start-time one-shot ends by calling `user-exec`, and so
+does every `docker exec <container> user-exec <cmd>` reattach (which
+passes the per-attach `$CURDIR`). One definition serves both, so a
+reattached session runs as the same user, with the same login
+environment, as a fresh run.
+
+**Key principle:** navigation and command belong to `user-exec`, never to
+the sourced `Z99` profile. Were they in `Z99`, every later `docker exec`
+login would be pinned to the directory and command frozen at container
+start; routing them through the accessor lets each exec session land at
+its own `$CURDIR` and run its own command.
+
+**Persistent containers.** `entrypoint.sh -N` runs init and then holds
+the container open as PID 1 — idle, with a `SIGTERM` trap so `docker
+stop` exits promptly. Reattach is `docker exec … user-exec`; paired with
+`docker run -d --rm`, the container lives while in use and is removed on
+stop. The `docker-builder-run` persistent mode drives this end to end,
+but the contract — `-N` and `user-exec` — works against any image
+directly.
 
 ## Image Integration Patterns
 

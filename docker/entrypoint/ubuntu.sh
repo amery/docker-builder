@@ -24,6 +24,14 @@ if [ "x${1:-}" = "x--run-hook" ]; then
 	exit
 fi
 
+# -N: run init only, then idle — keeps a persistent container open
+# (PID 1) for `docker exec` reattach instead of running a command.
+IDLE=
+if [ "x${1:-}" = "x-N" ]; then
+	IDLE=1
+	shift
+fi
+
 [ "${USER_NAME:-root}" != "root" ] || die "Invalid \$USER_NAME (${USER_NAME})"
 
 # helper to find existing group by GID
@@ -94,12 +102,18 @@ fi
 
 mv "$T" "$F"
 
-# Per-invocation navigation and command. Kept OUT of the sourced
-# profile above so a `docker exec` login shell into a persistent
-# container lands at its own CURDIR and runs its own command,
-# instead of inheriting the values frozen at container start.
-if [ -n "$CMD" ]; then
-	LOGIN="cd '$CURDIR' && exec $CMD"
+# Generate the run-as-user accessor. The one-shot tail below and a
+# `docker exec` reattach into a persistent container both dispatch
+# through it, so the run-as-user path has a single definition. The
+# heredoc is quoted: CURDIR, the command, USER_NAME and USER_IS_SUDO
+# are read at run time (per attach), not baked here.
+cat > /usr/local/bin/user-exec <<'EOT'
+#!/bin/sh
+
+set -eu
+
+if [ $# -gt 0 ]; then
+	LOGIN="cd '$CURDIR' && exec $*"
 else
 	LOGIN="cd '$CURDIR'; exec /bin/bash -il"
 fi
@@ -109,3 +123,16 @@ if [ -n "${USER_IS_SUDO:+yes}" ]; then
 else
 	exec su - "$USER_NAME" -c "$LOGIN"
 fi
+EOT
+chmod 0755 /usr/local/bin/user-exec
+
+# -N (persistent): init is done — hold the container open, but exit
+# cleanly on `docker stop` (SIGTERM) so --rm removes it promptly
+# instead of waiting out the stop timeout.
+if [ -n "$IDLE" ]; then
+	trap 'exit 0' TERM INT
+	tail -f /dev/null & wait
+	exit 0
+fi
+
+exec /usr/local/bin/user-exec "$@"
