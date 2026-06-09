@@ -26,6 +26,11 @@ All notable changes to docker-builder will be documented in this file.
   as `/usr/local/lib/docker-builder/entrypoint.sh` and sourced by the
   generated `entrypoint.sh` and `devcontainer.sh`, replacing the copies
   each carried
+- `docker-builder-run`: Label every container with
+  `docker-builder.workspace=<workspace root>`, so a running container can
+  be found by its workspace (`docker ps --filter label=…`) — the basis
+  for reattaching to or shutting down a workspace's container, applied to
+  ephemeral `--rm` runs too
 - Entrypoint persistent-container support: `entrypoint.sh -N` runs init
   (user creation, login profile) then idles as PID 1, holding the
   container open for reattach; init also generates a per-OS `user-exec`

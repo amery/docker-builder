@@ -316,6 +316,7 @@ builder_run_exec() {
 	# and finally run within the container
 	set -x
 	exec docker run --rm \
+		--label "docker-builder.workspace=$WS" \
 		-e USER_HOME="$HOME" \
 		-e USER_NAME="$USER_NAME" \
 		-e USER_UID="$USER_UID" \
