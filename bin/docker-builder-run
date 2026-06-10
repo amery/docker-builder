@@ -1,4 +1,9 @@
 #!/bin/sh
+#
+# Style noise parked to revisit:
+# - SC2155: `local x="$(cmd)"` masks the command's exit status; split
+#   the declarations from the assignments
+# shellcheck disable=SC2155
 
 set -eu
 
@@ -21,6 +26,8 @@ safe_atomic_write() {
 	shift
 	local tmp="$(mktemp "${target}.XXXXXX")"
 
+	# $tmp must expand now, while we know the name — not when the trap fires
+	# shellcheck disable=SC2064
 	trap "rm -f '$tmp'" EXIT INT TERM
 
 	if "$@" > "$tmp"; then
@@ -66,9 +73,13 @@ docker_build() {
 		set -- "$@" --pull --no-cache
 	fi
 
+	# DOCKER_BUILD_OPT is a user-supplied option string that must split into
+	# separate docker arguments
 	if docker buildx version >/dev/null 2>&1; then
+		# shellcheck disable=SC2086
 		set -- docker buildx build --builder default "$@" ${DOCKER_BUILD_OPT:-}
 	else
+		# shellcheck disable=SC2086
 		set -- docker build "$@" ${DOCKER_BUILD_OPT:---rm}
 	fi
 
@@ -88,7 +99,7 @@ builder_brute_find() {
 
 	while [ "$PWD" != / ]; do
 
-		if [ $op "$PWD/$cue" ]; then
+		if test "$op" "$PWD/$cue"; then
 			echo "$PWD"
 			break
 		fi
@@ -172,14 +183,14 @@ builder__filter_volumes() {
 	local list= match= m=
 	local d= n= prev= new=
 
-	while read d n; do
+	while read -r d n; do
 		new=true
 
 		if match="$(echo "$list" | grep "^$d:")"; then
 			for m in $match; do
 				# known device, known base?
 
-				prev="${match#*:}"
+				prev="${m#*:}"
 				if [ "$prev" = / ]; then
 					new=false
 				elif expr "$n" : "$prev/" > /dev/null; then
@@ -223,14 +234,14 @@ builder_gen_filter_volumes() {
 
 #
 builder_gen_volumes() {
-	builder_gen_filter_volumes "$@" | sort -V | while read x; do
+	builder_gen_filter_volumes "$@" | sort -V | while read -r x; do
 		# create missing directories
 		[ -d "$x/" ] || mkdir -p "$x"
 
 		# prevent root-owned directories at $home_dir
 		case "$x" in
 		"$HOME"/*|"$HOME")
-			x0="${x#$HOME}"
+			x0="${x#"$HOME"}"
 			mkdir -p "$home_dir$x0"
 			;;
 		esac
@@ -277,6 +288,8 @@ builder_run_exec() {
 	# hook to extend run.sh before mounting volumes or exporting variables
 	#
 	if [ -d "${DOCKER_DIR:-}" -a -s "${DOCKER_DIR:-}/run-hook.sh" ]; then
+		# a per-workspace file, not present at lint time
+		# shellcheck disable=SC1091
 		. "$DOCKER_DIR/run-hook.sh"
 	fi
 
@@ -293,6 +306,9 @@ builder_run_exec() {
 	# volumes -> -v
 	# gen_env -> -e
 	#
+	# the *_VOLUMES / *_ENV / EXTRA_OPTS lists are space-separated and must
+	# split into separate arguments for the gen helpers and the option set
+	# shellcheck disable=SC2086
 	eval "set -- \
 		$(builder_gen_volumes ${DOCKER_RUN_VOLUMES:-} HOME PWD WS) \
 		$(builder_gen_env ${DOCKER_RUN_ENV:-}) \
@@ -410,6 +426,9 @@ if [ -d "${DOCKER_DIR:-}" ]; then
 fi
 
 DOCKER_ENV_LABELS="$(docker_env_labels "$DOCKER_ID")"
+# TODO: gathered but never consumed — decide whether this is dead or
+# pending a consumer
+# shellcheck disable=SC2034
 DOCKER_VERSION_LABELS="$(docker_version_labels "$DOCKER_ID")"
 
 # pass-through environment
@@ -476,11 +495,16 @@ if [ ! -d "${DOCKER_RUN_WS:-}" ]; then
 	done
 
 	if [ -n "$CHECKER" ]; then
+		# the "$1" is literal sed-replacement text baked into the generated
+		# check_ws body — it must NOT expand here, so single quotes are right
+		# shellcheck disable=SC2016
 		eval "check_ws() { $(echo "$CHECKER" | sed -e 's|%|"$1"|g'); }"
 		CHECKER=check_ws
 	fi
 
-	DOCKER_RUN_WS=$(builder_find_workspace $CHECKER)
+	# CHECKER is a single checker name or empty; :+ passes it as one arg when
+	# set and nothing when empty — no word-splitting, no SC2086
+	DOCKER_RUN_WS=$(builder_find_workspace ${CHECKER:+"$CHECKER"})
 fi
 
 # initialise workspace based on run mode

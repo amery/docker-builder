@@ -119,6 +119,12 @@ All notable changes to docker-builder will be documented in this file.
   each golang image directory with a `top-level.mk` exclusion, so a
   file added to the Dockerfile `COPY` set is no longer silently
   dropped from the build context
+- `docker-builder-run`: Fix the volume dedup in
+  `builder__filter_volumes` — it compared candidates against the
+  first line of the whole multi-line match instead of the entry at
+  hand, so once two volumes on the same device were known, a volume
+  nested under a known base leaked through as a redundant bind mount
+  instead of being absorbed by its base's mount
 
 ## [1.22.1] - 2026-05-22
 
