@@ -283,9 +283,12 @@ builder_gen_env() {
 # builder_driver_oneshot
 # Run the command in a disposable container, replacing this process.
 # Takes the assembled docker run options, image and command as "$@";
-# reads WS, HOME and the USER_* identity from the calling scope.
+# reads WS, HOME, the USER_* identity and DOCKER_RUN_TTY from the
+# calling scope.
 #
 builder_driver_oneshot() {
+	set -- -i ${DOCKER_RUN_TTY:+-t} "$@"
+
 	set -x
 	exec docker run --rm \
 		--label "docker-builder.workspace=$WS" \
@@ -301,8 +304,8 @@ builder_driver_oneshot() {
 #
 # builder_run_exec
 # Assemble the docker run option set — bind mounts, pass-through
-# environment, debug capabilities, tty — and hand the result to the
-# driver.
+# environment, debug capabilities — decide the tty allocation, and
+# hand the result to the driver.
 #
 builder_run_exec() {
 	local home_dir=
@@ -355,11 +358,11 @@ builder_run_exec() {
 		--security-opt seccomp:unconfined \
 		"$@"
 
-	# isatty()
+	# isatty() — the drivers render the tty flags from this
 	if [ -t 0 ]; then
-		set -- -ti "$@"
+		DOCKER_RUN_TTY=true
 	else
-		set -- -i "$@"
+		DOCKER_RUN_TTY=
 	fi
 
 	# and finally run within the container
