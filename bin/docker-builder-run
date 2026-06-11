@@ -17,6 +17,14 @@ die() {
 }
 
 #
+# grep_escape <string>
+# Escape a literal string for use in a grep BRE pattern.
+#
+grep_escape() {
+	printf '%s\n' "$*" | sed -e 's/[][\.*^$]/\\&/g'
+}
+
+#
 # safe_atomic_write <target_file> <command...>
 # Executes command, writes output to temp file, then atomically moves to target.
 # Cleans up temp file on failure. Returns command's exit status.
@@ -193,7 +201,9 @@ builder__filter_volumes() {
 				prev="${m#*:}"
 				if [ "$prev" = / ]; then
 					new=false
-				elif expr "$n" : "$prev/" > /dev/null; then
+				elif [ "$n" != "${n#"$prev"/}" ]; then
+					# literal prefix test — expr's regex match
+					# over-matched on metachars in paths
 					new=false
 				fi
 
@@ -228,7 +238,7 @@ builder_gen_filter_volumes() {
 			echo "$v"
 		fi
 
-	done | sort -uV | grep -v "^$HOME\$" | xargs -r stat -c '%d %n' | builder__filter_volumes
+	done | sort -uV | grep -v "^$(grep_escape "$HOME")\$" | xargs -r stat -c '%d %n' | builder__filter_volumes
 	echo "$HOME"
 }
 
@@ -368,7 +378,7 @@ docker_labels() {
 }
 
 docker_label() {
-	docker__labels "$1" | grep "^$2=" | cut -d= -f2-
+	docker__labels "$1" | grep "^$(grep_escape "$2")=" | cut -d= -f2-
 }
 
 docker_env_labels() {
@@ -558,6 +568,10 @@ builder_prepare() {
 # special options
 #
 USER_IS_SUDO=
+# the mode this script works in, not necessarily the mode the container
+# works in: empty = run one-shot, `labels` = print the label set. NOT
+# the per-image toolchain modes — those are DOCKER_RUN_MODE.
+RUN_MODE=
 while [ $# -gt 0 ]; do
 	case "$1" in
 	-V)	cat <<-EOT >&2
@@ -565,11 +579,15 @@ while [ $# -gt 0 ]; do
 		https://github.com/amery/docker-builder
 		EOT
 		exit 1 ;;
-	-l)	docker_labels "$DOCKER_ID"
+	-l)	RUN_MODE=labels
 		;;
 
 	--pull) DOCKER_BUILD_FORCE=true ;;
-	-r)	USER_IS_SUDO=true ;;
+	-r)
+		# consumed by name via the DOCKER_RUN_ENV list — builder_gen_env
+		# evals it when rendering the -e options
+		# shellcheck disable=SC2034
+		USER_IS_SUDO=true ;;
 	-p)	DOCKER_EXPOSE="${DOCKER_EXPOSE:+$DOCKER_EXPOSE }$2"
 		shift ;;
 	-x)	set -x ;;
@@ -583,10 +601,17 @@ done
 #
 builder_build
 
+# -l: show the resolved image's labels and stop
+#
+if [ "$RUN_MODE" = labels ]; then
+	docker_labels "$DOCKER_ID"
+	exit 0
+fi
+
 # assemble the run context
 #
 builder_prepare
 
 # run
 #
-builder_run_exec "$DOCKER_RUN_WS" ${USER_IS_SUDO:+--cap-add=SYS_ADMIN} "$DOCKER_ID" "$@"
+builder_run_exec "$DOCKER_RUN_WS" "$DOCKER_ID" "$@"

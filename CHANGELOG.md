@@ -78,6 +78,11 @@ All notable changes to docker-builder will be documented in this file.
   workspace bin is added both baked (survives the `su -` environment
   reset at container start) and deferred via `${WS:-}` (covers the
   devcontainer build, where WS arrives at login via containerEnv)
+- `docker-builder-run`: `-r` no longer adds `--cap-add=SYS_ADMIN` —
+  container capabilities don't depend on the invoking user. Identity
+  is `user-exec`'s job; a workspace that needs extra capabilities
+  grants them itself, via `run-hook.sh` appending to
+  `DOCKER_EXTRA_OPTS`
 
 ### Fixed
 
@@ -125,6 +130,16 @@ All notable changes to docker-builder will be documented in this file.
   hand, so once two volumes on the same device were known, a volume
   nested under a known base leaked through as a redundant bind mount
   instead of being absorbed by its base's mount
+- `docker-builder-run`: Fix `-l` — it ran at option-parse time, before
+  the image was resolved, so it died on an unbound `DOCKER_ID` unless
+  one was in the environment, and when it did print it fell through
+  and ran a container anyway. It now resolves (or builds) the image
+  first, prints its labels and stops
+- `docker-builder-run`: Match paths and label keys literally instead
+  of as regex patterns: the nested-volume check (`expr`), the `$HOME`
+  exclusion and the `docker_label` key lookup all over-matched on
+  metachars — a known base like `a.b` silently swallowed a lookalike
+  `aXb/nested` mount, dropping it from the container
 
 ## [1.22.1] - 2026-05-22
 
