@@ -5,6 +5,8 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+## [1.22.2] - 2026-06-12
+
 ### Added
 
 - Local build mode for verifying a change before committing it:
@@ -124,6 +126,14 @@ All notable changes to docker-builder will be documented in this file.
   each golang image directory with a `top-level.mk` exclusion, so a
   file added to the Dockerfile `COPY` set is no longer silently
   dropped from the build context
+- Build system: `gen_images_mk.sh` took only the first token after
+  `COPY` as a rebuild prerequisite, so an option flag
+  (`COPY --chown=u:g src …`) was recorded as a phantom prerequisite
+  and the extra sources of a multi-source `COPY` were left out of the
+  image's rebuild dependencies. It now skips flags and emits every
+  source. No Dockerfile in the current tree uses those forms yet, so
+  generated output is unchanged — this hardens the generator against
+  them
 - `docker-builder-run`: Fix the volume dedup in
   `builder__filter_volumes` — it compared candidates against the
   first line of the whole multi-line match instead of the entry at
