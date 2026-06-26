@@ -97,16 +97,33 @@ EOT
 
 gen_user_exec_login() {
 	cat <<'EOT'
-	# util-linux su runs the login shell in a new session, dropping the
+	# su runs the login shell in a new session, which drops the
 	# controlling terminal, so an interactive `bash -il` loses job
-	# control under `docker -t`. --pty makes su allocate a controlling
-	# pty and restores it. Prepend it on a real TTY (piped logins want
-	# no pty) when su supports it; the shadow su on 16.04/18.04 lacks it.
-	set -- - "$USER_NAME" -c 'cd "$1" && exec /bin/bash -il' -- user-exec "$DIR"
-	if [ -t 0 ] && su --help 2>&1 | grep -q -- --pty; then
-		set -- --pty "$@"
+	# control under `docker -t`. Restore it per case below, but only on a
+	# real TTY. Both launchers run the same payload: cd to $DIR (the
+	# first positional) and exec the login bash. No `--` guard like the
+	# command path's — these operands are fixed and never start with a
+	# dash, so su has nothing to mis-permute.
+	set -- -c 'cd "$1" && exec /bin/bash -il' user-exec "$DIR"
+
+	if [ ! -t 0 ]; then
+		# No TTY: job control is moot; the plain su below suffices.
+		:
+	elif su --help 2>&1 | grep -q -- --pty; then
+		# util-linux su (20.04+): allocate a controlling pty for the
+		# new session so bash regains job control.
+		exec su --pty - "$USER_NAME" "$@"
+	elif CHROOT=$(command -v chroot); then
+		# shadow su (16.04/18.04) predates --pty: drop privileges in
+		# place instead, keeping the session that owns the pty. env -i
+		# mirrors `su -`'s clean login env; chroot is resolved first
+		# because env -i empties PATH.
+		exec env -i HOME="$USER_HOME" USER="$USER_NAME" ${TERM:+TERM="$TERM"} \
+			"$CHROOT" --userspec="$USER_UID:$USER_GID" / /bin/sh "$@"
 	fi
-	exec su "$@"
+
+	# Fallback: no TTY, or a TTY whose su lacks --pty and has no chroot.
+	exec su - "$USER_NAME" "$@"
 EOT
 }
 
