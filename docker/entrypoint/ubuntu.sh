@@ -97,7 +97,16 @@ EOT
 
 gen_user_exec_login() {
 	cat <<'EOT'
-	exec su - "$USER_NAME" -c 'cd "$1" && exec /bin/bash -il' -- user-exec "$DIR"
+	# util-linux su runs the login shell in a new session, dropping the
+	# controlling terminal, so an interactive `bash -il` loses job
+	# control under `docker -t`. --pty makes su allocate a controlling
+	# pty and restores it. Prepend it on a real TTY (piped logins want
+	# no pty) when su supports it; the shadow su on 16.04/18.04 lacks it.
+	set -- - "$USER_NAME" -c 'cd "$1" && exec /bin/bash -il' -- user-exec "$DIR"
+	if [ -t 0 ] && su --help 2>&1 | grep -q -- --pty; then
+		set -- --pty "$@"
+	fi
+	exec su "$@"
 EOT
 }
 
