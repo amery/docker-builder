@@ -5,6 +5,12 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- `docker-builder-run`: Skip the main execution when sourced with
+  `DOCKER_BUILDER_RUN_LIB` set, so the `builder_*` helpers can be
+  loaded as a library and unit-tested in isolation
+
 ## [1.22.2] - 2026-06-12
 
 ### Added

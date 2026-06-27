@@ -568,6 +568,11 @@ builder_prepare() {
 	done
 }
 
+# When sourced as a library — e.g. by tests exercising the builder_*
+# helpers — stop here: the functions above are defined, but the main
+# execution below is skipped. A normal run leaves the guard unset.
+[ -z "${DOCKER_BUILDER_RUN_LIB:-}" ] || return 0
+
 # special options
 #
 USER_IS_SUDO=
