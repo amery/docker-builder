@@ -232,10 +232,22 @@ builder_gen_filter_volumes() {
 		if [ -z "$v" ]; then
 			continue
 		elif [ -L "$v" ]; then
-			readlink -f "$v"
-			dirname "$v"
-		else
+			# a symlink contributes its resolved target plus the dir
+			# holding the link; a broken one can't be mounted, so warn
+			# and skip rather than feed a dead path to stat downstream
+			if [ -e "$v" ]; then
+				readlink -f "$v"
+				dirname "$v"
+			else
+				echo "skipping volume, broken symlink: $v" >&2
+			fi
+		elif [ -e "$v" ] || mkdir -p "$v"; then
+			# create a missing source before stat would drop it
 			echo "$v"
+		else
+			# can't be made — permission, or a file where a dir is
+			# needed — so warn and skip rather than abort the run
+			echo "skipping volume, cannot create source: $v" >&2
 		fi
 
 	done | sort -uV | grep -v "^$(grep_escape "$HOME")\$" | xargs -r stat -c '%d %n' | builder__filter_volumes
@@ -245,14 +257,22 @@ builder_gen_filter_volumes() {
 #
 builder_gen_volumes() {
 	builder_gen_filter_volumes "$@" | sort -V | while read -r x; do
-		# create missing directories
-		[ -d "$x/" ] || mkdir -p "$x"
-
-		# prevent root-owned directories at $home_dir
+		# every $x here exists and is a real path — the filter created
+		# any missing source and stat dropped what it could not.
+		# prevent root-owned mount points at $home_dir: pre-create the
+		# target as the workspace user, before the daemon makes it (root)
+		# while satisfying the bind. A file source needs a file target
+		# (touch); a directory source needs the directory (mkdir -p).
 		case "$x" in
 		"$HOME"/*|"$HOME")
 			x0="${x#"$HOME"}"
-			mkdir -p "$home_dir$x0"
+			x1="$home_dir$x0"
+			if [ -f "$x" ]; then
+				mkdir -p "${x1%/*}"
+				[ -e "$x1" ] || touch "$x1"
+			else
+				mkdir -p "$x1"
+			fi
 			;;
 		esac
 

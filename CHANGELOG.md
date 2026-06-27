@@ -11,6 +11,16 @@ All notable changes to docker-builder will be documented in this file.
   `DOCKER_BUILDER_RUN_LIB` set, so the `builder_*` helpers can be
   loaded as a library and unit-tested in isolation
 
+### Fixed
+
+- `docker-builder-run`: Give a file volume a file-type cache target
+  (`touch`) instead of a directory, so the daemon no longer
+  pre-creates the target `root`-owned and breaks the sandboxed home
+- `docker-builder-run`: Restore creation of a missing volume source,
+  lost once the filter began dropping paths it could not `stat`; a
+  broken symlink or an un-creatable source is now skipped with a
+  warning rather than aborting the run
+
 ## [1.22.2] - 2026-06-12
 
 ### Added

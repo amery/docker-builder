@@ -663,7 +663,7 @@ docker run --rm IMAGE --run-hook > docker/run-hook.sh
 - `DOCKER_ID`: Pre-built image ID to use instead
 - `DOCKER_BUILD_FORCE`: Force rebuild/repull
 - `DOCKER_RUN_ENV`: Variables to pass through
-- `DOCKER_RUN_VOLUMES`: Extra directories to mount
+- `DOCKER_RUN_VOLUMES`: Extra directories or files to mount
 - `DOCKER_RUN_WS`: Override workspace detection
 - `DOCKER_BUILD_OPT`: Extra `docker build` args (default: `--rm`)
 - `DOCKER_EXTRA_OPTS`: Raw Docker flags (capabilities, devices,
