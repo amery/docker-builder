@@ -13,6 +13,12 @@ All notable changes to docker-builder will be documented in this file.
 
 ### Fixed
 
+- `docker-builder-run`: On a forced build, refresh each external base
+  image by name before rebuilding. `buildx build --pull` fetched the
+  new base but recorded it under its digest only, leaving the local
+  `repo:tag` on the old image, so the next non-forced build kept
+  rebuilding from the stale base; an explicit `docker pull` now moves
+  the tag onto the new image
 - `docker-builder-run`: Give a file volume a file-type cache target
   (`touch`) instead of a directory, so the daemon no longer
   pre-creates the target `root`-owned and breaks the sandboxed home

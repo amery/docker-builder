@@ -66,6 +66,39 @@ get_run_hook() {
 }
 
 #
+# builder_from_bases <dockerfile>...
+# Emit, one per line, the external base images the given Dockerfiles
+# build FROM: each `FROM <image>` that names a real reference. Skips
+# `scratch`, --flag tokens (e.g. --platform=), ARG-substituted names we
+# cannot resolve here, and back-references to an earlier build stage
+# (FROM the name an earlier `AS` introduced). Empty or missing files
+# contribute nothing; stage tracking is per file.
+#
+builder_from_bases() {
+	local df=
+
+	for df; do
+		[ -s "$df" ] || continue
+
+		awk '
+		toupper($1) == "FROM" {
+			img = ""; as = ""
+			for (i = 2; i <= NF; i++) {
+				if ($i ~ /^--/) continue
+				if (img == "") { img = $i; continue }
+				if (toupper($i) == "AS") { as = $(i + 1); break }
+			}
+			if (img == "" || img == "scratch") next
+			if (img ~ /\$/) next         # unresolved ${ARG}
+			if (img in stage) next       # back-reference to a prior stage
+			print img
+			if (as != "") stage[as] = 1
+		}
+		' "$df"
+	done
+}
+
+#
 # docker_build <dir>
 # Builds image from Dockerfile in <dir>, sets DOCKER_ID on success.
 # Uses buildx when available, falls back to legacy docker build.
@@ -73,12 +106,24 @@ get_run_hook() {
 docker_build() {
 	local dir="$1"
 	local iidfile="$(mktemp)"
-	local rc=0
+	local rc=0 base=
+
+	if [ -n "${DOCKER_BUILD_FORCE:-}" ]; then
+		# Refresh the base image(s) by name before rebuilding. `buildx
+		# build --pull` fetches a newer base but records it under its
+		# digest only, leaving the local repo:tag on the old image — so
+		# the next non-forced build, which resolves that tag, keeps using
+		# the stale base. An explicit `docker pull` moves the named tag
+		# onto the new image; --no-cache below then rebuilds from it.
+		for base in $(builder_from_bases "$dir/Dockerfile"); do
+			docker pull "$base"
+		done
+	fi
 
 	set -- --iidfile "$iidfile"
 
 	if [ -n "${DOCKER_BUILD_FORCE:-}" ]; then
-		set -- "$@" --pull --no-cache
+		set -- "$@" --no-cache
 	fi
 
 	# DOCKER_BUILD_OPT is a user-supplied option string that must split into
