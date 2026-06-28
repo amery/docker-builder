@@ -5,6 +5,8 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+## [1.23.0] - 2026-06-29
+
 ### Added
 
 - `docker-builder-run`: Skip the main execution when sourced with
@@ -26,6 +28,14 @@ All notable changes to docker-builder will be documented in this file.
   lost once the filter began dropping paths it could not `stat`; a
   broken symlink or an un-creatable source is now skipped with a
   warning rather than aborting the run
+- Entrypoint (ubuntu): Restore job control on an interactive
+  `bash -il` login. util-linux `su` (20.04+) detaches the controlling
+  terminal, so the shell printed "no job control in this shell" under
+  `docker -t`; it now gets `--pty` to allocate a controlling pty,
+  gated on a real TTY and `su` advertising the flag. On 16.04/18.04,
+  where shadow `su` lacks `--pty`, a `chroot --userspec` fallback
+  drops privileges without a new session so the login shell keeps the
+  pty's session. Alpine was unaffected
 
 ## [1.22.2] - 2026-06-12
 

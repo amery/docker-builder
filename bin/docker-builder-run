@@ -7,7 +7,7 @@
 
 set -eu
 
-RUN_VERSION="1.22.2"
+RUN_VERSION="1.23.0"
 
 #
 #
