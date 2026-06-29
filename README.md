@@ -225,7 +225,7 @@ and troubleshooting, see [Build System Mechanics][build-system-mechanics].
 | `DOCKER_ID`          | Pre-built image ID to use instead of building
 | `DOCKER_BUILD_FORCE` | Force rebuild/repull of the image
 | `DOCKER_RUN_ENV`     | Environment variables to pass through to container
-| `DOCKER_RUN_VOLUMES` | Additional directories to mount in container
+| `DOCKER_RUN_VOLUMES` | Additional directories or files to mount in container
 | `DOCKER_RUN_WS`      | Override automatic workspace detection
 | `DOCKER_BUILD_OPT`   | Extra `docker build` args (default: `--rm`)
 | `DOCKER_EXTRA_OPTS`  | Extra options to pass to `docker run`

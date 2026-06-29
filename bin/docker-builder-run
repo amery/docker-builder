@@ -7,7 +7,7 @@
 
 set -eu
 
-RUN_VERSION="1.22.2"
+RUN_VERSION="1.23.0"
 
 #
 #
@@ -66,6 +66,39 @@ get_run_hook() {
 }
 
 #
+# builder_from_bases <dockerfile>...
+# Emit, one per line, the external base images the given Dockerfiles
+# build FROM: each `FROM <image>` that names a real reference. Skips
+# `scratch`, --flag tokens (e.g. --platform=), ARG-substituted names we
+# cannot resolve here, and back-references to an earlier build stage
+# (FROM the name an earlier `AS` introduced). Empty or missing files
+# contribute nothing; stage tracking is per file.
+#
+builder_from_bases() {
+	local df=
+
+	for df; do
+		[ -s "$df" ] || continue
+
+		awk '
+		toupper($1) == "FROM" {
+			img = ""; as = ""
+			for (i = 2; i <= NF; i++) {
+				if ($i ~ /^--/) continue
+				if (img == "") { img = $i; continue }
+				if (toupper($i) == "AS") { as = $(i + 1); break }
+			}
+			if (img == "" || img == "scratch") next
+			if (img ~ /\$/) next         # unresolved ${ARG}
+			if (img in stage) next       # back-reference to a prior stage
+			print img
+			if (as != "") stage[as] = 1
+		}
+		' "$df"
+	done
+}
+
+#
 # docker_build <dir>
 # Builds image from Dockerfile in <dir>, sets DOCKER_ID on success.
 # Uses buildx when available, falls back to legacy docker build.
@@ -73,12 +106,24 @@ get_run_hook() {
 docker_build() {
 	local dir="$1"
 	local iidfile="$(mktemp)"
-	local rc=0
+	local rc=0 base=
+
+	if [ -n "${DOCKER_BUILD_FORCE:-}" ]; then
+		# Refresh the base image(s) by name before rebuilding. `buildx
+		# build --pull` fetches a newer base but records it under its
+		# digest only, leaving the local repo:tag on the old image — so
+		# the next non-forced build, which resolves that tag, keeps using
+		# the stale base. An explicit `docker pull` moves the named tag
+		# onto the new image; --no-cache below then rebuilds from it.
+		for base in $(builder_from_bases "$dir/Dockerfile"); do
+			docker pull "$base"
+		done
+	fi
 
 	set -- --iidfile "$iidfile"
 
 	if [ -n "${DOCKER_BUILD_FORCE:-}" ]; then
-		set -- "$@" --pull --no-cache
+		set -- "$@" --no-cache
 	fi
 
 	# DOCKER_BUILD_OPT is a user-supplied option string that must split into
@@ -232,10 +277,22 @@ builder_gen_filter_volumes() {
 		if [ -z "$v" ]; then
 			continue
 		elif [ -L "$v" ]; then
-			readlink -f "$v"
-			dirname "$v"
-		else
+			# a symlink contributes its resolved target plus the dir
+			# holding the link; a broken one can't be mounted, so warn
+			# and skip rather than feed a dead path to stat downstream
+			if [ -e "$v" ]; then
+				readlink -f "$v"
+				dirname "$v"
+			else
+				echo "skipping volume, broken symlink: $v" >&2
+			fi
+		elif [ -e "$v" ] || mkdir -p "$v"; then
+			# create a missing source before stat would drop it
 			echo "$v"
+		else
+			# can't be made — permission, or a file where a dir is
+			# needed — so warn and skip rather than abort the run
+			echo "skipping volume, cannot create source: $v" >&2
 		fi
 
 	done | sort -uV | grep -v "^$(grep_escape "$HOME")\$" | xargs -r stat -c '%d %n' | builder__filter_volumes
@@ -245,14 +302,22 @@ builder_gen_filter_volumes() {
 #
 builder_gen_volumes() {
 	builder_gen_filter_volumes "$@" | sort -V | while read -r x; do
-		# create missing directories
-		[ -d "$x/" ] || mkdir -p "$x"
-
-		# prevent root-owned directories at $home_dir
+		# every $x here exists and is a real path — the filter created
+		# any missing source and stat dropped what it could not.
+		# prevent root-owned mount points at $home_dir: pre-create the
+		# target as the workspace user, before the daemon makes it (root)
+		# while satisfying the bind. A file source needs a file target
+		# (touch); a directory source needs the directory (mkdir -p).
 		case "$x" in
 		"$HOME"/*|"$HOME")
 			x0="${x#"$HOME"}"
-			mkdir -p "$home_dir$x0"
+			x1="$home_dir$x0"
+			if [ -f "$x" ]; then
+				mkdir -p "${x1%/*}"
+				[ -e "$x1" ] || touch "$x1"
+			else
+				mkdir -p "$x1"
+			fi
 			;;
 		esac
 
@@ -567,6 +632,11 @@ builder_prepare() {
 		export DOCKER_EXTRA_OPTS="${DOCKER_EXTRA_OPTS:+$DOCKER_EXTRA_OPTS }-p $x"
 	done
 }
+
+# When sourced as a library — e.g. by tests exercising the builder_*
+# helpers — stop here: the functions above are defined, but the main
+# execution below is skipped. A normal run leaves the guard unset.
+[ -z "${DOCKER_BUILDER_RUN_LIB:-}" ] || return 0
 
 # special options
 #

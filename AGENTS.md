@@ -663,12 +663,17 @@ docker run --rm IMAGE --run-hook > docker/run-hook.sh
 - `DOCKER_ID`: Pre-built image ID to use instead
 - `DOCKER_BUILD_FORCE`: Force rebuild/repull
 - `DOCKER_RUN_ENV`: Variables to pass through
-- `DOCKER_RUN_VOLUMES`: Extra directories to mount
+- `DOCKER_RUN_VOLUMES`: Extra directories or files to mount
 - `DOCKER_RUN_WS`: Override workspace detection
 - `DOCKER_BUILD_OPT`: Extra `docker build` args (default: `--rm`)
 - `DOCKER_EXTRA_OPTS`: Raw Docker flags (capabilities, devices,
   security options) — typically set in `run-hook.sh`, not `run.sh`
 - `DOCKER_EXPOSE`: Ports to expose
+
+Not a runtime knob: `DOCKER_BUILDER_RUN_LIB` is a testing-only switch.
+With it set, sourcing the script defines its `builder_*` helpers then
+stops before the main execution, so tests can call them as a library (see
+[Shell Scripts](#shell-scripts)). Leave it unset for normal runs.
 
 ### `docker-builder-run` Usage Examples
 
@@ -1002,6 +1007,10 @@ RUN python3 -m venv $NANOPB_VENV \
 - Follow POSIX sh compatibility
 - Add descriptive comments for complex logic
 - Test with shellcheck before committing
+- Unit-test the `builder_*` helpers by sourcing the script as a library:
+  `DOCKER_BUILDER_RUN_LIB=1 . bin/docker-builder-run` defines the
+  functions but skips the main execution, so a test can call them
+  directly
 
 ### Dockerfiles
 
