@@ -33,3 +33,5 @@ RUN ARCH=$(dpkg --print-architecture) \
 	&& /opt/golang/bin/go install -v -a ...
 
 ENV PATH=/opt/golang/bin:${PATH}
+
+COPY 10-golang.sh /etc/entrypoint.d/
