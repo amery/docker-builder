@@ -7,9 +7,6 @@ RUN sed -i \
 	-e 's|http://archive.ubuntu.com|http://gb.archive.ubuntu.com|' \
 	/etc/apt/sources.list
 
-# work around apt pipelining issues in buildkit containers
-RUN echo 'Acquire::http::Pipeline-Depth "0";' > /etc/apt/apt.conf.d/99no-pipeline
-
 # reduce apt-get install warnings
 ENV TERM=xterm
 

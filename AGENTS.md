@@ -290,14 +290,8 @@ default. This causes intermittent HTTP 400 errors during
 cause is APT's HTTP pipelining interacting badly with the
 bridge NAT layer.
 
-Two measures work together to prevent these errors:
-
-- **Builder**: `--driver-opt "network=host"` bypasses
-  bridge networking
-- **Dockerfiles**: `Acquire::http::Pipeline-Depth "0"`
-  disables APT's request pipelining
-
-Neither is sufficient alone. Both are already in place.
+Running the builder with `--driver-opt "network=host"`
+bypasses bridge networking.
 
 #### Per-Image Architecture Exclusions
 

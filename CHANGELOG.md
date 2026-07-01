@@ -5,6 +5,11 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Removed
+
+- Drop the `Acquire::http::Pipeline-Depth "0"` workaround from all
+  Ubuntu base images; it is no longer needed
+
 ## [1.23.0] - 2026-06-29
 
 ### Added

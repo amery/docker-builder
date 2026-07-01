@@ -1,8 +1,5 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
-# work around apt pipelining issues in buildkit containers
-RUN echo 'Acquire::http::Pipeline-Depth "0";' > /etc/apt/apt.conf.d/99no-pipeline
-
 #
 # foundation
 #
