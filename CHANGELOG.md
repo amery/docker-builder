@@ -5,6 +5,12 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- golang entrypoint: Export `GOBIN` set to `$GOPATH/bin` and prepend
+  it to `PATH`, so tools that consult `GOBIN` directly agree with
+  where `go install` places binaries
+
 ### Removed
 
 - Drop the `Acquire::http::Pipeline-Depth "0"` workaround from all

@@ -22,7 +22,8 @@ cat <<EOT
 # Go
 [ -z "${GOROOT:-}" ] || path_prepend "${GOROOT}/bin"
 export GOPATH="\${GOPATH:-\${WS:-\$HOME/go}}"
-path_prepend "\$GOPATH/bin"
+export GOBIN="\$GOPATH/bin"
+path_prepend "\$GOBIN"
 export CGO_ENABLED=0
 ${GO111MODULE:+export GO111MODULE=${GO111MODULE}
 }${GOINSECURE:+export GOINSECURE=${GOINSECURE}
