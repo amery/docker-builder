@@ -118,6 +118,6 @@ RUN python3 -m venv $NANOPB_VENV \
 #
 ENV BUF_VERSION=latest
 RUN env GOBIN=/usr/local/bin \
-	&& go install -v \
+	go install -v \
 		github.com/bufbuild/buf/cmd/...@${BUF_VERSION} \
 	&& rm -rf ~/go

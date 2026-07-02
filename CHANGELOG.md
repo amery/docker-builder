@@ -30,6 +30,9 @@ All notable changes to docker-builder will be documented in this file.
   profile is generated at image build time (devcontainers); an
   unguarded `$WS` killed the generator under `set -u` and silently
   dropped the block
+- micrologic: Install `buf`; a stray `&&` split
+  `env GOBIN=… && go install`, so the binary landed under `~/go` and
+  was removed by the cleanup — the image never shipped `buf`
 
 ## [1.23.0] - 2026-06-29
 
