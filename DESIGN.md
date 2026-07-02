@@ -72,6 +72,22 @@ export DOCKER_EXTRA_OPTS="${DOCKER_EXTRA_OPTS:+$DOCKER_EXTRA_OPTS }--cap-add SYS
 - Output appended to `/etc/profile.d/Z99-docker-run.sh`
 - Enables image-specific environment setup
 
+A plugin runs when the profile is generated; its *output* runs at
+every login. Generation happens at container start under
+`docker-builder-run` — runtime variables such as `WS` are in the
+entrypoint's environment, but the later `su -` login strips them —
+and at image build time for devcontainers, where they exist only in
+the login environment (`containerEnv`). What a plugin may emit
+depends on how a value behaves across those moments:
+
+- image-bound values (`GOROOT`, versions, install paths) resolve the
+  same either way and may be baked into the output
+- login-scoped values (`$HOME`) must be escaped so they expand at
+  login
+- runtime values (`WS`, `GOPATH`) need both forms: baked when the
+  generating environment has them, deferred otherwise — see
+  `gen_profile`'s baked+deferred workspace pair
+
 **Numbering scheme:**
 
 - `05-*.sh` - Low-level system setup (X11, display)

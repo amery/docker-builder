@@ -18,10 +18,24 @@ if [ -z "${GOROOT:-}" ]; then
 	fi
 fi
 
+# Bake the entrypoint-time default: the login `su -` strips GOPATH and
+# WS, so only the value captured here survives into the login shell; the
+# user's GOPATH takes precedence over the workspace. When neither is set
+# — the devcontainer build, where they arrive only in the login
+# environment — defer resolution to login time instead, matching
+# gen_profile's baked+deferred workspace pair.
+if [ -n "${GOPATH:-}${WS:-}" ]; then
+	GOPATH_DEFAULT="${GOPATH:-$WS}"
+else
+	# literal on purpose: emitted into the profile, expanded at login
+	# shellcheck disable=SC2016
+	GOPATH_DEFAULT='${WS:-$HOME/go}'
+fi
+
 cat <<EOT
 # Go
 [ -z "${GOROOT:-}" ] || path_prepend "${GOROOT}/bin"
-export GOPATH="\${GOPATH:-\${WS:-\$HOME/go}}"
+export GOPATH="\${GOPATH:-$GOPATH_DEFAULT}"
 export GOBIN="\$GOPATH/bin"
 path_prepend "\$GOBIN"
 export CGO_ENABLED=0
@@ -30,3 +44,4 @@ ${GO111MODULE:+export GO111MODULE=${GO111MODULE}
 }${GOPRIVATE:+export GOPRIVATE=${GOPRIVATE}
 }
 EOT
+unset GOPATH_DEFAULT

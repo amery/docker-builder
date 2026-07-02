@@ -22,6 +22,14 @@ All notable changes to docker-builder will be documented in this file.
   `--iidfile` output as `.image-*~` and rename it into place after
   buildx returns, so the sentinel can never become visible before the
   image is fully built and loaded
+- golang entrypoint: Follow the workspace when resolving `GOPATH`
+  under `docker-builder-run`; the profile deferred it to login time,
+  where `su -` had already stripped `WS` and `GOPATH`, so it always
+  fell back to `$HOME/go`
+- node entrypoint: Keep the `NPM_CONFIG_PREFIX` block when the
+  profile is generated at image build time (devcontainers); an
+  unguarded `$WS` killed the generator under `set -u` and silently
+  dropped the block
 
 ## [1.23.0] - 2026-06-29
 

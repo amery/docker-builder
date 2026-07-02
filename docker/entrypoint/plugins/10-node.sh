@@ -1,12 +1,23 @@
 gen_npm_prefix() {
+	# Bake the entrypoint-time workspace: the login `su -` strips WS,
+	# so only the value captured here survives into the login shell.
+	# When it is unset — the devcontainer build, where WS arrives only
+	# in the login environment — defer resolution to login time
+	# instead, matching gen_profile's baked+deferred workspace pair.
+	# literal on purpose: emitted into the profile, expanded at login
+	# shellcheck disable=SC2016
+	local ws='${WS:-}'
+
+	[ -z "${WS:-}" ] || ws="$WS"
+
 	if [ -n "${NPM_CONFIG_PREFIX:-}" ]; then
 		cat <<EOF
 	export NPM_CONFIG_PREFIX="$NPM_CONFIG_PREFIX"
 EOF
 	else
 		cat <<EOF
-	if [ -d "$WS/node_modules" ]; then
-		export NPM_CONFIG_PREFIX="$WS"
+	if [ -n "$ws" -a -d "$ws/node_modules" ]; then
+		export NPM_CONFIG_PREFIX="$ws"
 	else
 		export NPM_CONFIG_PREFIX="\$HOME/.local/share/npm"
 	fi
