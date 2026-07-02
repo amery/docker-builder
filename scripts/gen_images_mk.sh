@@ -253,13 +253,14 @@ ifeq (\$(WANTS_TAGS),1)
 		--cache-from type=registry,ref=\$(PREFIX)$tag \\
 		-t \$(PREFIX)$tag \\
 		$dir
+	touch \$@
 else
 	\$(DOCKER_BUILD) \$(DOCKER_BUILD_OPT) --load \\
 		${RUN_HOOK_SHA256:+--build-arg "RUN_HOOK_SHA256=$RUN_HOOK_SHA256" \\
-		}--iidfile \$@ \\
+		}--iidfile \$@~ \\
 		$dir
+	mv \$@~ \$@
 endif
-	touch \$@
 
 $a1: $s1
 ifeq (\$(WANTS_TAGS),1)

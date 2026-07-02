@@ -10,6 +10,13 @@ All notable changes to docker-builder will be documented in this file.
 - Drop the `Acquire::http::Pipeline-Depth "0"` workaround from all
   Ubuntu base images; it is no longer needed
 
+### Fixed
+
+- Write the local-build `.image-*` sentinel atomically: stage the
+  `--iidfile` output as `.image-*~` and rename it into place after
+  buildx returns, so the sentinel can never become visible before the
+  image is fully built and loaded
+
 ## [1.23.0] - 2026-06-29
 
 ### Added

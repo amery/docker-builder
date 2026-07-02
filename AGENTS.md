@@ -580,7 +580,9 @@ make FORCE=1 <target>
 # Local build (single-arch, loaded untagged, not pushed)
 make BUILDER= <target>
 # Uses: docker buildx build --progress=plain --load
-#        --iidfile .image-<name>
+#        --iidfile .image-<name>~
+# then renames .image-<name>~ into .image-<name>, so the marker
+# only appears once the image is fully built and loaded
 ```
 
 ## Docker Images Provided
