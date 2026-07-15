@@ -5,6 +5,16 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- `docker-builder-run`: define `require_run_version <version>` for a sourced
+  `run-hook.sh` to demand a runtime new enough for a feature it uses, e.g.
+  `require_run_version 1.24.1`. It compares the requested floor against the
+  runtime's own `RUN_VERSION` through the new `ver_to_num` helper, which
+  folds a dotted version into `major*100000 + minor*100 + patch` — the
+  encoding dev-env's `run.sh` floor already uses. A runtime too old to define
+  the function aborts the hook outright, which is the intended hard stop.
+
 ## [1.24.0] - 2026-07-15
 
 ### Added

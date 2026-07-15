@@ -17,6 +17,35 @@ die() {
 }
 
 #
+# ver_to_num <major.minor.patch>
+# Fold a dotted version into one comparable integer,
+# major*100000 + minor*100 + patch, so "1.24" and "1.24.0" both become
+# 102400 — the same encoding dev-env's run.sh uses. A missing minor or
+# patch counts as 0; minor spans 0-999 and patch 0-99 before they carry.
+#
+ver_to_num() {
+	oldifs=$IFS
+	IFS=.
+	# split the dotted version into the positional parameters
+	# shellcheck disable=SC2086
+	set -- $1
+	IFS=$oldifs
+	echo $(( ${1:-0} * 100000 + ${2:-0} * 100 + ${3:-0} ))
+}
+
+#
+# require_run_version <major.minor.patch>
+# Abort unless this docker-builder-run is at least <version>. A sourced
+# run-hook.sh calls it to demand a runtime new enough for a feature it needs.
+# A runtime too old to define this function does not degrade quietly: the call
+# fails as an unknown command and the run aborts. That hard stop is the point.
+#
+require_run_version() {
+	[ "$(ver_to_num "$RUN_VERSION")" -ge "$(ver_to_num "$1")" ] ||
+		die "docker-builder-run $RUN_VERSION is too old; this needs >= $1"
+}
+
+#
 # grep_escape <string>
 # Escape a literal string for use in a grep BRE pattern.
 #
