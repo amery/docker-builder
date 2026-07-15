@@ -230,6 +230,7 @@ and troubleshooting, see [Build System Mechanics][build-system-mechanics].
 | `DOCKER_BUILD_OPT`   | Extra `docker build` args (default: `--rm`)
 | `DOCKER_EXTRA_OPTS`  | Extra options to pass to `docker run`
 | `DOCKER_EXPOSE`      | Ports to expose (e.g., "8080" or "8080:8080/tcp")
+| `USER_AMBIENT_CAPS`  | Capabilities to raise into the workspace user's ambient set, so a `--cap-add` survives the drop from root (default: auto-detect; see [Capability Passthrough][capability-passthrough])
 
 ## Project Structure
 
@@ -343,6 +344,7 @@ MIT License - see [LICENCE.txt][licence-file] for details
 [agent-file]: ./AGENTS.md
 [build-system-mechanics]: ./AGENTS.md#build-system-mechanics
 [cross-platform-prereq]: ./AGENTS.md#prerequisites-for-cross-platform-builds
+[capability-passthrough]: ./AGENTS.md#capability-passthrough
 [design-file]: ./DESIGN.md
 [contributing-file]: ./CONTRIBUTING.md
 [licence-file]: ./LICENCE.txt

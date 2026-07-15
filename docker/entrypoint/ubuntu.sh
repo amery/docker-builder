@@ -91,7 +91,8 @@ gen_user_exec_cmd() {
 	# `--` stops su's option scanning: util-linux su permutes operands,
 	# so a command argument like `-un` would otherwise be read as a su
 	# option. After it, $0=user-exec, $1=$DIR, $2.. = the command.
-	exec su - "$USER_NAME" -c 'dir="$1"; shift; cd "$dir" && exec "$@"' -- user-exec "$DIR" "$@"
+	# shellcheck disable=SC2086 # $AMBIENT_PREFIX is a controlled setpriv token list
+	exec $AMBIENT_PREFIX su - "$USER_NAME" -c 'dir="$1"; shift; cd "$dir" && exec "$@"' -- user-exec "$DIR" "$@"
 EOT
 }
 
@@ -110,20 +111,23 @@ gen_user_exec_login() {
 		# No TTY: job control is moot; the plain su below suffices.
 		:
 	elif su --help 2>&1 | grep -q -- --pty; then
-		# util-linux su (20.04+): allocate a controlling pty for the
+		# util-linux su (20.04+): allocate a controlling PTY for the
 		# new session so bash regains job control.
-		exec su --pty - "$USER_NAME" "$@"
+		# shellcheck disable=SC2086 # $AMBIENT_PREFIX is a controlled setpriv token list
+		exec $AMBIENT_PREFIX su --pty - "$USER_NAME" "$@"
 	elif CHROOT=$(command -v chroot); then
 		# shadow su (16.04/18.04) predates --pty: drop privileges in
-		# place instead, keeping the session that owns the pty. env -i
+		# place instead, keeping the session that owns the PTY. env -i
 		# mirrors `su -`'s clean login env; chroot is resolved first
-		# because env -i empties PATH.
+		# because env -i empties PATH. No ambient prefix: these releases
+		# have no setpriv, so $AMBIENT_PREFIX is empty here anyway.
 		exec env -i HOME="$USER_HOME" USER="$USER_NAME" ${TERM:+TERM="$TERM"} \
 			"$CHROOT" --userspec="$USER_UID:$USER_GID" / /bin/sh "$@"
 	fi
 
 	# Fallback: no TTY, or a TTY whose su lacks --pty and has no chroot.
-	exec su - "$USER_NAME" "$@"
+	# shellcheck disable=SC2086 # $AMBIENT_PREFIX is a controlled setpriv token list
+	exec $AMBIENT_PREFIX su - "$USER_NAME" "$@"
 EOT
 }
 

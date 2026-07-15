@@ -354,6 +354,14 @@ builder_gen_env() {
 builder_driver_oneshot() {
 	set -- -i ${DOCKER_RUN_TTY:+-t} "$@"
 
+	# Forward an explicit ambient-cap request to the entrypoint. Only
+	# when the caller actually set one: an unset var must stay unset in
+	# the container, where it selects auto-detection — injecting it empty
+	# would instead read as "feature off" and defeat that.
+	if [ -n "${USER_AMBIENT_CAPS+x}" ]; then
+		set -- -e USER_AMBIENT_CAPS="$USER_AMBIENT_CAPS" "$@"
+	fi
+
 	set -x
 	exec docker run --rm \
 		--label "docker-builder.workspace=$WS" \

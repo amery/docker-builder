@@ -10,6 +10,20 @@ All notable changes to docker-builder will be documented in this file.
 - golang entrypoint: Export `GOBIN` set to `$GOPATH/bin` and prepend
   it to `PATH`, so tools that consult `GOBIN` directly agree with
   where `go install` places binaries
+- entrypoint: Pass a capability added with `docker run --cap-add`
+  through to the workspace user. The drop from root is a setuid
+  transition, which clears it; the entrypoint now raises the requested
+  capabilities into the user's ambient set — the one set that survives
+  the drop — with a `setpriv --ambient-caps` prefix on the existing
+  `su`/`su-exec` drop. `USER_AMBIENT_CAPS` selects what to raise: unset
+  auto-detects every capability beyond Docker's default set (whatever
+  `--cap-add` added), a comma list names them explicitly, and empty,
+  `none` or `-` turns it off. It needs a util-linux `setpriv`
+  (Ubuntu 20.04+, so `poky:24.04`); on 16.04/18.04, which never shipped
+  one, an auto-detected request warns and continues while an explicit
+  one is fatal. The poky images motivate it: their `run-hook.sh`
+  already adds `--cap-add SYS_ADMIN` for BitBake's network isolation,
+  now elevated to the workspace user automatically
 
 ### Removed
 

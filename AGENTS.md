@@ -665,6 +665,10 @@ docker run --rm IMAGE --run-hook > docker/run-hook.sh
 - `DOCKER_EXTRA_OPTS`: Raw Docker flags (capabilities, devices,
   security options) — typically set in `run-hook.sh`, not `run.sh`
 - `DOCKER_EXPOSE`: Ports to expose
+- `USER_AMBIENT_CAPS`: Capabilities to elevate into the workspace user's
+  ambient set (see [Capability Passthrough](#capability-passthrough)).
+  Forwarded to the entrypoint only when set; left unset it selects
+  auto-detection inside the container
 
 Not a runtime knob: `DOCKER_BUILDER_RUN_LIB` is a testing-only switch.
 With it set, sourcing the script defines its `builder_*` helpers then
@@ -686,6 +690,42 @@ DOCKER_RUN_VOLUMES="/data" docker-builder-run
 # Expose ports
 docker-builder-run -p 8080 npm start
 ```
+
+### Capability Passthrough
+
+A capability added to the container with `docker run --cap-add` lands in
+the effective set of the root entrypoint, but the drop from root to the
+workspace user is a setuid transition, which clears it — so the user's
+command never sees it. The entrypoint bridges that gap by raising the
+requested capabilities into the user's **ambient** set, the one set that
+survives the drop.
+
+`USER_AMBIENT_CAPS` selects which capabilities to raise:
+
+| Value | Behaviour |
+| ----- | --------- |
+| unset | Auto-detect — every capability in the bounding set beyond Docker's default set (i.e. whatever `--cap-add` added) |
+| `"sys_admin,net_admin"` | Exactly those; comma-separated, the `CAP_` prefix optional |
+| empty / `none` / `-` | Off — no passthrough |
+
+A requested capability that is not in the container's bounding set is
+skipped with a warning (the entrypoint raises what is grantable). The
+sudo path (`USER_IS_SUDO`) stays root and already holds the container's
+capabilities, so it needs none of this.
+
+The mechanism is a `setpriv --ambient-caps` prefix on the drop, which
+keeps the existing `su`/`su-exec` login handling intact. It needs a
+util-linux `setpriv` that supports `--ambient-caps` (Ubuntu 20.04+, so
+`poky:24.04`; absent on 16.04/18.04, which never shipped it). Where it is
+missing the request degrades: an auto-detected one warns and the
+container continues without it, an explicit one is fatal. This is
+harmless for the legacy images — `poky:18.04` is the pyro-era stack,
+which predates the BitBake network isolation that wants the capability.
+
+The poky images are the motivating case: their `run-hook.sh` adds
+`--cap-add SYS_ADMIN` for BitBake's user-namespace network isolation, and
+auto-detection then elevates it to the workspace user with no further
+configuration.
 
 ## The `x` Script
 

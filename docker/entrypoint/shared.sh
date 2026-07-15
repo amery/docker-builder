@@ -18,6 +18,136 @@ die() {
 	exit 1
 }
 
+# ambient_caps_table
+#
+# Echo the Linux capability names indexed by bit position — a stable
+# kernel ABI (position 0 = CAP_CHOWN, 21 = CAP_SYS_ADMIN, …). setpriv(1)
+# names caps without the CAP_ prefix, so these double as its arguments.
+ambient_caps_table() {
+	echo chown dac_override dac_read_search fowner fsetid kill setgid \
+		setuid setpcap linux_immutable net_bind_service net_broadcast \
+		net_admin net_raw ipc_lock ipc_owner sys_module sys_rawio \
+		sys_chroot sys_ptrace sys_pacct sys_admin sys_boot sys_nice \
+		sys_resource sys_time sys_tty_config mknod lease audit_write \
+		audit_control setfcap mac_override mac_admin syslog wake_alarm \
+		block_suspend audit_read perfmon bpf checkpoint_restore
+}
+
+# ambient_bounding_set
+#
+# Echo this process's capability bounding set as a decimal number. The
+# entrypoint and user-exec both read it while still root, before the
+# drop, so it reflects what `docker run` granted the container.
+ambient_bounding_set() {
+	local h
+	h=$(sed -n 's/^CapBnd:[[:space:]]*//p' /proc/self/status 2> /dev/null)
+	echo "$(( 0x${h:-0} ))"
+}
+
+# ambient_present_caps <mask>
+#
+# Echo, one per line, the capability names whose bit is set in <mask>.
+ambient_present_caps() {
+	local mask="$1" i=0 name
+	for name in $(ambient_caps_table); do
+		[ $(( (mask >> i) & 1 )) -eq 0 ] || echo "$name"
+		i=$(( i + 1 ))
+	done
+}
+
+# ambient_known_cap <name>
+#
+# Succeed when <name> is a capability the kernel ABI table knows.
+ambient_known_cap() {
+	case " $(ambient_caps_table) " in
+	*" $1 "*) return 0 ;;
+	*) return 1 ;;
+	esac
+}
+
+# ambient_have_setpriv
+#
+# Succeed only for a setpriv(1) that supports --ambient-caps. busybox's
+# applet lacks it; util-linux's has carried it since 2.31.
+ambient_have_setpriv() {
+	command -v setpriv > /dev/null 2>&1 || return 1
+	setpriv --help 2>&1 | grep -q -- '--ambient-caps'
+}
+
+# ambient_setpriv_prefix
+#
+# Echo a setpriv(1) command prefix that raises the operator-requested
+# capabilities into the workspace user's ambient set, so a capability
+# added at `docker run` with --cap-add survives the drop from root to the
+# unprivileged user — the setuid transition would otherwise clear it. The
+# prefix keeps the existing su/su-exec drop intact: setpriv stays root,
+# sets the securebit that stops the setuid fixup plus the inheritable and
+# ambient sets, then execs the drop, and the capability lands in the
+# user's effective set. Echo nothing when there is nothing to raise.
+#
+# Which caps to raise:
+#   USER_AMBIENT_CAPS unset          auto-detect — every cap in the
+#                                    bounding set beyond Docker's default
+#   USER_AMBIENT_CAPS "a,b"          exactly those (CAP_ prefix optional)
+#   USER_AMBIENT_CAPS ""|none|-      nothing; feature off
+#
+# A requested cap not in the bounding set is skipped with a warning
+# (raise what is grantable). When caps are wanted but setpriv(1) cannot
+# deliver them, an explicit request is fatal — it returns non-zero so the
+# caller's `set -e` aborts — while an auto-detected one only warns, the
+# intent there being inferred rather than stated.
+ambient_setpriv_prefix() {
+	# Docker's default bounding set — chown dac_override fowner fsetid
+	# kill setgid setuid setpcap net_bind_service net_raw sys_chroot
+	# mknod audit_write setfcap. Caps beyond it were added by --cap-add.
+	local default=0xa80425fb explicit= want bnd present name caps=
+
+	case "${USER_AMBIENT_CAPS-@auto@}" in
+	'@auto@')
+		bnd=$(ambient_bounding_set)
+		want=$(ambient_present_caps "$(( bnd & ~default ))")
+		;;
+	'' | none | -)
+		return 0
+		;;
+	*)
+		explicit=1
+		want=$(printf '%s' "$USER_AMBIENT_CAPS" | tr 'A-Z,' 'a-z ' |
+			sed -e 's/cap_//g')
+		bnd=$(ambient_bounding_set)
+		;;
+	esac
+
+	[ -n "$want" ] || return 0
+
+	present=" $(ambient_present_caps "$bnd" | tr '\n' ' ') "
+	for name in $want; do
+		case "$present" in
+		*" $name "*)
+			caps="${caps:+$caps,}+$name"
+			;;
+		*)
+			if ambient_known_cap "$name"; then
+				err "ambient: '$name' not in the container bounding set; skipping"
+			else
+				err "ambient: unknown capability '$name'; skipping"
+			fi
+			;;
+		esac
+	done
+
+	[ -n "$caps" ] || return 0
+
+	if ! ambient_have_setpriv; then
+		err "ambient: setpriv --ambient-caps unavailable; cannot grant $caps"
+		[ -z "$explicit" ] || return 1
+		return 0
+	fi
+
+	printf 'setpriv --securebits +no_setuid_fixup --inh-caps %s --ambient-caps %s --' \
+		"$caps" "$caps"
+}
+
 # atomic_install <dest> <mode> <command...>
 #
 # Install <dest> atomically: capture the command's stdout into a
@@ -156,6 +286,13 @@ if [ -n "$ROOT" ]; then
 		cd "$DIR" && exec /bin/bash -il
 	fi
 fi
+
+# Elevate operator-added capabilities into the workspace user's ambient
+# set so they survive the drop below (empty when none are requested).
+# Read while still root, before the drop. An explicit but ungrantable
+# request returns non-zero, so this assignment aborts under set -e; the
+# per-OS drop lines expand $AMBIENT_PREFIX unquoted to build the argv.
+AMBIENT_PREFIX=$(ambient_setpriv_prefix)
 
 if [ $# -gt 0 ]; then
 EOT

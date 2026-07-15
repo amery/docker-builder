@@ -60,7 +60,8 @@ gen_user_exec_cmd() {
 	# Resolve su-exec first: env -i wipes PATH, so a bare "su-exec" is
 	# not found in env's default search path.
 	SU_EXEC=$(command -v su-exec) || die "su-exec not found in PATH"
-	exec env -i HOME="$USER_HOME" USER="$USER_NAME" ${TERM:+TERM="$TERM"} \
+	# shellcheck disable=SC2086 # $AMBIENT_PREFIX is a controlled setpriv token list
+	exec $AMBIENT_PREFIX env -i HOME="$USER_HOME" USER="$USER_NAME" ${TERM:+TERM="$TERM"} \
 		"$SU_EXEC" "$USER_NAME" /bin/bash -lc 'dir="$1"; shift; cd "$dir" && exec "$@"' \
 		user-exec "$DIR" "$@"
 EOT
@@ -72,11 +73,13 @@ gen_user_exec_login() {
 		# Interactive login on a TTY: su - for a proper session. No
 		# command, so DIR (a single path) can be quoted into the -c
 		# string.
-		exec su - "$USER_NAME" -c "cd '$DIR' && exec /bin/bash -il"
+		# shellcheck disable=SC2086 # $AMBIENT_PREFIX is a controlled setpriv token list
+		exec $AMBIENT_PREFIX su - "$USER_NAME" -c "cd '$DIR' && exec /bin/bash -il"
 	else
 		# Non-TTY login shell: su-exec, as for commands.
 		SU_EXEC=$(command -v su-exec) || die "su-exec not found in PATH"
-		exec env -i HOME="$USER_HOME" USER="$USER_NAME" \
+		# shellcheck disable=SC2086 # $AMBIENT_PREFIX is a controlled setpriv token list
+		exec $AMBIENT_PREFIX env -i HOME="$USER_HOME" USER="$USER_NAME" \
 			"$SU_EXEC" "$USER_NAME" /bin/bash -lc "cd '$DIR' && exec /bin/bash -il"
 	fi
 EOT
