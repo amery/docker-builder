@@ -24,6 +24,11 @@ if [ "$REMOTE_USER" != "vscode" ]; then
 	usermod -s /bin/bash -l "$REMOTE_USER" vscode
 	if [ "$REMOTE_USER_HOME" != "/home/vscode" ]; then
 		usermod -d "$REMOTE_USER_HOME" "$REMOTE_USER"
+		# the target may live under a path absent from the base image
+		# — e.g. Windows host-path parity homes at /C/Users/<name> —
+		# so create the parent before renaming /home/vscode into it,
+		# or mv aborts on the missing directory.
+		mkdir -p "$(dirname "$REMOTE_USER_HOME")"
 		mv /home/vscode "$REMOTE_USER_HOME"
 	fi
 fi
