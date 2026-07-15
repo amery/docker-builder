@@ -5,6 +5,8 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+## [1.24.1] - 2026-07-15
+
 ### Added
 
 - `docker-builder-run`: define `require_run_version <version>` for a sourced
@@ -14,6 +16,14 @@ All notable changes to docker-builder will be documented in this file.
   folds a dotted version into `major*100000 + minor*100 + patch` — the
   encoding dev-env's `run.sh` floor already uses. A runtime too old to define
   the function aborts the hook outright, which is the intended hard stop.
+
+### Fixed
+
+- `ubuntu-vsc-base` (24.04): Create the home's parent directory before
+  relocating `/home/vscode` into it. A home under a path absent from the
+  base image — the Windows host-path-parity home at `/C/Users/<name>` —
+  made the `mv` abort with "No such file or directory"; `devcontainer.sh`
+  now `mkdir -p`s the parent first, mirroring the runtime entrypoint.
 
 ## [1.24.0] - 2026-07-15
 
