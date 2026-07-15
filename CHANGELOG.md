@@ -5,6 +5,8 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+## [1.24.0] - 2026-07-15
+
 ### Added
 
 - golang entrypoint: Export `GOBIN` set to `$GOPATH/bin` and prepend
@@ -24,6 +26,10 @@ All notable changes to docker-builder will be documented in this file.
   one is fatal. The poky images motivate it: their `run-hook.sh`
   already adds `--cap-add SYS_ADMIN` for BitBake's network isolation,
   now elevated to the workspace user automatically
+- `ubuntu-vsc-golang` and `ubuntu-vsc-nodejs-golang` (24.04): Ship
+  the shared `10-golang` entrypoint plugin, so their login shells set
+  up the Go environment (`PATH`, `GOPATH`, `CGO_ENABLED`) like the
+  `golang` and `ubuntu-nodejs-golang` images already do
 
 ### Removed
 
