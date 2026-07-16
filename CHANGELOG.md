@@ -5,6 +5,21 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- Ubuntu entrypoint and `ubuntu-vsc-base` devcontainer init: Create the
+  XDG runtime directory `/run/user/$UID`, owned by the workspace user, so
+  it is usable instead of left root-owned. On a host, logind creates it
+  at login; no logind runs in the container, so init stands in as the
+  session manager — the entrypoint makes it at container start, and the
+  devcontainer flow, which bypasses the entrypoint, bakes it at image
+  build time. A `run.sh` forwarding the host gpg-agent at
+  `/run/user/$UID/gnupg` had Docker fabricate that parent root-owned
+  before the entrypoint ran, leaving the directory unwritable. The
+  `05-gnupg.sh` plugin, which used to fix the ownership only as a side
+  effect of gpg forwarding, now keeps just its gpg-specific job
+  (exporting `XDG_RUNTIME_DIR` and bridging the agent sockets).
+
 ## [1.24.1] - 2026-07-15
 
 ### Added

@@ -78,6 +78,12 @@ if [ ! -s "$USER_HOME/.profile" ]; then
 	chown "$USER_NAME:$USER_NAME" "$USER_HOME"
 fi
 
+# Outside the skel guard above on purpose: the home persists across runs
+# in its bind-mounted cache, but /run/user lives in the container's own
+# filesystem and dies with it, so the runtime directory has to be made
+# every start rather than only the first.
+make_runtime_dir "$USER_UID" "$USER_GID"
+
 # The Z99 profile holds environment only; the sudo-mode SUDO_* context
 # is per-invocation and belongs to user-exec -r, never here, where every
 # later login would re-source it.

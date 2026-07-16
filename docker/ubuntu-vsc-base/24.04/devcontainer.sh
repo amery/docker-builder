@@ -2,6 +2,8 @@
 
 set -eu
 
+# the sourced runtime lib is absent at lint time
+# shellcheck disable=SC1091
 . /usr/local/lib/docker-builder/entrypoint.sh
 
 REMOTE_USER="$1"
@@ -32,3 +34,12 @@ if [ "$REMOTE_USER" != "vscode" ]; then
 		mv /home/vscode "$REMOTE_USER_HOME"
 	fi
 fi
+
+# The runtime directory the entrypoint makes at start; this image bypasses
+# the entrypoint, so bake it at build time instead. It survives to runtime
+# because Docker leaves /run as ordinary image filesystem rather than the
+# tmpfs the FHS calls for — were that to change, the directory would be
+# masked at start and a bind mount beneath it would go back to fabricating
+# a root-owned parent. Resolved after the rename above, so it reads the
+# final name either way; the UID it returns is untouched by usermod -l.
+make_runtime_dir "$(id -u "$REMOTE_USER")" "$(id -g "$REMOTE_USER")"

@@ -1,34 +1,19 @@
-# When /run/user/$UID/gnupg is bind-mounted from the host, docker
-# auto-creates the parent /run/user/$UID as root:root 0755. Fix it
-# for XDG_RUNTIME_DIR semantics and link the gpg-agent sockets into
-# ~/.gnupg so tools using the legacy path find them.
+# The runtime directory /run/user/$UID is created and owned by the
+# workspace user in the entrypoint's make_runtime_dir — baked at image
+# build time for the devcontainer flow, which bypasses the entrypoint —
+# so this plugin no longer creates or chowns it. What remains is
+# gpg-specific: point XDG_RUNTIME_DIR at the directory and bridge the
+# forwarded gpg-agent sockets into ~/.gnupg so tools using the legacy
+# path find them.
 #
-# Root-time runs at container start in the docker-builder-run flow.
-# The heredoc below runs at every login shell from the generated
-# profile script; the devcontainer flow relies on it (with sudo)
-# because snippets are sourced at image build time, before the
-# bind-mount exists.
-#
-# USER_UID is guarded because devcontainer.sh sources snippets
-# under set -eu without that variable defined.
-
-if [ -n "${USER_UID:-}" ]; then
-	RUN_USER_DIR="/run/user/$USER_UID"
-	if [ -d "$RUN_USER_DIR/gnupg" ]; then
-		chmod 0700 "$RUN_USER_DIR"
-		chown "$USER_UID:$USER_GID" "$RUN_USER_DIR"
-	fi
-	unset RUN_USER_DIR
-fi
+# The heredoc runs at every login shell from the generated profile — the
+# only hook the devcontainer flow has at runtime, since it sources these
+# snippets at image build time, before the bind-mount exists.
 
 cat <<'EOT'
 : ${XDG_RUNTIME_DIR:="/run/user/$(id -u)"}
 if [ -d "$XDG_RUNTIME_DIR/gnupg" ]; then
 	export XDG_RUNTIME_DIR
-	if [ "$(stat -c %u "$XDG_RUNTIME_DIR" 2>/dev/null)" != "$(id -u)" ]; then
-		sudo -n chown "$(id -u):$(id -g)" "$XDG_RUNTIME_DIR" 2>/dev/null || true
-		sudo -n chmod 0700 "$XDG_RUNTIME_DIR" 2>/dev/null || true
-	fi
 	mkdir -p "$HOME/.gnupg"
 	chmod 0700 "$HOME/.gnupg"
 	for sock in "$XDG_RUNTIME_DIR/gnupg"/S.gpg-agent*; do

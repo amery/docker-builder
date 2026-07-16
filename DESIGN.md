@@ -103,6 +103,16 @@ environment and creating the workspace user — then either dispatches the
 requested session as that user or, with `-N`, idles so the container
 stays open for reattach.
 
+Init also stands in as the container's **session manager**. On a host,
+logind creates the per-user XDG runtime directory `/run/user/$UID` at
+login; none runs here, so init creates it — owned by the workspace user,
+mode `0700` — through the shared library's `make_runtime_dir`. Without
+it Docker fabricates the directory root-owned the moment a bind mount
+lands beneath it — a forwarded gpg-agent socket at
+`/run/user/$UID/gnupg`, say — leaving it unwritable. The devcontainer
+flow bypasses the entrypoint, so it bakes the same directory at image
+build time from its own init instead.
+
 The login environment lives in `/etc/profile.d/Z99-docker-run.sh`, which
 holds **environment only** — `PATH` setup and the sourced `entrypoint.d`
 plugins. Because that profile is sourced by every login shell, including

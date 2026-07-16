@@ -163,6 +163,28 @@ atomic_install() {
 	mv "$tmp" "$dest"
 }
 
+# make_runtime_dir <uid> <gid>
+#
+# Create the XDG runtime directory /run/user/<uid>, owned by <uid>:<gid>
+# with the 0700 the spec asks for. Ubuntu software expects logind to have
+# made it at login; no logind runs here, so init stands in as the
+# container's session manager.
+#
+# Docker gets there first whenever a bind mount lands beneath it — a
+# run.sh forwarding the host's gpg-agent at $XDG_RUNTIME_DIR/gnupg has
+# the daemon fabricate the missing parent, root-owned, before PID 1 even
+# exists — so take ownership rather than assume a fresh directory.
+#
+# The chown is deliberately not recursive: anything mounted below is the
+# host's inode, shared with it, and its ownership is the host's business.
+make_runtime_dir() {
+	local dir="/run/user/$1"
+
+	mkdir -p "$dir"
+	chown "$1:$2" "$dir"
+	chmod 0700 "$dir"
+}
+
 # gen_profile
 #
 # Emit the assembled Z99 login profile to stdout: the PATH bootstrap
