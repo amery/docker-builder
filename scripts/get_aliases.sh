@@ -22,7 +22,7 @@ get_versions() {
 	esac
 
 	for v in $(${DOCKER:-docker} run "$image" --version); do
-		if [ "x$v" != "x$tag" -a "x$x" != "undefined" ]; then
+		if [ "$v" != "$tag" -a "$v" != "undefined" ]; then
 			echo "$v"
 		fi
 	done
