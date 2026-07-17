@@ -1,7 +1,9 @@
+# shellcheck shell=sh
+
 # BUILDDIR
 #
 # Get path relative to workspace
-x="${PWD#$WS/}"
+x="${PWD#"$WS"/}"
 if [ "$x" != "$PWD" ]; then
 	# We're inside workspace, extract first component
 	x="${x%%/*}"
@@ -13,6 +15,7 @@ fi
 
 # If not in a build directory, search for one
 if [ -z "${BUILDDIR:-}" ]; then
+	# shellcheck disable=SC2012
 	x="$(ls -1d "$WS"/*[Bb]uild*/conf/local.conf 2>/dev/null | head -1)"
 	if [ -n "$x" ]; then
 		BUILDDIR="${x%/conf/local.conf}"
