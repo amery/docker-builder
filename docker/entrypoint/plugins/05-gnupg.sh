@@ -1,3 +1,5 @@
+# shellcheck shell=sh
+
 # The runtime directory /run/user/$UID is created and owned by the
 # workspace user in the entrypoint's make_runtime_dir — baked at image
 # build time for the devcontainer flow, which bypasses the entrypoint —
