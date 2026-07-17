@@ -5,6 +5,8 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+## [1.24.2] - 2026-07-17
+
 ### Added
 
 - `docker-builder-run`: export `RUN_VERSION_NUM`, the runtime's own
