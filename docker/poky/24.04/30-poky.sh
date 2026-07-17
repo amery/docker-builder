@@ -1,3 +1,5 @@
+# shellcheck shell=sh
+
 # This file is sourced by base entrypoint as /etc/entrypoint.d/30-poky.sh
 # Its OUTPUT (via echo/cat) is appended to the profile file
 # OEROOT, DL_DIR, BUILDDIR, WS, CURDIR are all available
@@ -16,10 +18,10 @@ done
 # Find existing build directory
 # If BUILDDIR already set (from run-hook.sh), use it
 if [ -n "${BUILDDIR:-}" ]; then
-	builddir="${BUILDDIR#$WS/}"
+	builddir="${BUILDDIR#"$WS"/}"
 else
 	# Get path relative to workspace
-	x="${CURDIR#$WS/}"
+	x="${CURDIR#"$WS"/}"
 	if [ "$x" != "$CURDIR" ]; then
 		# We're inside workspace, extract first component
 		x="${x%%/*}"
@@ -31,16 +33,18 @@ else
 
 	# If not in a build directory, search for one
 	if [ -z "${builddir:-}" ]; then
+		# shellcheck disable=SC2012
 		x="$(ls -1d "$WS"/*[Bb]uild*/conf/local.conf 2>/dev/null | head -1)"
 		if [ -n "$x" ]; then
 			builddir="${x%/conf/local.conf}"
-			builddir="${builddir#$WS/}"
+			builddir="${builddir#"$WS"/}"
 		fi
 	fi
 fi
 
 # Setup OE/BitBake environment (replicate oe-buildenv-internal essentials)
 # This avoids verbose output from oe-init-build-env
+# shellcheck disable=SC2016 # literal single quotes in the emitted profile; vars expand via the unquoted heredoc
 cat <<EOT
 cd '$WS'
 export OEROOT='$OEROOT'
