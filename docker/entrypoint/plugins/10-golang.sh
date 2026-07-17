@@ -1,3 +1,5 @@
+# shellcheck shell=sh
+
 # Resolve the Go toolchain root so the login PATH points at wherever Go
 # lives. Prefer a pinned GOROOT; else ask go when it is on PATH; else scan
 # the usual install prefixes (the official golang: images use

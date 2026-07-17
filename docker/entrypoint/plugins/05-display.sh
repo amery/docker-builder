@@ -1,3 +1,5 @@
+# shellcheck shell=sh
+
 cat <<EOT
 
 export DISPLAY=${DISPLAY:-:0.0}

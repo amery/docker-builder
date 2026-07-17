@@ -1,3 +1,5 @@
+# shellcheck shell=sh
+
 PYTHON_VENV="\$HOME/.local/share/python/main"
 PYTHON_VERSION=$(python3 -c 'import sys; print("{}.{}".format(*sys.version_info[:2]))')
 

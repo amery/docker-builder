@@ -1,3 +1,5 @@
+# shellcheck shell=sh
+
 cat <<EOT
 
 cd "$WS"

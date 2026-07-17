@@ -1,3 +1,5 @@
+# shellcheck shell=sh
+
 gen_npm_prefix() {
 	# Bake the entrypoint-time workspace: the login `su -` strips WS,
 	# so only the value captured here survives into the login shell.

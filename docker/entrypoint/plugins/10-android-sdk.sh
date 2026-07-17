@@ -1,3 +1,5 @@
+# shellcheck shell=sh
+
 cat <<EOT
 
 export JAVA_HOME="$JAVA_HOME"
