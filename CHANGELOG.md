@@ -19,6 +19,12 @@ All notable changes to docker-builder will be documented in this file.
   `05-gnupg.sh` plugin, which used to fix the ownership only as a side
   effect of gpg forwarding, now keeps just its gpg-specific job
   (exporting `XDG_RUNTIME_DIR` and bridging the agent sockets).
+- `poky` (24.04): Locate bitbake whether it sits inside `$OEROOT`
+  (the combined poky tree) or beside it. Newer poky splits bitbake
+  out of oe-core, so the hardcoded `$OEROOT/bitbake` no longer
+  resolves and the login profile's `PYTHONPATH`/`PATH` point at
+  nothing; the `30-poky.sh` plugin now derives `BITBAKEDIR` from
+  whichever location exists and routes both through it.
 
 ## [1.24.1] - 2026-07-15
 

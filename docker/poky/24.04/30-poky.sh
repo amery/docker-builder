@@ -42,6 +42,10 @@ else
 	fi
 fi
 
+# bitbake may live inside poky ($OEROOT/bitbake) or next to it.
+BITBAKEDIR="$OEROOT/bitbake"
+[ -d "$BITBAKEDIR" ] || BITBAKEDIR="${OEROOT%/*}/bitbake"
+
 # Setup OE/BitBake environment (replicate oe-buildenv-internal essentials)
 # This avoids verbose output from oe-init-build-env
 # shellcheck disable=SC2016 # literal single quotes in the emitted profile; vars expand via the unquoted heredoc
@@ -50,7 +54,7 @@ cd '$WS'
 export OEROOT='$OEROOT'
 ${builddir:+export BUILDDIR='$WS/$builddir'}
 ${builddir:+export BBPATH='$WS/$builddir'}
-export PYTHONPATH="$OEROOT/bitbake/lib:\${PYTHONPATH:-}"
-path_prepend "$OEROOT/scripts" "$OEROOT/bitbake/bin"
+export PYTHONPATH="$BITBAKEDIR/lib:\${PYTHONPATH:-}"
+path_prepend "$OEROOT/scripts" "$BITBAKEDIR/bin"
 ${builddir:+cd '$builddir'}
 EOT
