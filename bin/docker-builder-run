@@ -34,6 +34,15 @@ ver_to_num() {
 }
 
 #
+# RUN_VERSION_NUM is RUN_VERSION folded through ver_to_num and exported so a
+# sourced run-hook.sh can gate on it directly — the soft alternative to
+# require_run_version. Compare against an encoded floor, e.g.
+# [ "${RUN_VERSION_NUM:-0}" -ge 102401 ]; a runtime too old to export it leaves
+# the guard reading 0, so the hook degrades quietly instead of aborting.
+#
+export RUN_VERSION_NUM="$(ver_to_num "$RUN_VERSION")"
+
+#
 # require_run_version <major.minor.patch>
 # Abort unless this docker-builder-run is at least <version>. A sourced
 # run-hook.sh calls it to demand a runtime new enough for a feature it needs.

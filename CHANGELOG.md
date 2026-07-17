@@ -5,6 +5,16 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- `docker-builder-run`: export `RUN_VERSION_NUM`, the runtime's own
+  `RUN_VERSION` folded through `ver_to_num`, as the soft companion to
+  `require_run_version`. A sourced `run-hook.sh` can gate on it inline —
+  `[ "${RUN_VERSION_NUM:-0}" -ge 102401 ]` — to enable a feature when the
+  runtime is new enough and degrade quietly where it is not, instead of
+  aborting as `require_run_version` does. A runtime too old to export it
+  leaves the guard reading 0.
+
 ### Fixed
 
 - Ubuntu entrypoint and `ubuntu-vsc-base` devcontainer init: Create the
