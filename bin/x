@@ -12,7 +12,7 @@ brute_find() {
 
 	while true; do
 
-		if [ $op "$dir/$cue" ]; then
+		if test "$op" "$dir/$cue"; then
 			echo "$dir"
 		elif [ / != "${dir:-/}" ]; then
 			dir="${dir%/*}"
@@ -90,7 +90,7 @@ run_sh="$(find_run_sh)"
 if $show_root; then
 	if [ -x "$run_sh" ]; then
 		# found
-		echo "$(dirname "$run_sh")"
+		dirname "$run_sh"
 		exit 0
 	fi
 
