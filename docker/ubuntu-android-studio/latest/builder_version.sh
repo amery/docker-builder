@@ -1,8 +1,9 @@
 #!/bin/sh
 
+# shellcheck disable=SC1091
 . /etc/os-release
 
-read STUDIO_VERSION < /opt/android-sdk/android-studio/.version
+read -r STUDIO_VERSION < /opt/android-sdk/android-studio/.version
 VSCODE_VERSION="$(dpkg -s code | sed -n 's|^Version: \([^-]\+\).*|\1|p')"
 
 STUDIO_V3=$(echo "$STUDIO_VERSION" | cut -d. -f1-3)

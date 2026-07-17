@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# shellcheck disable=SC1091
 . /etc/os-release
 
 APP_VERSION="$(npm info cordova version)"

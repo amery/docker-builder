@@ -2,6 +2,7 @@
 
 set -eu
 
+# shellcheck disable=SC1091
 . /etc/os-release
 
 GO_VERSION=$(go version | sed -e 's|.* go\([1-9][^ ]\+\) .*|\1|')
