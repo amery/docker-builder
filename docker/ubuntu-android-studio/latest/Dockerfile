@@ -1,4 +1,4 @@
-FROM quay.io/amery/docker-ubuntu-vscode-builder:22.04
+FROM quay.io/amery/docker-ubuntu-vscode-builder:24.04
 
 # build: !arm64
 
