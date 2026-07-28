@@ -1,4 +1,4 @@
-FROM quay.io/amery/docker-ubuntu-builder:20.04
+FROM quay.io/amery/docker-ubuntu-builder:26.04
 
 LABEL docker-builder.run-env.x11="DISPLAY"
 

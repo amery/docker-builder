@@ -1,4 +1,4 @@
-FROM quay.io/amery/docker-ubuntu-builder:22.04
+FROM quay.io/amery/docker-ubuntu-builder:26.04
 
 # build: !arm64
 
