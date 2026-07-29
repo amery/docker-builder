@@ -15,6 +15,10 @@ All notable changes to docker-builder will be documented in this file.
 
 ### Changed
 
+- `docker-golang-builder`: Update Go 1.25 to 1.25.12 and
+  Go 1.26 to 1.26.5, moving both to `alpine3.24` (Docker Hub no longer
+  ships these patches on `alpine3.22`)
+- `docker`: Update ubuntu-based golang images to Go 1.26.5
 - `docker-builder-run`: Forward `XDG_RUNTIME_DIR` into every container so
   it matches the `/run/user/$UID` the entrypoint's `make_runtime_dir`
   creates. Unset on the host, it is dropped and the login-time default
