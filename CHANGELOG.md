@@ -35,6 +35,10 @@ All notable changes to docker-builder will be documented in this file.
   `docker-builder-run` neither forwarded `GOPATH` (and `GO111MODULE`,
   `GOINSECURE`, `GOPRIVATE`) nor engaged golang run-mode, unlike
   `ubuntu-nodejs-golang`.
+- `docker-apptly-builder`: Move the image from `apptly/latest` to
+  `apptly/24.04` with a `latest` → `24.04` symlink, matching the
+  `ubuntu-vsc-*` families, so `docker-apptly-builder:24.04` becomes a
+  directory-derived tag.
 
 ## [1.24.2] - 2026-07-17
 
