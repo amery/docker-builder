@@ -67,11 +67,14 @@ ambient_known_cap() {
 
 # ambient_have_setpriv
 #
-# Succeed only for a setpriv(1) that supports --ambient-caps. busybox's
-# applet lacks it; util-linux's has carried it since 2.31.
+# Succeed only for a setpriv(1) that can run the drop prefix, which needs
+# --securebits (to set +no_setuid_fixup) as well as --ambient-caps.
+# busybox's setpriv supports --ambient-caps but not --securebits, so probe
+# the latter — without that securebit the ambient caps would not survive
+# the setuid drop anyway.
 ambient_have_setpriv() {
 	command -v setpriv > /dev/null 2>&1 || return 1
-	setpriv --help 2>&1 | grep -q -- '--ambient-caps'
+	setpriv --help 2>&1 | grep -q -- '--securebits'
 }
 
 # ambient_setpriv_prefix
@@ -139,7 +142,7 @@ ambient_setpriv_prefix() {
 	[ -n "$caps" ] || return 0
 
 	if ! ambient_have_setpriv; then
-		err "ambient: setpriv --ambient-caps unavailable; cannot grant $caps"
+		err "ambient: setpriv --securebits unavailable; cannot grant $caps"
 		[ -z "$explicit" ] || return 1
 		return 0
 	fi

@@ -40,6 +40,12 @@ All notable changes to docker-builder will be documented in this file.
   `apptly/24.04` with a `latest` → `24.04` symlink, matching the
   `ubuntu-vsc-*` families, so `docker-apptly-builder:24.04` becomes a
   directory-derived tag.
+- `entrypoint`: Probe `setpriv` for `--securebits`, the flag the
+  ambient-capability drop actually needs, not `--ambient-caps`. busybox's
+  `setpriv` supports `--ambient-caps` but not `--securebits`, so the old
+  probe accepted it and the drop then aborted on `--securebits` — fatal
+  even for an auto-detected capability (the golang images'
+  `--cap-add SYS_PTRACE`) instead of degrading with a warning.
 
 ## [1.24.2] - 2026-07-17
 

@@ -713,14 +713,17 @@ skipped with a warning (the entrypoint raises what is grantable). The
 sudo path (`USER_IS_SUDO`) stays root and already holds the container's
 capabilities, so it needs none of this.
 
-The mechanism is a `setpriv --ambient-caps` prefix on the drop, which
-keeps the existing `su`/`su-exec` login handling intact. It needs a
-util-linux `setpriv` that supports `--ambient-caps` (Ubuntu 20.04+, so
-`poky:24.04`; absent on 16.04/18.04, which never shipped it). Where it is
-missing the request degrades: an auto-detected one warns and the
-container continues without it, an explicit one is fatal. This is
-harmless for the legacy images — `poky:18.04` is the pyro-era stack,
-which predates the BitBake network isolation that wants the capability.
+The mechanism is a `setpriv` prefix on the drop, which keeps the existing
+`su`/`su-exec` login handling intact. It needs a `setpriv` that supports
+`--securebits`, used to set the `no_setuid_fixup` securebit that carries
+the ambient caps through the setuid drop. Ubuntu 20.04+ ships one (so
+`poky:24.04`); 16.04/18.04 ship no `setpriv` at all, and busybox's
+`setpriv` (the Alpine golang and nodejs images) supports `--ambient-caps`
+but not `--securebits`. Where a capable `setpriv` is missing the request
+degrades: an auto-detected one warns and the container continues without
+it, an explicit one is fatal. This is harmless for the legacy images —
+`poky:18.04` is the pyro-era stack, which predates the BitBake network
+isolation that wants the capability.
 
 The poky images are the motivating case: their `run-hook.sh` adds
 `--cap-add SYS_ADMIN` for BitBake's user-namespace network isolation, and
