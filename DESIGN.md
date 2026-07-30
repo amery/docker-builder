@@ -114,11 +114,13 @@ flow bypasses the entrypoint, so it bakes the same directory at image
 build time from its own init instead.
 
 The login environment lives in `/etc/profile.d/Z99-docker-run.sh`, which
-holds **environment only** — `PATH` setup and the sourced `entrypoint.d`
-plugins. Because that profile is sourced by every login shell, including
-each `docker exec` into a running container, the per-invocation parts —
-navigating to `$CURDIR` and running the requested command — are kept
-**out** of it.
+holds **environment only** — `PATH` and `XDG_RUNTIME_DIR` setup and the
+sourced `entrypoint.d` plugins. `XDG_RUNTIME_DIR` is exported here so
+every login carries it, honouring a value forwarded from the host and
+otherwise defaulting to the `/run/user/$UID` init created above. Because
+that profile is sourced by every login shell, including each `docker
+exec` into a running container, the per-invocation parts — navigating to
+`$CURDIR` and running the requested command — are kept **out** of it.
 
 That profile is assembled in a temporary file and atomically renamed into
 place — never written incrementally onto the live file — so a nested

@@ -42,6 +42,11 @@ adduser -s /bin/bash -S -h "$USER_HOME" \
 	-G "$USER_NAME" -u "$USER_UID" \
 	"$USER_NAME"
 
+# /run/user lives in the container's own filesystem and dies with it, so
+# the XDG runtime directory is made every start — the same call the Ubuntu
+# entrypoint makes, standing in for the host's logind.
+make_runtime_dir "$USER_UID" "$USER_GID"
+
 # The Z99 profile holds environment only; the sudo-mode SUDO_* context
 # is per-invocation and belongs to user-exec -r, never here, where every
 # later login would re-source it.

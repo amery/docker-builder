@@ -24,6 +24,11 @@ All notable changes to docker-builder will be documented in this file.
   it matches the `/run/user/$UID` the entrypoint's `make_runtime_dir`
   creates. Unset on the host, it is dropped and the login-time default
   stands in.
+- `entrypoint`: Set and export `XDG_RUNTIME_DIR` from the login profile
+  itself, not only on the gpg-forwarding path, and create `/run/user/$UID`
+  on Alpine images as the Ubuntu entrypoint already did — so the forwarded
+  value names a directory that exists on every image, matching the host
+  inside and out.
 
 ### Fixed
 

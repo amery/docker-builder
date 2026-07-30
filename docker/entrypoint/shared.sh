@@ -169,9 +169,11 @@ atomic_install() {
 # make_runtime_dir <uid> <gid>
 #
 # Create the XDG runtime directory /run/user/<uid>, owned by <uid>:<gid>
-# with the 0700 the spec asks for. Ubuntu software expects logind to have
-# made it at login; no logind runs here, so init stands in as the
-# container's session manager.
+# with the 0700 the spec asks for. On a host logind makes it at login; no
+# logind runs here — on any base image, Ubuntu or Alpine alike — so init
+# stands in as the container's session manager. The path is /run/user;
+# FHS's /var/run is a symlink onto /run on any modern system, so the two
+# name the same directory.
 #
 # Docker gets there first whenever a bind mount lands beneath it — a
 # run.sh forwarding the host's gpg-agent at $XDG_RUNTIME_DIR/gnupg has
@@ -190,8 +192,9 @@ make_runtime_dir() {
 
 # gen_profile
 #
-# Emit the assembled Z99 login profile to stdout: the PATH bootstrap
-# followed by the output of every /etc/entrypoint.d plugin. The caller
+# Emit the assembled Z99 login profile to stdout: the PATH and
+# XDG_RUNTIME_DIR bootstrap followed by the output of every
+# /etc/entrypoint.d plugin. The caller
 # owns the output. The target profile is sourced by every login shell
 # and re-entered by nested `su -`/`bash -l`, so the caller must redirect
 # into a temporary file and rename it into place (atomic_install does
@@ -205,6 +208,14 @@ make_runtime_dir() {
 # build, where WS is unset at build time but present in the login
 # environment via containerEnv. path_prepend dedupes, so listing both
 # is safe.
+#
+# XDG_RUNTIME_DIR is set and exported here too, so every login carries it
+# rather than only the gpg-forwarding path that used to own the default.
+# The `:=` honours a value forwarded from the host (docker-builder-run
+# passes it through); absent that it falls back to the /run/user/$UID the
+# entrypoint's make_runtime_dir created and owns. Deferred to login time
+# so `$(id -u)` reads the logging-in user, which the devcontainer flow
+# needs as much as the entrypoint one.
 gen_profile() {
 	local x
 
@@ -225,6 +236,11 @@ for d in /opt/* "\$HOME/.local" "\$HOME" "${WS:-}" "\${WS:-}"; do
 		path_prepend "\$d/bin"
 	fi
 done
+
+# XDG runtime dir: honour a value forwarded from the host, else default
+# to the /run/user/\$UID the entrypoint owns.
+: "\${XDG_RUNTIME_DIR:=/run/user/\$(id -u)}"
+export XDG_RUNTIME_DIR
 EOT
 
 	# the plugins are our own numbered NN-name.sh files — no exotic
