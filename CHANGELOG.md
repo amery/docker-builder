@@ -13,6 +13,13 @@ All notable changes to docker-builder will be documented in this file.
   on 24.04. `ubuntu-vsc-base` pins Microsoft's `devcontainers/base`
   as `ubuntu26.04` — the 26.04 tag drops the hyphen that 24.04 uses.
 
+### Changed
+
+- `docker-builder-run`: Forward `XDG_RUNTIME_DIR` into every container so
+  it matches the `/run/user/$UID` the entrypoint's `make_runtime_dir`
+  creates. Unset on the host, it is dropped and the login-time default
+  stands in.
+
 ## [1.24.2] - 2026-07-17
 
 ### Added
