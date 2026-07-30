@@ -2,6 +2,8 @@ FROM quay.io/amery/docker-ubuntu-vsc-nodejs-builder:26.04
 
 ENV GO_VERSION=1.26.3
 
+LABEL docker-builder.run-env.golang="GOPATH GO111MODULE GOINSECURE GOPRIVATE"
+
 #
 # update world
 #

@@ -20,6 +20,14 @@ All notable changes to docker-builder will be documented in this file.
   creates. Unset on the host, it is dropped and the login-time default
   stands in.
 
+### Fixed
+
+- `docker-ubuntu-vsc-golang-builder` and `-vsc-nodejs-golang-builder`: Add
+  the missing `docker-builder.run-env.golang` label. Without it
+  `docker-builder-run` neither forwarded `GOPATH` (and `GO111MODULE`,
+  `GOINSECURE`, `GOPRIVATE`) nor engaged golang run-mode, unlike
+  `ubuntu-nodejs-golang`.
+
 ## [1.24.2] - 2026-07-17
 
 ### Added
