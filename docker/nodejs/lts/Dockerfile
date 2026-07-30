@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/node/
-FROM node:lts-alpine3.20
+FROM node:lts-alpine3.24
 
 LABEL docker-builder.run-env.npm="NPM_CONFIG_PREFIX"
 

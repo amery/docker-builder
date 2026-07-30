@@ -22,6 +22,10 @@ All notable changes to docker-builder will be documented in this file.
 
 ### Fixed
 
+- `docker-nodejs-builder`: Bump the `node` base from `alpine3.20` to
+  `alpine3.24`. node stopped rebuilding the `alpine3.20` variant, leaving
+  it at node 24.1.0, which the current `npm@latest` refuses to install on;
+  `alpine3.24` carries node 26.5 (current) and 24.18 (lts).
 - `docker-ubuntu-vsc-golang-builder` and `-vsc-nodejs-golang-builder`: Add
   the missing `docker-builder.run-env.golang` label. Without it
   `docker-builder-run` neither forwarded `GOPATH` (and `GO111MODULE`,
