@@ -8,10 +8,11 @@ All notable changes to docker-builder will be documented in this file.
 ### Added
 
 - `docker`: Add Ubuntu 26.04 across all image families (`ubuntu`,
-  `poky`, `ubuntu-nodejs-golang`, `ubuntu-x11`, and the `ubuntu-vsc-*`
-  set), each built on its parent's 26.04, with the `latest` tags left
-  on 24.04. `ubuntu-vsc-base` pins Microsoft's `devcontainers/base`
-  as `ubuntu26.04` — the 26.04 tag drops the hyphen that 24.04 uses.
+  `poky`, `ubuntu-nodejs-golang`, `ubuntu-x11`, `apptly`, and the
+  `ubuntu-vsc-*` set), each built on its parent's 26.04, with the
+  `latest` tags left on 24.04. `ubuntu-vsc-base` pins Microsoft's
+  `devcontainers/base` as `ubuntu26.04` — the 26.04 tag drops the
+  hyphen that 24.04 uses.
 
 ### Changed
 

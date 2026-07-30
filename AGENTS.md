@@ -606,7 +606,7 @@ make BUILDER= <target>
 - **ubuntu-android-studio**: Android Studio with SDK
 - **poky/{18.04,24.04,26.04}**: Yocto/OE builds (latest→24.04)
 - **micrologic/latest**: Custom micrologic environment
-- **apptly/24.04**: Apptly development base (latest→24.04)
+- **apptly/{24.04,26.04}**: Apptly development base (latest→24.04)
 
 ### VS Code DevContainer Images
 

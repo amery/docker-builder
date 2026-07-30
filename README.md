@@ -140,7 +140,7 @@ command — no per-exec environment.
 - **android/11** - Android SDK development
 - **ubuntu-android-studio/latest** - Android Studio with SDK
 - **poky/{18.04,24.04,26.04}** - Yocto/OE builds (latest→24.04)
-- **apptly/24.04** - Apptly development base (latest→24.04)
+- **apptly/{24.04,26.04}** - Apptly development base (latest→24.04)
 
 ## Build System
 
