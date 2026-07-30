@@ -589,30 +589,30 @@ make BUILDER= <target>
 
 ### Base Images
 
-- **ubuntu/{16.04,18.04,20.04,22.04,24.04}**: Base Ubuntu images with
+- **ubuntu/{16.04,18.04,20.04,22.04,24.04,26.04}**: Base Ubuntu images with
   builder_version.sh
-- **ubuntu-x11/{20.04,22.04,24.04}**: Ubuntu with X11 forwarding support
-- **ubuntu-vsc-base/24.04**: VS Code DevContainer base
+- **ubuntu-x11/{20.04,22.04,24.04,26.04}**: Ubuntu with X11 forwarding support
+- **ubuntu-vsc-base/{24.04,26.04}**: VS Code DevContainer base
 
 ### Development Stacks
 
 - **golang/{1.18-1.26}**: Go development environments
 - **nodejs/{lts,current}**: Node.js with pnpm support
-- **ubuntu-nodejs-golang/{22.04,24.04}**: Combined Node.js + Go
+- **ubuntu-nodejs-golang/{22.04,24.04,26.04}**: Combined Node.js + Go
 
 ### Specialized Images
 
 - **android/11**: Android SDK development
 - **ubuntu-android-studio**: Android Studio with SDK
-- **poky/{18.04,24.04}**: Yocto/OE builds (latest→24.04)
+- **poky/{18.04,24.04,26.04}**: Yocto/OE builds (latest→24.04)
 - **micrologic/latest**: Custom micrologic environment
 - **apptly/latest**: Apptly development base
 
 ### VS Code DevContainer Images
 
-- **ubuntu-vsc-golang/24.04**: Go development in VS Code
-- **ubuntu-vsc-nodejs/24.04**: Node.js development in VS Code
-- **ubuntu-vsc-nodejs-golang/24.04**: Combined stack for VS Code
+- **ubuntu-vsc-golang/{24.04,26.04}**: Go development in VS Code
+- **ubuntu-vsc-nodejs/{24.04,26.04}**: Node.js development in VS Code
+- **ubuntu-vsc-nodejs-golang/{24.04,26.04}**: Combined stack for VS Code
 
 ## The `docker-builder-run` Script
 

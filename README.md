@@ -119,27 +119,27 @@ command — no per-exec environment.
 
 ### Base Images
 
-- **ubuntu/{16.04,18.04,20.04,22.04,24.04}** - Base Ubuntu environments
-- **ubuntu-x11/{20.04,22.04,24.04}** - Ubuntu with X11 forwarding
+- **ubuntu/{16.04,18.04,20.04,22.04,24.04,26.04}** - Base Ubuntu environments
+- **ubuntu-x11/{20.04,22.04,24.04,26.04}** - Ubuntu with X11 forwarding
 
 ### Development Environments
 
 - **golang/{1.18-1.26}** - Go development environments
 - **nodejs/{lts,current}** - Node.js with pnpm
-- **ubuntu-nodejs-golang/{22.04,24.04}** - Combined Go + Node.js
+- **ubuntu-nodejs-golang/{22.04,24.04,26.04}** - Combined Go + Node.js
 
 ### VS Code DevContainers
 
-- **ubuntu-vsc-base/24.04** - Base for VS Code development
-- **ubuntu-vsc-golang/24.04** - Go in VS Code
-- **ubuntu-vsc-nodejs/24.04** - Node.js in VS Code
-- **ubuntu-vsc-nodejs-golang/24.04** - Full stack VS Code
+- **ubuntu-vsc-base/{24.04,26.04}** - Base for VS Code development
+- **ubuntu-vsc-golang/{24.04,26.04}** - Go in VS Code
+- **ubuntu-vsc-nodejs/{24.04,26.04}** - Node.js in VS Code
+- **ubuntu-vsc-nodejs-golang/{24.04,26.04}** - Full stack VS Code
 
 ### Specialized
 
 - **android/11** - Android SDK development
 - **ubuntu-android-studio/latest** - Android Studio with SDK
-- **poky/{18.04,24.04}** - Yocto/OE builds (latest→24.04)
+- **poky/{18.04,24.04,26.04}** - Yocto/OE builds (latest→24.04)
 - **apptly/latest** - Apptly development base
 
 ## Build System
