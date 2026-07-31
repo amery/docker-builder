@@ -5,6 +5,8 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+## [1.25.0] - 2026-07-31
+
 ### Added
 
 - `docker`: Add Ubuntu 26.04 across all image families (`ubuntu`,
