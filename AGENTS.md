@@ -730,6 +730,27 @@ The poky images are the motivating case: their `run-hook.sh` adds
 auto-detection then elevates it to the workspace user with no further
 configuration.
 
+### GPG Agent Forwarding
+
+A `run.sh` can forward the host's gpg-agent by bind-mounting the host's
+`$XDG_RUNTIME_DIR/gnupg` into the container at the same path;
+`docker-builder-run` forwards `XDG_RUNTIME_DIR` itself so host and
+container agree on it. The entrypoint's `make_runtime_dir` takes ownership
+of `/run/user/$UID` so the forwarded socket is usable, and on a modern
+gnupg the agent socket already sits at gpg's canonical `agent-socket` path,
+so gpg reaches the forwarded agent unaided.
+
+The hazard is a local gpg-agent: a gpg operation that finds the forwarded
+agent momentarily unreachable autostarts its own, which unlinks the
+bind-mounted socket to bind a fresh one — severing the forward and holding
+none of the host's keys. The `05-gnupg.sh` plugin prevents this by writing
+`no-autostart` to `/etc/gnupg/common.conf`, the file every gnupg component
+reads, so gpg only ever uses the forwarded agent and never spawns a local
+one. The plugin body runs as root wherever the login profile is
+generated — container start for the entrypoint flow, image build for the
+devcontainer flow — so both flows carry the setting, and its stdout (which
+becomes the profile) stays empty: the config is a pure root side-effect.
+
 ## The `x` Script
 
 Located at `bin/x`, this script provides workspace-aware command
@@ -1060,7 +1081,7 @@ RUN python3 -m venv $NANOPB_VENV \
 - Use environment variables for versions and paths
 - Document non-obvious decisions with comments
 - Use numbered entrypoint.d scripts for environment setup:
-  - `05-*.sh` - Low-level system setup (X11, display)
+  - `05-*.sh` - Low-level system setup (X11 display, gpg-agent)
   - `10-*.sh` - Primary feature setup (golang, node, android)
   - `20-*.sh` - Feature extensions (pnpm, additional tools)
   - `30-*.sh` - Complex/specialized setup (Yocto/OE, build systems)

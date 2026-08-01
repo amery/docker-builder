@@ -5,6 +5,17 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- `entrypoint`: Prevent gpg from autostarting a local `gpg-agent` that
+  would displace a forwarded host agent. A spawned agent unlinks the
+  bind-mounted `/run/user/$UID/gnupg` socket to bind its own, severing the
+  forward; the `05-gnupg.sh` plugin now writes `no-autostart` to
+  `/etc/gnupg/common.conf` — read by every gnupg component — so no local
+  agent starts. It also drops the `~/.gnupg` socket symlinks, redundant now
+  the forwarded socket sits at gpg's canonical path, where a stale link
+  could itself trip the autostart they were meant to avoid.
+
 ## [1.25.0] - 2026-07-31
 
 ### Added
