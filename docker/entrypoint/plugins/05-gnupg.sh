@@ -11,14 +11,28 @@
 # in /etc/gnupg/common.conf, the file every gnupg component reads, keeps a
 # local agent from ever being spawned.
 #
-# Set unconditionally, not only when a forward is mounted. Unlike the login
-# snippets the other plugins emit, this runs as root at profile-generation
+# The no-autostart write is a pure root side-effect at profile-generation
 # time — container start for the entrypoint flow, image build time for the
-# devcontainer flow — and at devcontainer build time no forward yet exists
-# to key off. These builder images use gpg only through a forwarded agent,
-# so suppressing autostart everywhere costs nothing; a container that truly
+# devcontainer flow — so it is set unconditionally, not only when a forward
+# is mounted: the devcontainer build has no forward yet to key off, and
+# these builder images use gpg only through a forwarded agent, so
+# suppressing autostart everywhere costs nothing. A container that truly
 # wants a local agent can still start one with `gpgconf --launch gpg-agent`.
 mkdir -p /etc/gnupg
 if ! grep -qxF no-autostart /etc/gnupg/common.conf 2> /dev/null; then
 	echo no-autostart >> /etc/gnupg/common.conf
 fi
+
+# Older images bridged the forwarded sockets into ~/.gnupg with symlinks;
+# this plugin no longer does, but a persistent home carried across an image
+# swap keeps them. Under no-autostart a dangling link can no longer be
+# repaired by an autostart, and a live one can redirect a launched local
+# agent onto the forwarded socket — the kidnap no-autostart exists to
+# prevent. Clear them at login, in the user's context: the -L guard takes
+# only symlinks, never a live socket or a gnupg-managed redirect file.
+cat <<'EOT'
+for link in "$HOME/.gnupg"/S.gpg-agent*; do
+	[ -L "$link" ] || continue
+	rm -f "$link"
+done
+EOT
