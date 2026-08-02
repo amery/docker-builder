@@ -25,6 +25,14 @@ All notable changes to docker-builder will be documented in this file.
   agent starts. It also drops the `~/.gnupg` socket symlinks, redundant now
   the forwarded socket sits at gpg's canonical path, where a stale link
   could itself trip the autostart they were meant to avoid.
+- `ubuntu-vsc-base`: Copy the `05-gnupg.sh` plugin into the devcontainer
+  base so the gpg `no-autostart` guard reaches the VS Code and `apptly`
+  images. These build on Microsoft's `devcontainers/base`, not
+  `docker-ubuntu-builder`, so they never inherited the plugin the Ubuntu
+  bases carry, leaving a forwarded host gpg-agent open to being displaced
+  by a locally autostarted one. The devcontainer flow bakes the setting at
+  image build time, and every image down the chain (`ubuntu-vsc-nodejs`,
+  `-golang`, `apptly`) inherits it.
 
 ## [1.25.0] - 2026-07-31
 
