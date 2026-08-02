@@ -139,7 +139,8 @@ The build system employs two independent caching layers:
 
 - **Files**: `.image-*` (build) and `.alias-*` (tag) markers
 - **Purpose**: Track build and alias completion separately
-- **Behavior**: If marker exists and deps unchanged, skip
+- **Behavior**: If marker exists and deps unchanged, skip (see
+  [What Triggers a Rebuild](#what-triggers-a-rebuild))
 - **Control**: Use `-B` flag or delete marker files
 
 #### 2. Docker Layer (Build Cache)
@@ -157,6 +158,44 @@ The build system employs two independent caching layers:
 | `make FORCE=1 <target>` | ✓ Used | ✗ Bypassed | Refresh base images or upstream packages |
 | `make -B <target>` | ✗ Bypassed | ✓ Used | Marker file stale, dependencies should rebuild |
 | `make -B FORCE=1 <target>` | ✗ Bypassed | ✗ Bypassed | Complete clean rebuild from scratch |
+
+### What Triggers a Rebuild
+
+An image's `.image-<name>` marker is remade when any of three
+prerequisite tiers is newer than it — this is the whole of the
+make-layer rebuild logic:
+
+1. **The image's own inputs.** Each image rule lists its `Dockerfile`
+   and every file the Dockerfile `COPY`s — the entrypoint, the shared
+   library, `builder_version.sh`, and each `/etc/entrypoint.d` plugin —
+   as explicit prerequisites, so editing any of them rebuilds that image
+   alone. The plugin and library prerequisites are the generated
+   per-image copies, so a change to a golden source under
+   `docker/entrypoint/` propagates through the copy to every image that
+   carries it (see [Entrypoint Generation](#4-entrypoint-generation)).
+
+2. **The base image.** `gen_images_mk.sh` reads each `FROM` line and,
+   for an own-image base, wires `.image-<image>` to depend on
+   `.image-<base>`, so rebuilding a base cascades to every descendant.
+   This edge belongs to the publish build only; a
+   [local build](#local-builds) drops it to stay single-target. A
+   third-party base (`ubuntu:24.04`, Microsoft's `devcontainers/base`)
+   is a leaf — nothing local rebuilds when it moves, and `FORCE=1`
+   re-pulls it.
+
+3. **The build system.** Every image rule also depends on `BUILD_SYS` —
+   `Makefile`, `config.mk`, and `scripts/gen_images_mk.sh` — so a change
+   to the build recipe or global configuration rebuilds everything. It
+   keys on the `images.mk` generator, not the generated `images.mk`:
+   regenerating the rule set for a new Dockerfile or an added `COPY` no
+   longer forces a global rebuild (that lands through tier 1, on the
+   affected image), while a genuine recipe change still sweeps the whole
+   tree.
+
+Docker's layer cache then decides how much of each triggered build
+actually re-runs (see [Docker Layer](#2-docker-layer-build-cache)): an
+image whose base digest is unchanged is largely a cache hit even when
+its marker was invalidated.
 
 ### Multi-Architecture Builds
 
