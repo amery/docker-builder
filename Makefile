@@ -31,7 +31,12 @@ endif
 
 B = $(CURDIR)
 
-BUILD_SYS = Makefile $(CONFIG_MK) $(IMAGES_MK)
+# Rebuild triggers shared by every image. Depend on the images.mk
+# generator, not its output: a change to the build recipe forces a
+# full rebuild, but merely regenerating the rule set (a new Dockerfile,
+# an added COPY) does not — those land per-image via the explicit file
+# prerequisites and the base sentinel edges.
+BUILD_SYS = Makefile $(CONFIG_MK) $(GEN_IMAGES_MK_SH)
 
 # scripts
 #

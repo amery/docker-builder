@@ -5,6 +5,16 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Build system: Key the per-image rebuild trigger on the `images.mk`
+  generator, not the generated `images.mk`. Every image rule listed the
+  generated file, so any change to its content — a new Dockerfile, an
+  added `COPY` — forced all images to rebuild; depending on
+  `scripts/gen_images_mk.sh` instead confines a rebuild to the trees
+  whose own inputs changed, while a real build-recipe change still
+  rebuilds everything.
+
 ### Fixed
 
 - `entrypoint`: Prevent gpg from autostarting a local `gpg-agent` that
