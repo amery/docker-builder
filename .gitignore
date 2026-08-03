@@ -14,6 +14,7 @@ shared.sh
 # generated entrypoint.d plugin copies (golden: docker/entrypoint/plugins/)
 05-display.sh
 05-gnupg.sh
+05-sudo.sh
 10-android-sdk.sh
 10-golang.sh
 10-node.sh

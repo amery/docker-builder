@@ -5,6 +5,18 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- `entrypoint`: Grant the workspace user passwordless `sudo` through a new
+  `05-sudo.sh` plugin, which writes an `/etc/sudoers.d/$USER_NAME` rule at
+  container start. These images are ephemeral developer environments — one
+  workspace user, no service accounts — so the grant is unconditional
+  rather than gated behind a knob. The Ubuntu bases gain the `sudo` package
+  to go with it: 16.04, 20.04, 22.04, 24.04 and 26.04 shipped without the
+  binary, 18.04 alone having picked it up from `unminimize`. The
+  `ubuntu-vsc-*` images do not take the plugin — they carry `sudo` from
+  Microsoft's `devcontainers/base`.
+
 ### Changed
 
 - Build system: Key the per-image rebuild trigger on the `images.mk`
