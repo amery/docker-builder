@@ -479,9 +479,9 @@ make quay.io/amery/docker-ubuntu-builder-24.04
 make quay.io/amery/docker-ubuntu-builder-24.04
 # Output: make: Nothing to be done for '...'
 
-# Force rebuild by removing markers
+# Rebuild by removing the marker. The alias marker depends on it, so it
+# follows on its own and needs no separate removal.
 rm .image-docker-ubuntu-builder-24.04
-rm .alias-docker-ubuntu-builder-24.04
 make quay.io/amery/docker-ubuntu-builder-24.04
 # Rebuilds and re-aliases
 ```
