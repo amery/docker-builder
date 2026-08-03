@@ -368,13 +368,13 @@ the local daemon with `--load`, skipping the registry entirely: no
 push, no inline cache, and no alias retagging. The build is
 single-target — it does **not** rebuild base images, letting buildx
 pull whatever base is published. The image is loaded **untagged**; its
-ID is written into the `.image-*` marker via `--iidfile`, which doubles
-as the run handle. Pass that ID to `docker-builder-run` (a bare
+ID is written into the `.image-*.local` marker via `--iidfile`, which
+doubles as the run handle. Pass that ID to `docker-builder-run` (a bare
 `docker run` fails — the entrypoint needs the `USER_NAME`/`USER_UID`/…
 environment that `docker-builder-run` sets up):
 
 ```bash
-DOCKER_ID="$(cat .image-docker-ubuntu-builder-24.04)" docker-builder-run bash
+DOCKER_ID="$(cat .image-docker-ubuntu-builder-24.04.local)" docker-builder-run bash
 ```
 
 Because a local build leaves no persistent tag, the image is dangling
@@ -387,6 +387,14 @@ The mode is driven by the generated `WANTS_TAGS` flag: an empty
 `BUILDER` clears it, so the recipes take the `--load`/`--iidfile`
 branch and drop the base-image prerequisites; any builder sets it and
 the recipes push, retag, and build bases first exactly as before.
+
+It also selects `SENTINEL_SUFFIX`, `.local` here and empty for a
+publish build, so the two modes keep separate markers and neither can
+satisfy the other's target. They record different things — an image ID
+in the local daemon against a manifest pushed to the registry — so a
+shared marker would let a local build leave the publish target looking
+done. Both keep the `.image-*`/`.alias-*` prefixes, so `make clean` and
+`.gitignore` cover them unchanged.
 
 ### Target Types: Version-Specific vs Aggregate
 
@@ -477,6 +485,10 @@ rm .alias-docker-ubuntu-builder-24.04
 make quay.io/amery/docker-ubuntu-builder-24.04
 # Rebuilds and re-aliases
 ```
+
+These markers are empty: they record only that the build and the retag
+happened. A [local build](#local-builds) keeps a separate set, suffixed
+`.local`.
 
 ### Target Name Patterns
 
@@ -619,9 +631,9 @@ make FORCE=1 <target>
 # Local build (single-arch, loaded untagged, not pushed)
 make BUILDER= <target>
 # Uses: docker buildx build --progress=plain --load
-#        --iidfile .image-<name>~
-# then renames .image-<name>~ into .image-<name>, so the marker
-# only appears once the image is fully built and loaded
+#        --iidfile .image-<name>.local~
+# then renames .image-<name>.local~ into .image-<name>.local, so the
+# marker only appears once the image is fully built and loaded
 ```
 
 ## Docker Images Provided

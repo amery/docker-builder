@@ -121,11 +121,14 @@ puller() {
 	done
 }
 
+# Sentinels for images built here. They carry $(SENTINEL_SUFFIX) so a local
+# (BUILDER=) build cannot satisfy a publish target, or the other way about:
+# the two record different artefacts under different names.
 sentinel() {
 	local x=
 	for x; do
 		x="$(echo "$x" | tr ':/' '-_')"
-		echo "\$(B)/.image-$x"
+		echo "\$(B)/.image-$x\$(SENTINEL_SUFFIX)"
 	done
 }
 
@@ -133,7 +136,18 @@ aliases() {
 	local x=
 	for x; do
 		x="$(echo "$x" | tr ':/' '-_')"
-		echo "\$(B)/.alias-$x"
+		echo "\$(B)/.alias-$x\$(SENTINEL_SUFFIX)"
+	done
+}
+
+# Sentinel for a third-party image, which is pulled rather than built. A pull
+# is the same operation in either mode, so these take no suffix and the two
+# modes share them.
+pull_sentinel() {
+	local x=
+	for x; do
+		x="$(echo "$x" | tr ':/' '-_')"
+		echo "\$(B)/.image-$x"
 	done
 }
 
@@ -151,7 +165,7 @@ EOT
 # THIRD_PARTY
 #
 for tag in $THIRD_PARTY; do
-	s1="$(sentinel "$tag")"
+	s1="$(pull_sentinel "$tag")"
 	k1="$(key "$tag")"
 	d1="$(puller "$tag")"
 	cat <<EOT
@@ -186,7 +200,7 @@ while read tag dir; do
 		a0=$(aliases "${from#$PREFIX}")
 	else
 		# Third-party base: its pulled image.
-		s0=$(sentinel "$from")
+		s0=$(pull_sentinel "$from")
 		a0=$s0
 	fi
 
@@ -243,8 +257,8 @@ EOT
 
 	# With tags: push the multi-arch manifest and seed the registry cache.
 	# Without tags: build for the host and load it untagged, recording the
-	# image ID in the sentinel. A dev build leaves no persistent tag, so
-	# docker image prune reclaims it; reference it via $(cat sentinel).
+	# image ID in the .local sentinel. A dev build leaves no persistent tag,
+	# so docker image prune reclaims it; reference it via $(cat sentinel).
 	cat <<EOT
 ifeq (\$(WANTS_TAGS),1)
 	\$(DOCKER_BUILD) \$(DOCKER_BUILD_OPT) --platform \$(PLATFORM) --push \\

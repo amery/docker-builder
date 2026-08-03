@@ -198,10 +198,14 @@ make BUILDER= quay.io/amery/docker-ubuntu-builder-24.04
 An empty `BUILDER` is the development exception, for checking a change
 builds and runs before you commit it. It builds for the host
 architecture alone and loads the image into the local daemon untagged
-(its ID lands in the `.image-*` marker, so
-`DOCKER_ID="$(cat .image-<name>)" docker-builder-run bash` runs it). The
-build is single-target — base images are pulled, not rebuilt. Nothing is
-pushed and no tag persists, so `docker image prune` reclaims the image.
+(its ID lands in the `.image-<name>.local` marker, so
+`DOCKER_ID="$(cat .image-<name>.local)" docker-builder-run bash` runs
+it). The build is single-target — base images are pulled, not rebuilt.
+Nothing is pushed and no tag persists, so `docker image prune` reclaims
+the image.
+
+The `.local` suffix keeps the modes apart, so publishing an image you
+have just built locally works as usual.
 
 For detailed information about the build system mechanics, caching behavior,
 and troubleshooting, see [Build System Mechanics][build-system-mechanics].

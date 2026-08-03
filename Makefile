@@ -29,6 +29,17 @@ else
 WANTS_TAGS ?= 1
 endif
 
+# Sentinel suffix, empty in the publish mode. The two modes record different
+# things — an image ID in the local daemon against a manifest pushed to the
+# registry — so they name their sentinels apart and neither can satisfy the
+# other's target. Both remain .image-*/.alias-*, so clean and .gitignore need
+# no adjustment.
+ifeq ($(WANTS_TAGS),1)
+SENTINEL_SUFFIX =
+else
+SENTINEL_SUFFIX = .local
+endif
+
 B = $(CURDIR)
 
 # Rebuild triggers shared by every image. Depend on the images.mk

@@ -29,6 +29,18 @@ All notable changes to docker-builder will be documented in this file.
 
 ### Fixed
 
+- Build system: Keep the local (`BUILDER=`) and publish builds in separate
+  sentinels. Both wrote `.image-<name>`, so a local build left the publish
+  target satisfied — `make <target>` reported `Nothing to be done` while
+  the registry went on serving the old image — and a publish build did the
+  same to the local one. The local build now suffixes its sentinels
+  `.local`, selected by `SENTINEL_SUFFIX` alongside `WANTS_TAGS`, so
+  neither mode can satisfy the other's target; a third-party image's pull
+  sentinel stays shared, a pull being the same operation in both modes. The
+  local build handle moves with it, to `$(cat .image-<name>.local)`. Clear
+  any pre-existing `.image-*` that holds an image ID rather than being
+  empty: written by an older local build, it still blocks that publish.
+
 - `entrypoint`: Prevent gpg from autostarting a local `gpg-agent` that
   would displace a forwarded host agent. A spawned agent unlinks the
   bind-mounted `/run/user/$UID/gnupg` socket to bind its own, severing the
