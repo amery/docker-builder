@@ -169,8 +169,9 @@ make quay.io/amery/docker-ubuntu-builder-24.04
 # Bypass Docker layer cache (e.g. refresh base images)
 make FORCE=1 quay.io/amery/docker-golang-builder-1.25
 
-# Bypass all caching
-make -B FORCE=1 quay.io/amery/docker-golang-builder
+# Bypass all caching: clear that family's markers, then the layer cache
+rm .image-docker-golang-builder-*
+make FORCE=1 quay.io/amery/docker-golang-builder
 ```
 
 #### Multi-Architecture Builds

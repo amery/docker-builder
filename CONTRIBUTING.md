@@ -232,12 +232,21 @@ make quay.io/amery/docker-<name>-builder-<version>
 #### Stuck Build Issues
 
 ```bash
-# Make says "Nothing to be done" but you need rebuild
-make -B quay.io/amery/docker-<name>-builder
+# Make says "Nothing to be done" but you need a rebuild: remove that
+# image's marker (the alias marker follows on its own)
+rm .image-docker-<name>-builder-<version>
+make quay.io/amery/docker-<name>-builder-<version>
 
-# Complete clean rebuild (bypasses all caching)
-make -B FORCE=1 quay.io/amery/docker-<name>-builder
+# Complete clean rebuild of that family (bypasses all caching)
+rm .image-docker-<name>-builder-*
+make FORCE=1 quay.io/amery/docker-<name>-builder
 ```
+
+Clear markers rather than forcing targets — `-B` treats every
+prerequisite as out of date and rebuilds and pushes base images nobody
+asked for. Keep `make clean` for when you do mean every image: it
+discards the whole make layer, and each marker only returns by
+rebuilding, which in the normal mode pushes.
 
 #### Added New Dockerfiles
 
@@ -255,8 +264,8 @@ make quay.io/amery/docker-<newname>-builder
 | ------- | ------- |
 | Modified existing Dockerfile | `make <target>` |
 | Added new Dockerfile | `make files && make <target>` |
-| Build seems stuck | `make -B <target>` |
-| Complete rebuild needed | `make -B FORCE=1 <target>` |
+| Build seems stuck | `rm .image-<name>`, then `make <target>` |
+| Complete rebuild needed | `make clean`, then `make FORCE=1` |
 
 For detailed explanation of the build system mechanics, see
 [AGENTS.md Build System Mechanics](./AGENTS.md#build-system-mechanics).

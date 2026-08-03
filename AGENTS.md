@@ -141,7 +141,9 @@ The build system employs two independent caching layers:
 - **Purpose**: Track build and alias completion separately
 - **Behavior**: If marker exists and deps unchanged, skip (see
   [What Triggers a Rebuild](#what-triggers-a-rebuild))
-- **Control**: Use `-B` flag or delete marker files
+- **Control**: Delete the marker of the image concerned, or `make clean`
+  to clear the whole layer (see
+  [Build Control Options](#build-control-options))
 
 #### 2. Docker Layer (Build Cache)
 
@@ -156,8 +158,31 @@ The build system employs two independent caching layers:
 | ------- | ---------- | ------------ | -------- |
 | `make <target>` | ✓ Used | ✓ Used | Normal incremental builds |
 | `make FORCE=1 <target>` | ✓ Used | ✗ Bypassed | Refresh base images or upstream packages |
-| `make -B <target>` | ✗ Bypassed | ✓ Used | Marker file stale, dependencies should rebuild |
-| `make -B FORCE=1 <target>` | ✗ Bypassed | ✗ Bypassed | Complete clean rebuild from scratch |
+| `rm .image-<name>`, then `make <target>` | ✗ Bypassed, that image and its descendants | ✓ Used | One image's marker is wrong |
+| `make clean`, then `make` | ✗ Bypassed, all | ✓ Used | Rebuild everything |
+| `make clean`, then `make FORCE=1` | ✗ Bypassed, all | ✗ Bypassed | Complete clean rebuild from scratch |
+
+Clearing the make layer means removing markers, not forcing targets. **Do
+not use `-B`**: it treats every prerequisite as out of date, so it drags
+in far more than the target named — for an image whose base is an own
+image, the base is rebuilt and **pushed** too:
+
+```text
+$ make -n -B quay.io/amery/docker-poky-builder-24.04
+…
+docker buildx build … --push … -t quay.io/amery/docker-ubuntu-builder:24.04 …
+…
+docker buildx build … --push … -t quay.io/amery/docker-poky-builder:24.04 …
+```
+
+`make clean` is the honest way to rebuild everything: it removes the
+markers and the generated makefiles, then leaves normal dependency
+resolution to decide what is built. Mind what that costs. The makefiles
+regenerate for free, but a marker only comes back by rebuilding, and in
+the normal mode every rebuild pushes — so the next full `make`
+re-publishes all of them, Docker's layer cache sparing the build work
+but not the push. Remove one image's marker, or a family's, when that
+is what you mean.
 
 ### What Triggers a Rebuild
 
@@ -447,15 +472,22 @@ make quay.io/amery/docker-golang-builder-1.25
 #### Scenario: Make thinks it's built but it hasn't
 
 ```bash
-# Marker file exists but image was deleted or you want to rebuild all versions
-make -B quay.io/amery/docker-ubuntu-builder
+# Marker file exists but the image was deleted
+rm .image-docker-ubuntu-builder-24.04
+make quay.io/amery/docker-ubuntu-builder-24.04
+
+# ... or the whole family, clearing its markers together
+rm .image-docker-ubuntu-builder-*
+make quay.io/amery/docker-ubuntu-builder
 ```
 
 #### Scenario: Completely stuck build state
 
 ```bash
-# Nuclear option: bypass all caching
-make -B FORCE=1 quay.io/amery/docker-golang-builder
+# Nuclear option: clear that family's markers, then bypass the Docker
+# cache too
+rm .image-docker-golang-builder-*
+make FORCE=1 quay.io/amery/docker-golang-builder
 ```
 
 #### Scenario: Just regenerate rules
@@ -607,11 +639,11 @@ ls -la .image-* .alias-*  # List all marker files
 make -n <target>        # Dry run, show what would execute
 ```
 
-#### Force complete rebuild
+#### Complete rebuild
 
 ```bash
-make clean              # Remove all markers
-make -B FORCE=1         # Build everything from scratch
+make clean              # Remove markers and generated makefiles
+make FORCE=1            # Build everything from scratch
 ```
 
 #### Check Docker build arguments
