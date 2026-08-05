@@ -8,16 +8,18 @@
 # operation that finds the agent momentarily unreachable autostarts its own
 # agent, which unlinks the bind-mounted socket to bind a fresh one —
 # severing the forward, and holding none of the host's keys. no-autostart
-# in /etc/gnupg/common.conf, the file every gnupg component reads, keeps a
-# local agent from ever being spawned.
+# in /etc/gnupg/common.conf keeps that agent from being spawned on gnupg
+# 2.4, which reads the file; 2.2 reads it and ignores it.
 #
 # The no-autostart write is a pure root side-effect at profile-generation
 # time — container start for the entrypoint flow, image build time for the
 # devcontainer flow — so it is set unconditionally, not only when a forward
 # is mounted: the devcontainer build has no forward yet to key off, and
 # these builder images use gpg only through a forwarded agent, so
-# suppressing autostart everywhere costs nothing. A container that truly
-# wants a local agent can still start one with `gpgconf --launch gpg-agent`.
+# suppressing autostart everywhere costs nothing. On 2.4 the setting also
+# blocks `gpgconf --launch gpg-agent`, which returns success and starts
+# nothing, so a container that wants a local agent has to drop the setting
+# rather than launch around it.
 mkdir -p /etc/gnupg
 if ! grep -qxF no-autostart /etc/gnupg/common.conf 2> /dev/null; then
 	echo no-autostart >> /etc/gnupg/common.conf

@@ -826,10 +826,26 @@ so gpg reaches the forwarded agent unaided.
 The hazard is a local gpg-agent: a gpg operation that finds the forwarded
 agent momentarily unreachable autostarts its own, which unlinks the
 bind-mounted socket to bind a fresh one — severing the forward and holding
-none of the host's keys. The `05-gnupg.sh` plugin prevents this by writing
-`no-autostart` to `/etc/gnupg/common.conf`, the file every gnupg component
-reads, so gpg only ever uses the forwarded agent and never spawns a local
-one. The plugin body runs as root wherever the login profile is
+none of the host's keys. The `05-gnupg.sh` plugin writes `no-autostart` to
+`/etc/gnupg/common.conf` against this. How far it reaches depends on the
+release's gnupg, measured on the published images:
+
+- **2.4** (24.04, 26.04) reads `common.conf`, so the setting holds and no
+  local agent is spawned. It also blocks `gpgconf --launch gpg-agent`,
+  which returns success and starts nothing — a container that wants a local
+  agent has to drop the setting rather than launch around it.
+- **2.2** reads `common.conf` and ignores it — measured on 20.04 (2.2.19)
+  and 22.04 (2.2.27), with 18.04 (2.2.4) below the same cutoff. The option
+  itself works on 2.2, but only from `~/.gnupg/gpg.conf`, so the plugin's
+  write leaves these bases uncovered; the `ubuntu` images seed it into
+  `/etc/skel/.gnupg/gpg.conf` instead, which a home created from skel picks
+  up and an existing one never sees.
+- **1.4** (16.04) has no agent at all, so there is nothing to displace, and
+  it never reads `common.conf`, which makes the plugin's write inert rather
+  than harmful. `no-autostart` is unknown to 1.4 and fatal in a file it does
+  read, so nothing is seeded into `~/.gnupg` there.
+
+The plugin body runs as root wherever the login profile is
 generated — container start for the entrypoint flow, image build for the
 devcontainer flow — so both flows carry the setting, and its stdout (which
 becomes the profile) stays empty: the config is a pure root side-effect.

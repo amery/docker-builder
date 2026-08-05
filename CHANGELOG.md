@@ -45,10 +45,12 @@ All notable changes to docker-builder will be documented in this file.
   would displace a forwarded host agent. A spawned agent unlinks the
   bind-mounted `/run/user/$UID/gnupg` socket to bind its own, severing the
   forward; the `05-gnupg.sh` plugin now writes `no-autostart` to
-  `/etc/gnupg/common.conf` — read by every gnupg component — so no local
-  agent starts. It also drops the `~/.gnupg` socket symlinks, redundant now
-  the forwarded socket sits at gpg's canonical path, where a stale link
-  could itself trip the autostart they were meant to avoid.
+  `/etc/gnupg/common.conf`. gnupg 2.4 reads that file, so no local agent
+  starts on 24.04 or 26.04; 2.2 ignores it, and the seeded
+  `~/.gnupg/gpg.conf` covers the older bases instead. It also drops the
+  `~/.gnupg` socket symlinks, redundant now the forwarded socket sits at
+  gpg's canonical path, where a stale link could itself trip the autostart
+  they were meant to avoid.
 - `ubuntu` (18.04, 20.04, 22.04): Seed `no-autostart` as the initial
   `~/.gnupg` default on the bases below the `common.conf` cutoff.
   `/etc/gnupg/common.conf` is only honoured from gnupg 2.4, so the
