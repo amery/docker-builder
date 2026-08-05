@@ -65,6 +65,17 @@ All notable changes to docker-builder will be documented in this file.
   by a locally autostarted one. The devcontainer flow bakes the setting at
   image build time, and every image down the chain (`ubuntu-vsc-nodejs`,
   `-golang`, `apptly`) inherits it.
+- `entrypoint`: Copy `/etc/skel` directories into a new home with their own
+  mode and owner. The copy walked files alone and made their parents with a
+  bare `mkdir -p`, which carries neither, so a nested entry such as
+  `~/.gnupg` landed in a root-owned 0755 directory — the user locked out of
+  their own keyring, and gpg refusing a homedir that permissive as unsafe.
+  The file itself was chowned, so nothing showed until gpg ran. Two smaller
+  gaps came from the same omission: an empty skel directory never reached
+  the home at all, and only the immediate parent was created, leaving the
+  levels of a deeper tree root-owned. The walk now covers directories too,
+  sorted so each is in place before the entries that land in it, and
+  repairs one an earlier run left wrong instead of skipping it.
 
 ## [1.25.0] - 2026-07-31
 

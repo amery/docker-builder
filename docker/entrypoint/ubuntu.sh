@@ -69,11 +69,24 @@ else
 fi
 
 if [ ! -s "$USER_HOME/.profile" ]; then
-	find /etc/skel ! -type d | while read -r f0; do
-		f1="$USER_HOME/${f0##/etc/skel}"
-		mkdir -p "${f1%/*}"
-		cp -a "$f0" "$f1"
-		chown "$USER_NAME:$USER_NAME" "$f1"
+	# The home normally arrives as a bind mount and useradd is called
+	# without -m, so nothing else creates it when it does not.
+	mkdir -p "$USER_HOME"
+	# Ancestors sort before their descendants (a path is a prefix of
+	# everything below it), so each directory exists before its
+	# entries; -mindepth 1 leaves an existing $USER_HOME's mode alone.
+	find /etc/skel -mindepth 1 | sort | while read -r f0; do
+		f1="$USER_HOME/${f0#/etc/skel}"
+		if [ -d "$f0" -a ! -L "$f0" ]; then
+			# mkdir's defaults would leave ~/.gnupg root-owned
+			# and 0755: locked out of their own keyring, and too
+			# permissive for gpg to trust it.
+			mkdir -p "$f1"
+			chmod --reference="$f0" "$f1"
+		else
+			cp -a "$f0" "$f1"
+		fi
+		chown -h "$USER_NAME:$USER_NAME" "$f1"
 	done
 	chown "$USER_NAME:$USER_NAME" "$USER_HOME"
 fi
