@@ -71,6 +71,13 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-re
 #
 COPY builder_version.sh /usr/local/bin/builder_version
 
+# gpg: seed no-autostart as the initial ~/.gnupg default. Best effort —
+# only a home created from skel receives it; see 05-gnupg.sh.
+RUN mkdir -p /etc/skel/.gnupg \
+	&& chmod 0700 /etc/skel/.gnupg \
+	&& echo no-autostart > /etc/skel/.gnupg/gpg.conf \
+	&& chmod 0600 /etc/skel/.gnupg/gpg.conf
+
 COPY 05-gnupg.sh /etc/entrypoint.d/
 COPY 05-sudo.sh /etc/entrypoint.d/
 COPY 10-python.sh /etc/entrypoint.d/

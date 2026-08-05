@@ -23,6 +23,18 @@ if ! grep -qxF no-autostart /etc/gnupg/common.conf 2> /dev/null; then
 	echo no-autostart >> /etc/gnupg/common.conf
 fi
 
+# common.conf is only honoured from gnupg 2.4, so on 18.04/20.04/22.04 the
+# setting above is inert. There the option has to reach ~/.gnupg/gpg.conf,
+# which belongs to the user — so the Dockerfile seeds it through
+# /etc/skel/.gnupg/gpg.conf, an initial default a new home picks up and
+# the user is then free to change. Best effort by construction: a home
+# that already exists never sees it. (Not 16.04: gnupg 1.4 treats an
+# unknown option as fatal, so seeding it there breaks gpg outright.)
+#
+# Ownership and mode of the copied ~/.gnupg belong to the skel loop, not
+# to this plugin: the loop mirrors /etc/skel/.gnupg, so the copy arrives
+# 0700 and owned by the user.
+
 # Older images bridged the forwarded sockets into ~/.gnupg with symlinks;
 # this plugin no longer does, but a persistent home carried across an image
 # swap keeps them. Under no-autostart a dangling link can no longer be

@@ -49,6 +49,23 @@ All notable changes to docker-builder will be documented in this file.
   agent starts. It also drops the `~/.gnupg` socket symlinks, redundant now
   the forwarded socket sits at gpg's canonical path, where a stale link
   could itself trip the autostart they were meant to avoid.
+- `ubuntu` (18.04, 20.04, 22.04): Seed `no-autostart` as the initial
+  `~/.gnupg` default on the bases below the `common.conf` cutoff.
+  `/etc/gnupg/common.conf` is only honoured from gnupg 2.4, so the
+  system-wide write above is inert on the older releases: 20.04 (2.2.19)
+  and 22.04 (2.2.27) read the file and go on autostarting a local
+  `gpg-agent`, where 24.04 (2.4.4) and 26.04 (2.4.8) refuse; 18.04 ships
+  2.2.4 and sits below the cutoff too. Those three now build
+  `/etc/skel/.gnupg/gpg.conf`, 0700 on the directory and 0600 on the file,
+  so a home created from skel starts with the option in the file gnupg does
+  read. That file belongs to the user, so this is an initial default and
+  nothing more — a home that already exists never sees it, which makes it
+  best effort rather than a substitute for a gnupg new enough to read
+  `common.conf`. Not 16.04, where gnupg 1.4 treats an unknown option as
+  fatal and a seeded `gpg.conf` would break gpg outright; not the images
+  that honour `common.conf` either, where a seed would duplicate the
+  plugin's own setting in a file the user would then have to edit as well
+  to undo it.
 - `entrypoint`: Remove stale `~/.gnupg/S.gpg-agent*` symlinks that older
   images left when they bridged the forwarded sockets into the legacy path.
   A persistent home carried across an image swap keeps them, and under
