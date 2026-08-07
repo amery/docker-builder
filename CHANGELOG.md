@@ -40,6 +40,17 @@ All notable changes to docker-builder will be documented in this file.
 
 ### Removed
 
+- `ubuntu-vsc-base` (24.04, 26.04): Drop code-server. Nothing referenced or
+  started it — not the entrypoint, the devcontainer init, or the
+  `devcontainer.metadata` label — and VS Code's own server is injected by
+  the client at attach time, so the browser IDE this installed was never
+  reached. The layer also resolved GitHub's `releases/latest` at build
+  time, so every rebuild installed whatever code-server had shipped by
+  then, read from an unauthenticated `api.github.com` call with no failure
+  check: a rate-limited response yields a null tag and a 404 on the
+  download rather than an error naming the cause. The images that build on
+  this base lose it too.
+
 - `docker-micrologic-builder`: Drop libbacktrace. It is not used, and the
   layer cloned and built the project from HEAD, unpinned, on every rebuild.
 
