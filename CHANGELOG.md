@@ -38,6 +38,11 @@ All notable changes to docker-builder will be documented in this file.
   whose own inputs changed, while a real build-recipe change still
   rebuilds everything.
 
+### Removed
+
+- `docker-micrologic-builder`: Drop libbacktrace. It is not used, and the
+  layer cloned and built the project from HEAD, unpinned, on every rebuild.
+
 ### Fixed
 
 - `docker-micrologic-builder`: Take protobuf and the clang bindings from

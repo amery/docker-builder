@@ -76,19 +76,6 @@ RUN git clone -b $SANCUS_VERSION --depth 1 \
 	&& make install \
 	&& rm -rf /usr/src/sancus-core
 
-# libbacktrace
-#
-RUN git clone --depth 1 \
-		https://github.com/ianlancetaylor/libbacktrace /usr/src/libbacktrace \
-	&& cd /usr/src/libbacktrace \
-	&& autoreconf -ivf \
-	&& mkdir build \
-	&& cd build \
-	&& ../configure \
-	&& make \
-	&& make install \
-	&& rm -rf /usr/src/libbacktrace
-
 # protobuf
 #
 RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
