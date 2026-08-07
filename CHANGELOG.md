@@ -29,6 +29,21 @@ All notable changes to docker-builder will be documented in this file.
 
 ### Fixed
 
+- `docker-poky-builder:18.04`: Drop the inherited `10-python.sh` plugin so
+  `python` stays python2. The plugin prepends a venv whose `bin/python` is
+  python3 — on the Ubuntu bases, which ship no unversioned `python` at all,
+  that is the only `python` there is and worth having, but this image
+  installs a real python2 for the pyro-era recipes and the venv shadowed it.
+  Pyro predates python3 as `python`: `python3-pycairo` bundles waf 1.6.4,
+  which defines its `Node` subclass inside `Context.__init__` and patches
+  only `__name__`/`__module__`, so python3.5+ — resolving by `__qualname__`
+  — cannot pickle the build cache, and `do_configure` dies with `Can't
+  pickle local object`. The image is the only one in the family with a
+  python2 to shadow, so the removal stays here rather than in the bases. An
+  existing workspace also needs its stale `$TMPDIR/hosttools/python` symlink
+  deleted once: BitBake creates hosttools links only when absent and never
+  refreshes them.
+
 - Build system: Keep the local (`BUILDER=`) and publish builds in separate
   sentinels. Both wrote `.image-<name>`, so a local build left the publish
   target satisfied — `make <target>` reported `Nothing to be done` while

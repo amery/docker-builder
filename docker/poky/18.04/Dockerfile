@@ -22,6 +22,13 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-re
 	texinfo \
 	&& apt-get clean
 
+# Drop the base image's python venv plugin. It prepends a venv whose
+# bin/python is python3 — a useful `python` on the bases, which have none,
+# but here it shadows the python2 installed above. Pyro predates python3 as
+# `python`: pycairo's bundled waf 1.6.4 defines its Node class inside a
+# function and cannot pickle its build cache under python3.5+.
+RUN rm -f /etc/entrypoint.d/10-python.sh
+
 COPY 30-poky.sh /etc/entrypoint.d/30-poky.sh
 
 # Embed run-hook.sh template for workspace deployment
