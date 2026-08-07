@@ -17,6 +17,17 @@ All notable changes to docker-builder will be documented in this file.
   `ubuntu-vsc-*` images do not take the plugin — they carry `sudo` from
   Microsoft's `devcontainers/base`.
 
+- `docker-poky-nodejs-golang-builder:26.04`: New image — the poky base
+  with Node.js and Go, for Yocto workspaces that build Go or pnpm
+  projects in the same container as BitBake rather than standing up a
+  second one. Node arrives through corepack alone: no global pnpm or
+  yarn, so nothing on PATH shadows the version a project's
+  `packageManager` field pins, which is how the recipes resolve it too.
+  Go is 1.26.5, as the rest of the tree carries. It inherits poky's
+  `run-hook.sh` and `30-poky.sh` unchanged, adding the `run-env.npm` and
+  `run-env.golang` labels beside the inherited `run-env.oe`. `latest`
+  tracks 26.04, the only version so far.
+
 ### Changed
 
 - Build system: Key the per-image rebuild trigger on the `images.mk`

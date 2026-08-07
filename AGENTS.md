@@ -688,7 +688,7 @@ make BUILDER= <target>
 - **android/11**: Android SDK development
 - **ubuntu-android-studio**: Android Studio with SDK
 - **poky/{18.04,24.04,26.04}**: Yocto/OE builds (latest→24.04)
-- **micrologic/latest**: Custom micrologic environment
+- **poky-nodejs-golang/26.04**: Yocto/OE with Node.js and Go (latest→26.04)
 - **apptly/{24.04,26.04}**: Apptly development base (latest→24.04)
 
 ### VS Code DevContainer Images
@@ -1013,8 +1013,11 @@ When updating docker-builder:
    make files
    ```
 
-   This generates entrypoint.sh from golden copies if Dockerfile includes
-   `COPY entrypoint.sh`.
+   This regenerates the makefiles, so the new image is discovered. The
+   generated copies its Dockerfile needs — `entrypoint.sh` from the golden
+   matching the `FROM` line, and each `/etc/entrypoint.d` plugin that has a
+   golden copy — are written by `make entrypoint`, and by the build itself,
+   which lists them as prerequisites.
 
 4. Build the image:
 
@@ -1043,15 +1046,15 @@ make tags-gc
 
 ### Image-Specific Targets
 
-For each image (e.g., `micrologic`), the following targets
+For each image (e.g., `poky`), the following targets
 are available:
 
 ```bash
 # Build and push to registry
-make quay.io/amery/docker-micrologic-builder
+make quay.io/amery/docker-poky-builder
 
 # Pull from registry
-make pull-docker-micrologic-builder
+make pull-docker-poky-builder
 ```
 
 ### Global Targets
@@ -1081,7 +1084,7 @@ different mechanisms. Patch bumps must touch every relevant pin.
 | -------- | --------- | -------------- |
 | `docker/golang/<X.Y>/Dockerfile` | Upstream `golang:X.Y.Z-alpine` base image | `FROM` tag |
 | `docker/golang/multi/Dockerfile` | Builds older Go versions from source, bootstrapped from the `FROM docker-golang-builder:<latest>` image | The version strings in the `for GO_VERSION in …` loop (the current series comes via `FROM` and does not appear in the loop) |
-| `docker/ubuntu-*-golang/*/Dockerfile`, `docker/ubuntu-vsc-*-golang/*/Dockerfile` | Downloads `https://golang.org/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz` to `/opt/golang` | `ENV GO_VERSION=X.Y.Z` |
+| `docker/*-golang/*/Dockerfile` | Downloads `https://golang.org/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz` to `/opt/golang` | `ENV GO_VERSION=X.Y.Z` |
 
 For a single-series patch bump, grep for the old version:
 
@@ -1095,10 +1098,15 @@ their target version and do not need a separate edit.
 ### Node.js
 
 Node.js is pinned to a NodeSource major (e.g. `24.x`) via
-`ENV NODE_VERSION=` in `docker/ubuntu-*-nodejs*/Dockerfile` and
-`docker/ubuntu-vsc-nodejs*/Dockerfile`. Patch and minor releases
-flow in automatically on rebuild; only major-version moves require
-editing these files.
+`ENV NODE_VERSION=` in every image that installs from NodeSource —
+`ubuntu-nodejs-golang`, `ubuntu-vsc-nodejs`, `poky-nodejs-golang` and
+`ubuntu-cordova`. Patch and minor releases flow in automatically on
+rebuild; only major-version moves require editing these files, so list
+them rather than trusting the set above to stay current:
+
+```bash
+grep -rl 'ENV NODE_VERSION' docker/
+```
 
 ## Managing Python Dependencies
 
@@ -1205,7 +1213,7 @@ component: action description
 
 Examples:
 
-- `docker-micrologic-builder: add dos2unix`
+- `docker-ubuntu-builder: add python venv auto-setup`
 - `go: update Go 1.23 to 1.23.10`
 - `docker: add tool to multiple images`
 
