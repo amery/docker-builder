@@ -194,15 +194,25 @@ When adding tools with Python dependencies:
        && $TOOL_VENV/bin/pip install --no-cache-dir package==version
    ```
 
-2. **Pin compatible versions**:
+2. **Take compiled dependencies from apt, not pip.** A wheel is built for
+   the interpreters that existed when it was published, so on a newer
+   Ubuntu it either has no wheel or installs one the running Python
+   refuses to load — and pinning an older release gets the same wheel.
+   The distro builds its own, so let the venv inherit them:
+
+   ```dockerfile
+   RUN apt-get install -y --no-install-recommends python3-package \
+       && python3 -m venv --system-site-packages $TOOL_VENV
+   ```
+
+3. **Pin for API compatibility only**:
 
    ```dockerfile
    RUN $TOOL_VENV/bin/pip install --no-cache-dir \
-       "protobuf<5.0" \
        "dependency>=1.0,<2.0"
    ```
 
-3. **Update shebangs for scripts**:
+4. **Update shebangs for scripts**:
 
    ```dockerfile
    RUN sed -i "1s|^#!/usr/bin/env python3|#!$TOOL_VENV/bin/python3|" \

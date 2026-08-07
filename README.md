@@ -262,7 +262,8 @@ docker-builder/
 
 When building images that require Python packages (e.g., nanopb, sphinx):
 
-1. **Use virtual environments** for isolated dependencies:
+1. **Give the tool a virtual environment.** Never install into the system
+   interpreter:
 
    ```dockerfile
    ENV TOOL_VENV=/opt/tool-env
@@ -270,19 +271,38 @@ When building images that require Python packages (e.g., nanopb, sphinx):
        && $TOOL_VENV/bin/pip install --no-cache-dir package==version
    ```
 
-2. **Pin compatible versions** to avoid conflicts:
-   - Check tool documentation for version requirements
-   - Use version constraints like `"protobuf<5.0"`
-   - Test compatibility between system and pip packages
+2. **Decide whether that venv isolates or inherits.** Isolation suits
+   pure-Python dependencies. Where one carries a compiled extension —
+   protobuf, the clang bindings — install the distro's build with apt and
+   let the venv see it:
 
-3. **Update script shebangs** to use venv Python:
+   ```dockerfile
+   RUN apt-get install -y --no-install-recommends python3-package \
+       && python3 -m venv --system-site-packages $TOOL_VENV
+   ```
+
+   A wheel is built for the interpreters that existed when it was
+   published, so on a newer Ubuntu it either has no wheel at all or
+   installs one the running Python refuses to load. Pinning an older
+   release does not help — it is the same wheel. The distro builds its
+   Python packages against its own interpreter, so they always match.
+
+3. **Ask the interpreter for its paths** instead of writing them out. A
+   `python3.12` inside a path is a version pin nothing declares:
+
+   ```dockerfile
+   RUN site_packages="$($TOOL_VENV/bin/python3 -c \
+           'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
+   ```
+
+4. **Update script shebangs** to use venv Python:
 
    ```dockerfile
    RUN sed -i "1s|^#!/usr/bin/env python3|#!$TOOL_VENV/bin/python3|" \
        /usr/bin/script
    ```
 
-4. **Add venv to PATH** for runtime access:
+5. **Add venv to PATH** for runtime access:
 
    ```dockerfile
    RUN echo "export PATH=\"$TOOL_VENV/bin:\$PATH\"" >> /etc/profile.d/tool.sh
@@ -291,11 +311,18 @@ When building images that require Python packages (e.g., nanopb, sphinx):
 ### Common Build Issues
 
 - **Version Conflicts**: System packages (apt) may conflict with pip
-  packages. Use virtual environments to isolate dependencies.
+  packages. Give each tool a venv, and let it inherit the system ones only
+  where the distro's build is the one wanted.
 - **Missing Modules**: If you see "ModuleNotFoundError", ensure the Python
   path includes the installation directory.
 - **API Changes**: Pin versions when tools break due to API changes
-  (e.g., protobuf's RegisterExtension removal).
+  (e.g., protobuf's RegisterExtension removal). Pin for API compatibility,
+  never to make a package work on the running interpreter — that is what
+  the distro build is for.
+- **Unloadable Library**: A binding that dlopens a bare soname, as the
+  `clang` bindings do with `libclang.so`, needs the distro's own binding
+  package. Ubuntu ships only the versioned name, so the PyPI release
+  imports and then fails at the first use.
 
 ## Best Practices
 

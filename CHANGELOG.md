@@ -40,6 +40,25 @@ All notable changes to docker-builder will be documented in this file.
 
 ### Fixed
 
+- `docker-micrologic-builder`: Take protobuf and the clang bindings from
+  apt rather than pip. The `clang` release on PyPI dlopens a bare
+  `libclang.so`, a name no Ubuntu package provides (only `libclang-NN.so`),
+  so it imported cleanly and then raised `LibclangError` at the first
+  header parsed — a failure that surfaces during a documentation build
+  rather than at image build time. `python3-clang` asks for the versioned
+  name and matches the libclang built beside it. The `libclang-cpp14` line
+  goes with it: it pulled LLVM 14's C++ library in beside the 18 that
+  `libclang-dev` already brings, and neither is the library the binding
+  loads. The nanopb venv gains `--system-site-packages` and drops its
+  `protobuf<5.0` and `grpcio-tools<1.65` pins — the layer above installs
+  `python3-protobuf` and `python3-grpc-tools`, and the venv was shadowing
+  both — and its install directory is now asked of the interpreter instead
+  of spelled out as `python3.12`, which pinned the base release without
+  declaring it. README, CONTRIBUTING and AGENTS all carried the
+  pinned-and-isolated recipe as the house pattern; they now separate a
+  dependency that installs anywhere from one whose compiled extension has
+  to match the interpreter.
+
 - `docker-poky-builder:18.04`: Drop the inherited `10-python.sh` plugin so
   `python` stays python2. The plugin prepends a venv whose `bin/python` is
   python3 — on the Ubuntu bases, which ship no unversioned `python` at all,

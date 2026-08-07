@@ -1120,10 +1120,23 @@ version conflicts:
 2. **API changes**: Tools may break when dependencies update (e.g.,
    protobuf removing RegisterExtension)
 3. **Path issues**: Python modules installed in unexpected locations
+4. **The interpreter moves with the release**: each Ubuntu carries its own
+   Python — 3.12 on 24.04, 3.14 on 26.04 — so a path or a wheel that suited
+   one base does not survive the next
 
 ### Solution: Virtual Environments
 
-Always use Python virtual environments for tool-specific dependencies:
+Give each tool a venv of its own; never install into the system
+interpreter. What that venv is allowed to see is the second decision:
+
+- **Isolated** (`python3 -m venv`) for pure-Python dependencies, which
+  install anywhere.
+- **Inheriting** (`python3 -m venv --system-site-packages`) where a
+  dependency carries a compiled extension. A wheel is built for the
+  interpreters that existed when it was published, so on a newer base it
+  either has no wheel at all or installs one the running Python refuses to
+  load — and pinning an older release gets the same wheel. apt's build
+  always matches the interpreter beside it.
 
 ```dockerfile
 # Define environment variables for paths
@@ -1144,26 +1157,58 @@ RUN sed -i "1s|^#!/usr/bin/env python3|#!$TOOL_VENV/bin/python3|" \
 RUN echo "export PATH=\"$TOOL_VENV/bin:\$PATH\"" >> /etc/profile.d/tool.sh
 ```
 
+Ask the interpreter where things go rather than writing the path out. A
+`python3.12` inside a Dockerfile is a version pin nothing declares:
+
+```dockerfile
+RUN site_packages="$($TOOL_VENV/bin/python3 -c \
+        'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
+```
+
 ### Real-World Example: nanopb
 
-The nanopb tool requires specific protobuf versions:
+nanopb needs protobuf below 5, and that is exactly where pinning stops
+working: protobuf 5 and later break its extension handling, while the last
+4.x on PyPI loads a upb extension a new interpreter rejects. Both pins are
+dead ends, so protobuf and protoc come from apt and the venv holds nanopb
+alone:
 
 ```dockerfile
 ENV NANOPB_VERSION=0.4.9.1
 ENV NANOPB_VENV=/opt/nanopb-env
-ENV NANOPB_SITE_PACKAGES=$NANOPB_VENV/lib/python3.12/site-packages
 
-RUN python3 -m venv $NANOPB_VENV \
-    && $NANOPB_VENV/bin/pip install --no-cache-dir \
-        "protobuf<5.0" \
-        "grpcio-tools<1.65" \
+RUN apt-get install -y --no-install-recommends \
+        protobuf-compiler \
+        python3-protobuf \
+        python3-grpc-tools
+
+RUN python3 -m venv --system-site-packages $NANOPB_VENV \
+    && site_packages="$($NANOPB_VENV/bin/python3 -c \
+        'import sysconfig; print(sysconfig.get_paths()["purelib"])')" \
     && git clone -b $NANOPB_VERSION --depth 1 \
         https://github.com/nanopb/nanopb /usr/src/nanopb \
     && cd /usr/src/nanopb \
     && cmake -DCMAKE_INSTALL_PREFIX=/usr \
-        -Dnanopb_PYTHON_INSTDIR_OVERRIDE=$NANOPB_SITE_PACKAGES \
+        -DPython_EXECUTABLE=$NANOPB_VENV/bin/python3 \
+        -Dnanopb_PYTHON_INSTDIR_OVERRIDE="$site_packages" \
         . \
     && make && make install
+```
+
+### Second Example: the clang bindings
+
+A binding that dlopens a bare soname needs the distro's package for a
+different reason. `clang.cindex` loads `libclang.so`, and Ubuntu ships only
+`libclang-NN.so`, so the PyPI `clang` release imports cleanly and then
+raises `LibclangError` at the first header parsed — a failure that surfaces
+during a documentation build rather than at image build time.
+`python3-clang` asks for the versioned name and matches the libclang built
+beside it:
+
+```dockerfile
+RUN apt-get install -y --no-install-recommends python3-clang \
+    && python3 -m venv --system-site-packages /opt/sphinx-env \
+    && /opt/sphinx-env/bin/pip install --no-cache-dir "hawkmoth~=0.16.0"
 ```
 
 ## Code Quality Standards
@@ -1245,23 +1290,37 @@ docker-builder-run -V
 docker inspect <image> | jq '.[] | .Config.Labels'
 
 # Test tool in container
-docker run --rm quay.io/amery/docker-<name>-builder tool --version
+DOCKER_ID=quay.io/amery/docker-<name>-builder docker-builder-run tool --version
 ```
 
 ### Python Dependency Issues
 
+Probe through the entrypoint, not around it: the venv PATH entries come
+from `/etc/profile.d/*.sh`, which the entrypoint writes, so a bare
+`docker run <image> <cmd>` resolves a different `python3` than real use
+does — when it runs at all, which it does not, since the entrypoint needs
+the variables `docker-builder-run` supplies. From a workspace, `x` also
+satisfies whatever that workspace's `run-hook.sh` sets up, such as poky's
+`OEROOT`:
+
 ```bash
 # Check Python path in container
-docker run --rm <image> python3 -c "import sys; print(sys.path)"
+x python3 -c "import sys; print(sys.path)"
 
 # Test module import
-docker run --rm <image> python3 -c "import module_name"
+x python3 -c "import module_name"
+
+# Check which build of a compiled package the venv resolves
+x python3 -c "import google.protobuf as p; print(p.__version__, p.__file__)"
+
+# Check whether a binding can load its shared library
+x python3 -c "import clang.cindex as c; print(c.Config().lib)"
 
 # Check pip packages
-docker run --rm <image> pip list
+x pip list
 
-# Verify venv activation
-docker run --rm <image> bash -c "source /etc/profile.d/*.sh && which python3"
+# Outside a workspace, name the image instead
+DOCKER_ID=<image> docker-builder-run python3 -c "import sys; print(sys.path)"
 ```
 
 ## Best Practices
@@ -1271,8 +1330,10 @@ docker run --rm <image> bash -c "source /etc/profile.d/*.sh && which python3"
 3. **Test Locally**: Build and test before pushing
 4. **Document Changes**: Update AGENTS.md, README.md, and CONTRIBUTING.md
 5. **Coordinate Updates**: Notify dependent projects of breaking changes
-6. **Isolate Dependencies**: Use virtual environments for Python tools
-7. **Pin Versions**: Specify exact or compatible version ranges
+6. **Isolate Dependencies**: Give Python tools a venv, inheriting the
+   system packages only for compiled ones
+7. **Pin Versions**: Specify exact or compatible version ranges, for API
+   compatibility rather than to fit the interpreter
 8. **Clean Builds**: Remove build artifacts in the same layer
 
 ## Security Considerations
@@ -1283,7 +1344,8 @@ docker run --rm <image> bash -c "source /etc/profile.d/*.sh && which python3"
 - Review generated images with `docker history`
 - Scan images for vulnerabilities before pushing
 - Avoid running pip with `--break-system-packages`
-- Use virtual environments instead of system-wide Python packages
+- Install Python packages into a virtual environment, never into the
+  system interpreter
 
 ## Troubleshooting Guide
 
@@ -1309,6 +1371,18 @@ docker run --rm <image> bash -c "source /etc/profile.d/*.sh && which python3"
 - Incompatible version combinations
 
 **Solution**: Pin compatible versions in requirements
+
+### Extension Rejected by the Interpreter
+
+**Symptom**: `TypeError: Metaclasses with custom tp_new are not supported`,
+or a wheel that has no build for the running Python
+
+**Cause**: a pip package whose compiled extension predates the base image's
+interpreter. Pinning further back does not help — the older release is
+built for older interpreters still.
+
+**Solution**: install the distro's build with apt and let the venv inherit
+it (see Managing Python Dependencies)
 
 ### Build Failures
 

@@ -19,24 +19,31 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install --no-install-re
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 
-# documentation
+# documentation. The venv is a layer of its own so re-pinning it does not
+# re-run apt.
 #
 RUN apt-get update && apt-get dist-upgrade -y \
 	&& apt-get install -y \
 		python3-full \
 		python3-dev \
+		python3-clang \
 		libclang-dev \
-		libclang-cpp14 \
 		universal-ctags \
 	&& apt-get clean \
-	&& rm -rf /var/lib/apt/lists/* \
-	&& python3 -m venv /opt/sphinx-env \
+	&& rm -rf /var/lib/apt/lists/*
+
+# The clang binding hawkmoth imports comes from apt and the venv inherits
+# it. The pip one dlopens a bare libclang.so that no package puts on the
+# loader path, so it raises LibclangError at the first header parsed; the
+# distro's asks for the versioned soname and matches the libclang built
+# beside it.
+#
+RUN python3 -m venv --system-site-packages /opt/sphinx-env \
 	&& /opt/sphinx-env/bin/pip install --no-cache-dir --upgrade \
 		pip \
 		setuptools \
 		wheel \
 	&& /opt/sphinx-env/bin/pip install --no-cache-dir \
-		"clang~=18.0" \
 		"doc8>=1.1.0" \
 		"exhale~=0.3.6" \
 		"hawkmoth~=0.16.0" \
@@ -91,13 +98,20 @@ RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recomme
 	python3-grpc-tools \
 	&& apt-get clean
 
-# nanopb
+# nanopb. The install directory is asked of the interpreter rather than
+# spelled out: the venv follows the distro's python, 3.12 on 24.04.
+#
+# protobuf and protoc come from apt above rather than pip, so the venv
+# holds nanopb alone and inherits them. A pip protobuf 5 or later breaks
+# 0.4.9.1's extension handling, and nanopb rebuilds its own nanopb_pb2
+# against whatever protoc it finds.
 #
 ENV NANOPB_VERSION=0.4.9.1
 ENV NANOPB_VENV=/opt/nanopb-env
-ENV NANOPB_SITE_PACKAGES=$NANOPB_VENV/lib/python3.12/site-packages
-RUN python3 -m venv $NANOPB_VENV \
-	&& $NANOPB_VENV/bin/pip install --no-cache-dir "protobuf<5.0" "grpcio-tools<1.65" \
+
+RUN python3 -m venv --system-site-packages $NANOPB_VENV \
+	&& site_packages="$($NANOPB_VENV/bin/python3 -c \
+		'import sysconfig; print(sysconfig.get_paths()["purelib"])')" \
 	&& git clone -b $NANOPB_VERSION --depth 1 \
 		https://github.com/nanopb/nanopb /usr/src/nanopb \
 	&& cd /usr/src/nanopb \
@@ -105,7 +119,7 @@ RUN python3 -m venv $NANOPB_VENV \
 	&& cd build \
 	&& cmake -DCMAKE_INSTALL_PREFIX=/usr \
 		-DPython_EXECUTABLE=$NANOPB_VENV/bin/python3 \
-		-Dnanopb_PYTHON_INSTDIR_OVERRIDE=$NANOPB_SITE_PACKAGES \
+		-Dnanopb_PYTHON_INSTDIR_OVERRIDE="$site_packages" \
 		../ \
 	&& make \
 	&& make install \
