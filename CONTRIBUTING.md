@@ -34,7 +34,7 @@ Extended explanation if needed.
 
 ### Examples
 
-- `docker-micrologic-builder: add dos2unix`
+- `docker-ubuntu-builder: add python venv auto-setup`
 - `go: update Go 1.23 to 1.23.10`
 - `docker: add xxd to ubuntu and ubuntu-vsc-base 24.04 images`
 
@@ -88,17 +88,25 @@ Common action verbs:
    ENTRYPOINT ["/entrypoint.sh"]
    ```
 
-   **Note:** When creating a base image that uses `COPY entrypoint.sh`,
-   the file will be automatically generated from canonical sources
-   (`docker/entrypoint/ubuntu.sh` or `docker/entrypoint/alpine.sh`) based
-   on the FROM line. Run `make files` to generate it.
+   **Note:** Anything the Dockerfile copies from a golden source is
+   generated for you: `entrypoint.sh` from `docker/entrypoint/ubuntu.sh` or
+   `docker/entrypoint/alpine.sh` according to the FROM line, and each
+   `/etc/entrypoint.d` plugin with a golden copy under
+   `docker/entrypoint/plugins/`. Run `make files` to discover the image,
+   then `make entrypoint` to write those copies — the build writes them
+   too, listing them as prerequisites.
 
-3. Test your image locally:
+3. Test it locally, before publishing anything:
 
    ```bash
-   make quay.io/amery/docker-<name>-builder
-   docker run --rm -it quay.io/amery/docker-<name>-builder:<version> bash
+   make BUILDER= quay.io/amery/docker-<name>-builder-<version>
+   DOCKER_ID="$(cat .image-docker-<name>-builder-<version>.local)" \
+       docker-builder-run bash
    ```
+
+   A local build loads the image untagged, so its ID in the `.local`
+   sentinel is the handle; a bare `docker run` fails, the entrypoint
+   needing the environment `docker-builder-run` sets up.
 
 ## Code Style Guidelines
 
@@ -205,14 +213,18 @@ When adding tools with Python dependencies:
 
 ### Build Prerequisites
 
-All builds produce multi-architecture manifests (amd64 + arm64)
-and push to registry. Before
-building:
+The normal build produces a multi-architecture manifest (amd64 + arm64)
+and pushes it to the registry. Before building:
 
 1. **Registry login**: `docker login quay.io`
 2. **Multi-arch builder**: A `multiarch-native` buildx builder with
    native nodes (see
    [AGENTS.md](./AGENTS.md#using-ssh-remote-builders-for-native-builds))
+
+A local build (`make BUILDER= <target>`) needs neither: it builds for the
+host architecture alone and loads the image into the local daemon
+untagged, pushing nothing. Develop against that, and use the normal build
+once the change is ready — see [AGENTS.md](./AGENTS.md#local-builds).
 
 ### Build Workflows
 
