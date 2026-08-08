@@ -56,6 +56,28 @@ All notable changes to docker-builder will be documented in this file.
 
 ### Fixed
 
+- `ubuntu` (16.04, 18.04): Carry the image's locale into the login
+  profile, through a new `05-locale.sh` plugin. `su -` clears the
+  environment, so the `ENV LANG` these images set never reaches a login
+  shell on its own; every login that goes through `su` gets it back from
+  PAM, which reads `/etc/default/locale` via `pam_env`. An interactive
+  login on these two does not — shadow's `su` predates `--pty`, so the
+  entrypoint drops privileges with `chroot` instead, behind an `env -i`
+  besides — and nothing restored the locale there: the shell came up with
+  an empty `LANG` and an ASCII filesystem encoding, which BitBake refuses
+  to run under ("Please use a locale setting which supports utf-8"), so an
+  interactive build in `poky:18.04` needed an `LC_ALL=C.UTF-8` prefix to
+  work at all. Scripted use escaped it, the no-TTY path being a plain `su
+  -`, which is why it surfaced only with a terminal attached. The plugin
+  emits `/etc/default/locale` into the profile every login sources
+  whichever branch it arrived by — that file only, never `pam_env`'s other
+  source `/etc/environment`, which carries the `PATH` `gen_profile` owns.
+  The values are baked, the locale being fixed at image build time, and
+  go out with `:=`, so a value forwarded from the host still wins and the
+  `su` paths, where PAM has set these already, are left untouched. Only
+  these two releases carry the plugin: 20.04 and later have a util-linux
+  `su`, whose every login is a real PAM session.
+
 - `docker-micrologic-builder`: Take protobuf and the clang bindings from
   apt rather than pip. The `clang` release on PyPI dlopens a bare
   `libclang.so`, a name no Ubuntu package provides (only `libclang-NN.so`),

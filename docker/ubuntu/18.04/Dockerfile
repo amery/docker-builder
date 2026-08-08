@@ -79,6 +79,9 @@ RUN mkdir -p /etc/skel/.gnupg \
 	&& chmod 0600 /etc/skel/.gnupg/gpg.conf
 
 COPY 05-gnupg.sh /etc/entrypoint.d/
+# shadow's su has no --pty, so an interactive login drops privileges
+# with chroot and misses the PAM session that would restore the locale
+COPY 05-locale.sh /etc/entrypoint.d/
 COPY 05-sudo.sh /etc/entrypoint.d/
 COPY 10-python.sh /etc/entrypoint.d/
 
