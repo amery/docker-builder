@@ -56,6 +56,21 @@ DOCKER_ID=quay.io/amery/docker-ubuntu-builder:24.04 docker-builder-run bash
 docker run --rm IMAGE --run-hook > docker/run-hook.sh
 ```
 
+Options come before the command:
+
+| Option      | Purpose
+|-------------|----------------------------------------------------------
+| `-l`        | Print the resolved image's labels and exit
+| `-p <port>` | Expose a port; repeatable, same syntax as `DOCKER_EXPOSE`
+| `-r`        | Sudo mode — skip the drop to the workspace user
+| `-x`        | Trace the script's own execution (`set -x`)
+| `--pull`    | Refresh the image first, as `DOCKER_BUILD_FORCE` does
+| `-V`        | Print the version and exit
+| `--`        | End of options; the command follows
+
+The first unrecognised argument ends option parsing too, so
+`docker-builder-run make test` needs no `--`.
+
 `docker-builder-run` automatically updates embedded `run-hook.sh`
 templates when SHA256 mismatches are detected.
 
@@ -228,12 +243,12 @@ and troubleshooting, see [Build System Mechanics][build-system-mechanics].
 | Variable             | Purpose
 |----------------------|-----------------------------------------------------------
 | `DOCKER_DIR`         | Directory containing Dockerfile to build
-| `DOCKER_ID`          | Pre-built image ID to use instead of building
+| `DOCKER_ID`          | Image reference — a tag or an image ID — to run instead of building
 | `DOCKER_BUILD_FORCE` | Force rebuild/repull of the image
 | `DOCKER_RUN_ENV`     | Environment variables to pass through to container
 | `DOCKER_RUN_VOLUMES` | Additional directories or files to mount in container
 | `DOCKER_RUN_WS`      | Override automatic workspace detection
-| `DOCKER_BUILD_OPT`   | Extra `docker build` args (default: `--rm`)
+| `DOCKER_BUILD_OPT`   | Extra build args (default: none with buildx, `--rm` without it)
 | `DOCKER_EXTRA_OPTS`  | Extra options to pass to `docker run`
 | `DOCKER_EXPOSE`      | Ports to expose (e.g., "8080" or "8080:8080/tcp")
 | `USER_AMBIENT_CAPS`  | Capabilities to raise into the workspace user's ambient set, so a `--cap-add` survives the drop from root (default: auto-detect; see [Capability Passthrough][capability-passthrough])

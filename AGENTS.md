@@ -739,12 +739,14 @@ docker run --rm IMAGE --run-hook > docker/run-hook.sh
 ### Environment Variables
 
 - `DOCKER_DIR`: Directory containing Dockerfile to build
-- `DOCKER_ID`: Pre-built image ID to use instead
+- `DOCKER_ID`: Image reference — a tag or an image ID — to run instead
+  of building
 - `DOCKER_BUILD_FORCE`: Force rebuild/repull
 - `DOCKER_RUN_ENV`: Variables to pass through
 - `DOCKER_RUN_VOLUMES`: Extra directories or files to mount
 - `DOCKER_RUN_WS`: Override workspace detection
-- `DOCKER_BUILD_OPT`: Extra `docker build` args (default: `--rm`)
+- `DOCKER_BUILD_OPT`: Extra build args (default: none with buildx,
+  `--rm` without it)
 - `DOCKER_EXTRA_OPTS`: Raw Docker flags (capabilities, devices,
   security options) — typically set in `run-hook.sh`, not `run.sh`
 - `DOCKER_EXPOSE`: Ports to expose
@@ -1283,7 +1285,7 @@ make FORCE=1 quay.io/amery/docker-<name>-builder
 # Test docker-builder-run directly
 DOCKER_ID=ubuntu:24.04 docker-builder-run bash
 
-# Check detected environment
+# Print the docker-builder-run version
 docker-builder-run -V
 
 # Inspect image labels

@@ -179,6 +179,27 @@ All notable changes to docker-builder will be documented in this file.
   sorted so each is in place before the entries that land in it, and
   repairs one an earlier run left wrong instead of skipping it.
 
+### Documentation
+
+- `README.md`: Document `docker-builder-run`'s options. `-l`, `-p`, `-r`,
+  `-x`, `--pull`, `-V` and `--` were readable only from the source. The
+  new table names each, and says that the first unrecognised argument
+  ends option parsing too, so an ordinary command needs no `--`.
+
+- `README.md`, `AGENTS.md`: Correct `DOCKER_BUILD_OPT`'s default, given
+  as `--rm` in both. That holds only where the buildx CLI plugin is
+  absent and the fallback `docker build` runs — a real case on
+  distribution packaging, which ships buildx separately, but not the
+  usual one. The buildx path defaults it to empty.
+
+- `README.md`, `AGENTS.md`: Describe `DOCKER_ID` as the image reference
+  it is, a tag or an image ID, rather than a "pre-built image ID". Every
+  example in both documents already passes a tag.
+
+- `AGENTS.md`: `docker-builder-run -V` prints the version. It sat among
+  the runtime-debugging examples labelled as checking the detected
+  environment, which it has never done.
+
 ## [1.25.0] - 2026-07-31
 
 ### Added
