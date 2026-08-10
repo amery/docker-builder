@@ -5,6 +5,8 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+## [1.26.0] - 2026-08-10
+
 ### Added
 
 - `entrypoint`: Grant the workspace user passwordless `sudo` through a new
