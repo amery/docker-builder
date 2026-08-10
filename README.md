@@ -71,6 +71,11 @@ Options come before the command:
 The first unrecognised argument ends option parsing too, so
 `docker-builder-run make test` needs no `--`.
 
+The image is resolved before anything else runs: one already present is
+used as it stands, a missing one is pulled by name, and `--pull`
+refreshes it. In `DOCKER_DIR` mode that applies to the `FROM` bases the
+Dockerfile names rather than to the image being built.
+
 `docker-builder-run` automatically updates embedded `run-hook.sh`
 templates when SHA256 mismatches are detected.
 

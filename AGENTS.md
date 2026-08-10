@@ -402,6 +402,11 @@ environment that `docker-builder-run` sets up):
 DOCKER_ID="$(cat .image-docker-ubuntu-builder-24.04.local)" docker-builder-run bash
 ```
 
+That ID needs no fetching: the build has just loaded it, so
+[image resolution](#image-resolution) finds it present and pulls
+nothing — which is as well, since an untagged image names no registry
+reference to pull.
+
 Because a local build leaves no persistent tag, the image is dangling
 and `docker image prune` reclaims it; dev builds stay ephemeral by
 construction. Alias-only targets (e.g. `latest`) skip their retag in
@@ -710,6 +715,31 @@ execution:
 4. **Mode Detection**: Configures for Go, Node.js, or X11 as needed
 5. **User Identity**: Preserves UID/GID in container
 6. **Template Updates**: Automatically updates `run-hook.sh` from images
+7. **Image Resolution**: Builds from `DOCKER_DIR`, or fetches `DOCKER_ID`
+   when it is not already here
+
+### Image Resolution
+
+`docker-builder-run` is a consumer: it runs published images rather than
+producing them. `builder_build` settles which image that is before any
+label is read.
+
+- **`DOCKER_ID` set**: `may_pull` fetches the reference when it is not
+  present locally, and refreshes it when `--pull` or
+  `DOCKER_BUILD_FORCE` asks. The reference stays the one the caller
+  named — a plain pull, with no local retagging and no digest pinned on
+  our side, so a tag keeps tracking whatever the registry publishes.
+- **`DOCKER_DIR` mode**: the same treatment goes to each `FROM` base the
+  Dockerfile names, pulled by name so the local `repo:tag` moves onto
+  the fetched image. A base that buildx fetches for itself is recorded
+  under its digest alone, leaving the tag on the old image, and the next
+  build resolves that tag back to the stale base.
+
+Resolution comes first deliberately. `docker__labels` ends in a pipe, so
+`docker inspect` failing on an image that is not here yields an empty
+label set at rc 0 rather than an error — and the run would then lose its
+`run-env` pass-through, its `run-bind` mounts and mode detection, with
+`docker run` fetching the image at the very end as a side effect.
 
 ### Automatic `run-hook.sh` Updates
 

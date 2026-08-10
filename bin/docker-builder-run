@@ -137,6 +137,28 @@ builder_from_bases() {
 }
 
 #
+# must_pull <image>
+# True when <image> has to be fetched: it is not here, or a refresh was
+# asked for with DOCKER_BUILD_FORCE.
+#
+must_pull() {
+	[ -n "${DOCKER_BUILD_FORCE:-}" ] ||
+		! docker image inspect "$1" > /dev/null 2>&1
+}
+
+#
+# may_pull <image>
+# Pull <image> by name when must_pull says so. A consumer runs against
+# published images, so the reference stays the one the caller named — a
+# plain pull, no local retagging and no digest pinning of our own.
+#
+may_pull() {
+	if must_pull "$1"; then
+		docker pull "$1"
+	fi
+}
+
+#
 # docker_build <dir>
 # Builds image from Dockerfile in <dir>, sets DOCKER_ID on success.
 # Uses buildx when available, falls back to legacy docker build.
@@ -146,17 +168,15 @@ docker_build() {
 	local iidfile="$(mktemp)"
 	local rc=0 base=
 
-	if [ -n "${DOCKER_BUILD_FORCE:-}" ]; then
-		# Refresh the base image(s) by name before rebuilding. `buildx
-		# build --pull` fetches a newer base but records it under its
-		# digest only, leaving the local repo:tag on the old image — so
-		# the next non-forced build, which resolves that tag, keeps using
-		# the stale base. An explicit `docker pull` moves the named tag
-		# onto the new image; --no-cache below then rebuilds from it.
-		for base in $(builder_from_bases "$dir/Dockerfile"); do
-			docker pull "$base"
-		done
-	fi
+	# Resolve the base image(s) by name before building. `buildx build`
+	# fetches a base it lacks, and `--pull` a newer one, but records it
+	# under its digest only, leaving the local repo:tag on the old image
+	# — so the next non-forced build, which resolves that tag, keeps
+	# using the stale base. An explicit pull moves the named tag onto the
+	# image; --no-cache below then rebuilds from it.
+	for base in $(builder_from_bases "$dir/Dockerfile"); do
+		may_pull "$base"
+	done
 
 	set -- --iidfile "$iidfile"
 
@@ -509,7 +529,8 @@ docker_version_labels() {
 
 #
 # builder_build
-# Resolve the image to run: build from DOCKER_DIR, or pull when forced.
+# Resolve the image to run: build from DOCKER_DIR, or pull DOCKER_ID by
+# name when it is missing or a refresh was asked for.
 # Then refresh the workspace run-hook.sh when the image's embedded copy
 # differs, and read the label sets the exec phase consumes. Sets the
 # DOCKER_ID, DOCKER_DIR, DOCKER_ENV_LABELS and DOCKER_VERSION_LABELS
@@ -523,8 +544,12 @@ builder_build() {
 		if [ -d "$DOCKER_DIR" ]; then
 			docker_build "$DOCKER_DIR"
 		fi
-	elif [ -n "${DOCKER_BUILD_FORCE:-}" ]; then
-		docker pull "$DOCKER_ID"
+	else
+		# Before the label reads below, which inspect the image:
+		# docker__labels ends in a pipe, so a missing one yields an empty
+		# label set at rc 0 instead of an error, and the run loses its
+		# run-env, run-bind and mode detection.
+		may_pull "$DOCKER_ID"
 	fi
 
 	# Auto-update run-hook.sh from image if SHA256 mismatches

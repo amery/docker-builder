@@ -178,6 +178,20 @@ All notable changes to docker-builder will be documented in this file.
   levels of a deeper tree root-owned. The walk now covers directories too,
   sorted so each is in place before the entries that land in it, and
   repairs one an earlier run left wrong instead of skipping it.
+- `docker-builder-run`: Fetch a missing image by name, rather than
+  pulling only when forced. A run against a published image the host had
+  never pulled reached the label reads with nothing to inspect, and
+  `docker__labels` ends in a pipe, so the failure came back as an empty
+  label set at rc 0 instead of an error: the container started without
+  its `run-env` pass-through, its `run-bind` mounts or golang/nodejs/x11
+  mode detection, `docker run` having fetched the image at the very end
+  as a side effect. A new `may_pull` now resolves the image up front —
+  pulling the reference by name when it is absent, or when `--pull` or
+  `DOCKER_BUILD_FORCE` asks for a refresh — and covers the Dockerfile's
+  `FROM` bases in `DOCKER_DIR` mode as well as `DOCKER_ID` itself, which
+  generalises the forced-only base refresh from 1.23.0. The reference
+  stays the one the caller named: a plain pull, no local retagging and
+  no digest pinned on our side.
 
 ### Documentation
 
