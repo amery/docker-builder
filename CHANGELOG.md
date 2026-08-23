@@ -5,6 +5,20 @@ All notable changes to docker-builder will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- `docker-golang-builder:1.27`: New image, Go 1.27.0 on `alpine3.24` as
+  the rest of the family. `latest` stays on 1.26 for now.
+
+### Changed
+
+- `docker-golang-builder`: Update Go 1.25 to 1.25.14 and Go 1.26 to
+  1.26.7
+- `docker-golang-builder:multi`: Rebase onto 1.27 and add 1.26 to the
+  source-built set, so the image goes on carrying every series from 1.18
+  up to its own base
+- `docker`: Update ubuntu-based golang images to Go 1.26.7
+
 ## [1.26.0] - 2026-08-10
 
 ### Added
