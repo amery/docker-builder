@@ -1,5 +1,6 @@
 .docker-run-cache
 .alias-*
+.link-*
 .tag-dirs
 .tags-*
 .image-*

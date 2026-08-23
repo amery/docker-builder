@@ -38,8 +38,6 @@ get_platform() {
 	echo "$result"
 }
 
-#
-#
 get_images() {
 	cut -d' ' -f1 < "$1"
 }
@@ -91,10 +89,10 @@ gen_image_files() {
 		}
 	' "$df"
 
-	# Include .in templates
+	# Files generated from .in templates, named without the suffix: the
+	# rule wants the generated file, not the template it comes from.
 	find "$dir" ! -type d -a -name '*.in' | sed -e 's|\.in$||'
 
-	# Include Dockerfile itself
 	echo "$dir/Dockerfile"
 
 	) | sed -e "s|^$PWD/||" -e "s|^./||" | sort -uV
@@ -137,6 +135,17 @@ aliases() {
 	for x; do
 		x="$(echo "$x" | tr ':/' '-_')"
 		echo "\$(B)/.alias-$x\$(SENTINEL_SUFFIX)"
+	done
+}
+
+# Sentinel for an alias-only tag, holding the version its symlink resolves
+# to. It records the state of the tree rather than an artefact either mode
+# produced, so it takes no suffix and the two modes share it.
+link() {
+	local x=
+	for x; do
+		x="$(echo "$x" | tr ':/' '-_')"
+		echo "\$(B)/.link-$x"
 	done
 }
 
@@ -208,9 +217,10 @@ while read tag dir; do
 	d1=$(puller $tag)
 	s1=$(sentinel $tag)
 	a1=$(aliases $tag)
+	l1=$(link $tag)
 
 	if [ -z "$dir" ]; then
-		files="$a0"
+		files="$a0 $l1"
 	else
 		from=
 		# Base sentinel is intentionally absent here: it is a gated
@@ -288,6 +298,9 @@ else
 	# Alias-only tag: retag the registry manifest. Local builds are
 	# untagged and single-target, so there is no tag to copy and the
 	# alias resolves to a no-op.
+	#
+	# The link sentinel holds this tag's line from .tag-dirs, settled
+	# with a cmp so its mtime moves only when this link moves.
 	cat <<EOT
 ifeq (\$(WANTS_TAGS),1)
 	\$(DOCKER_TAG) -t \$(PREFIX)$tag \$(PREFIX)$from
@@ -296,6 +309,10 @@ endif
 
 $a1: $s1
 	touch \$@
+
+$l1: \$(TAG_DIRS)
+	grep '^$tag ' \$< > \$@~
+	if ! cmp -s \$@~ \$@; then mv \$@~ \$@; else rm \$@~; fi
 EOT
 fi
 

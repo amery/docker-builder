@@ -20,6 +20,20 @@ All notable changes to docker-builder will be documented in this file.
   up to its own base
 - `docker`: Update ubuntu-based golang images to Go 1.27.0
 
+### Fixed
+
+- Build system: Make a moved `latest` symlink re-fire its retag. The
+  version the link points at appears only in the generated rule's text,
+  so repointing it changed which alias sentinel the rule named but no
+  file's mtime — `make` reported `Nothing to be done`, exited 0, and the
+  registry went on serving the old version under `:latest`. Each
+  alias-only rule now depends on a `.link-*` sentinel holding its line
+  from `.tag-dirs`, which records the resolved target; the sentinel is
+  settled with a `cmp`, so its mtime moves only when that link moves and
+  a change elsewhere in the tree leaves the other families alone.
+  `make clean` removes the new sentinels along with the existing
+  markers.
+
 ## [1.26.0] - 2026-08-10
 
 ### Added

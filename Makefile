@@ -81,7 +81,7 @@ all: images
 files: $(RULES_MK) $(CONFIG_MK) $(IMAGES_MK) $(ENTRYPOINT_MK) $(TAG_DIRS)
 
 clean:
-	rm -f $(B)/.image-* $(B)/.alias-* $(RULES_MK) $(IMAGES_MK) $(ENTRYPOINT_MK) $(TAG_DIRS) *~
+	rm -f $(B)/.image-* $(B)/.alias-* $(B)/.link-* $(RULES_MK) $(IMAGES_MK) $(ENTRYPOINT_MK) $(TAG_DIRS) *~
 
 .PHONY: FORCE
 FORCE:

@@ -137,7 +137,8 @@ The build system employs two independent caching layers:
 
 #### 1. Make Layer (Marker Files)
 
-- **Files**: `.image-*` (build) and `.alias-*` (tag) markers
+- **Files**: `.image-*` (build) and `.alias-*` (tag) markers, plus a
+  `.link-*` sentinel per symlinked version recording where it points
 - **Purpose**: Track build and alias completion separately
 - **Behavior**: If marker exists and deps unchanged, skip (see
   [What Triggers a Rebuild](#what-triggers-a-rebuild))
@@ -216,6 +217,12 @@ make-layer rebuild logic:
    longer forces a global rebuild (that lands through tier 1, on the
    affected image), while a genuine recipe change still sweeps the whole
    tree.
+
+Alias-only markers — the `latest` symlinks — sit outside all three
+tiers, having no inputs of their own and no `BUILD_SYS` edge. They
+retag rather than build, and depend on the target version's alias
+sentinel and on their own `.link-*` sentinel (see
+[Symlink Handling](#symlink-handling)).
 
 Docker's layer cache then decides how much of each triggered build
 actually re-runs (see [Docker Layer](#2-docker-layer-build-cache)): an
@@ -568,13 +575,16 @@ make quay.io/amery/docker-ubuntu-builder-latest   # Tags 24.04 as :latest
 ```
 
 The `latest` target does not build anything — it depends on the
-real version's alias sentinel, then creates a registry-side tag:
+real version's alias sentinel and on its own `.link-*` sentinel, then
+creates a registry-side tag:
 
 <!-- markdownlint-disable MD010 -->
 
 ```makefile
 # Generated rule for symlink
-.image-docker-ubuntu-builder-latest: .alias-docker-ubuntu-builder-24.04
+.image-docker-ubuntu-builder-latest: \
+	.alias-docker-ubuntu-builder-24.04 \
+	.link-docker-ubuntu-builder-latest
 ifeq ($(WANTS_TAGS),1)
 	$(DOCKER_TAG) -t $(PREFIX)docker-ubuntu-builder:latest \
 	              $(PREFIX)docker-ubuntu-builder:24.04
@@ -583,12 +593,33 @@ endif
 
 .alias-docker-ubuntu-builder-latest: .image-docker-ubuntu-builder-latest
 	touch $@
+
+.link-docker-ubuntu-builder-latest: .tag-dirs
+	grep '^docker-ubuntu-builder:latest ' $< > $@~
+	if ! cmp -s $@~ $@; then mv $@~ $@; else rm $@~; fi
 ```
 
 In a [local build](#local-builds) (`WANTS_TAGS` empty) the retag is
 skipped and the rule collapses to `touch $@`.
 
 <!-- markdownlint-enable MD010 -->
+
+The `.link-*` sentinel is what makes a moved link visible. Which version
+`latest` points at appears only in the rule's text, so repointing it
+changes which alias sentinel the rule names but no file's mtime —
+leaving make to find the sentinel current, report nothing to do, and
+exit 0 while the registry goes on serving the old version. The sentinel
+holds the tag's line from `.tag-dirs`, which records the resolved target
+(`docker-ubuntu-builder:latest docker-ubuntu-builder:24.04`), so the
+move reaches the rule.
+
+Depending on `.tag-dirs` directly would do that much, but it is one file
+for the whole tree: adding or removing any image directory rewrites it,
+and every family's `latest` would be re-asserted. Extracting one line
+per tag and settling it with a `cmp` — the same dance `.tag-dirs` itself
+uses — confines the mtime move to the link that actually moved. The
+sentinels carry no `SENTINEL_SUFFIX`: they describe the tree, not
+anything either build mode produced, so both modes share them.
 
 ### Makefile Generation
 
