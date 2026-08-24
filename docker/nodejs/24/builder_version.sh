@@ -10,5 +10,7 @@ NODE_V1=$(echo "$NODE_VERSION" | cut -d. -f1)
 
 echo "$NODE_VERSION-alpine$OS_V2"
 echo "$NODE_V2-alpine$OS_V2"
+echo "$NODE_V1-alpine$OS_V2"
+echo "$NODE_VERSION"
 echo "$NODE_V2"
 echo "$NODE_V1"

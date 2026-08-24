@@ -145,7 +145,7 @@ command — no per-exec environment.
 ### Development Environments
 
 - **golang/{1.18-1.27}** - Go development environments
-- **nodejs/{lts,current}** - Node.js with pnpm
+- **nodejs/{24,26}** - Node.js with pnpm (lts→24, current→26)
 - **ubuntu-nodejs-golang/{22.04,24.04,26.04}** - Combined Go + Node.js
 
 ### VS Code DevContainers

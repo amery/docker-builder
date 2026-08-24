@@ -23,6 +23,14 @@ All notable changes to docker-builder will be documented in this file.
   1.24 onto the newer variant upstream publishes for their pinned Go
   patch (3.16 to 3.17, 3.18 to 3.19, 3.20 to 3.21, 3.22 to 3.23). The Go
   versions are unchanged; those series receive no further patches.
+- `docker-nodejs-builder`: Name the image directories after the Node
+  major, `24` and `26`, pinning each to a full `node:X.Y.Z-alpineN.M`
+  base, and carry `lts`, `current` and `latest` as symlinks onto them.
+  The three tags keep publishing as before, now as retags of the
+  version they resolve to, and `:24` and `:26` join them. Two alias
+  tags that were missing are added, the major qualified by the alpine
+  release and the exact version on its own, so `:24-alpine3.24` and
+  `:24.19.0` publish alongside the forms already there.
 
 ### Fixed
 

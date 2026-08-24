@@ -716,7 +716,8 @@ make BUILDER= <target>
 ### Development Stacks
 
 - **golang/{1.18-1.27}**: Go development environments
-- **nodejs/{lts,current}**: Node.js with pnpm support
+- **nodejs/{24,26}**: Node.js with pnpm support (lts→24, current→26,
+  latest→current)
 - **ubuntu-nodejs-golang/{22.04,24.04,26.04}**: Combined Node.js + Go
 
 ### Specialized Images
@@ -1189,11 +1190,18 @@ still do.
 
 ### Node.js
 
-Node.js is pinned to a NodeSource major (e.g. `24.x`) via
-`ENV NODE_VERSION=` in every image that installs from NodeSource —
-`ubuntu-nodejs-golang`, `ubuntu-vsc-nodejs`, `poky-nodejs-golang` and
-`ubuntu-cordova`. Patch and minor releases flow in automatically on
-rebuild; only major-version moves require editing these files, so list
+The `nodejs` images take Node from the upstream image, pinned in full as
+`node:X.Y.Z-alpineN.M` for the reason given above. Their directories are
+named after the major — `docker/nodejs/24`, `docker/nodejs/26` — with
+`lts` and `current` as symlinks, so the tag a consumer follows can move
+between majors without disturbing either build.
+
+Everywhere else Node comes from NodeSource, pinned to a major (e.g.
+`24.x`) via `ENV NODE_VERSION=` — `ubuntu-nodejs-golang`,
+`ubuntu-vsc-nodejs`, `poky-nodejs-golang` and `ubuntu-cordova`. Only
+major-version moves require editing those files; a patch or minor
+arrives with the next rebuild, which nothing here triggers on its own,
+so it is picked up when the image is rebuilt for some other reason. List
 them rather than trusting the set above to stay current:
 
 ```bash
