@@ -19,6 +19,10 @@ All notable changes to docker-builder will be documented in this file.
   source-built set, so the image goes on carrying every series from 1.18
   up to its own base
 - `docker`: Update ubuntu-based golang images to Go 1.27.0
+- `docker-golang-builder`: Move the alpine floor of 1.18, 1.20, 1.22 and
+  1.24 onto the newer variant upstream publishes for their pinned Go
+  patch (3.16 to 3.17, 3.18 to 3.19, 3.20 to 3.21, 3.22 to 3.23). The Go
+  versions are unchanged; those series receive no further patches.
 
 ### Fixed
 

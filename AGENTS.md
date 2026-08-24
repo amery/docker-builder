@@ -1145,7 +1145,7 @@ different mechanisms. Patch bumps must touch every relevant pin.
 
 | Location | Mechanism | What to change |
 | -------- | --------- | -------------- |
-| `docker/golang/<X.Y>/Dockerfile` | Upstream `golang:X.Y.Z-alpine` base image | `FROM` tag |
+| `docker/golang/<X.Y>/Dockerfile` | Upstream `golang:X.Y.Z-alpineN.M` base image | `FROM` tag: the Go patch, and the alpine floor when a newer variant appears |
 | `docker/golang/multi/Dockerfile` | Builds older Go versions from source, bootstrapped from the `FROM docker-golang-builder:<latest>` image | The version strings in the `for GO_VERSION in …` loop (the current series comes via `FROM` and does not appear in the loop) |
 | `docker/*-golang/*/Dockerfile` | Downloads `https://golang.org/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz` to `/opt/golang` | `ENV GO_VERSION=X.Y.Z` |
 
@@ -1157,6 +1157,35 @@ grep -RlE "1\.26\.[0-9]+" docker/
 
 Edit every match; symlinked `latest` directories share the file with
 their target version and do not need a separate edit.
+
+#### Why both halves of the tag are pinned
+
+The make layer notices a base image only when a file changes (see
+[What Triggers a Rebuild](#what-triggers-a-rebuild)), so a tag that
+moves on its own is doubly wrong here: it drifts on upstream's schedule,
+and it then waits for an unrelated rebuild to take effect. That rules
+out `X.Y-alpine`, and equally `X.Y.Z-alpine`, which is not the frozen
+pairing it looks like — it names the newest alpine variant carrying
+that Go patch, and moves as newer ones appear, so `1.26.4-alpine` and
+`1.25.11-alpine` both resolve to their `alpine3.24` build rather than
+the `alpine3.22` that was current when those patches shipped. Written
+out in full, every move is a diff and a rebuild.
+
+The price is that the alpine floor is ours to move. Upstream builds each
+Go patch against the two most recent Alpine releases and no further
+back, so a series pinned to an ageing variant quietly stops receiving
+patches once its variant is dropped — `1.25.11` was the last 1.25 patch
+built on `alpine3.22`. Nothing fails when that happens: the pinned tag
+goes on resolving and the updates simply stop arriving. List what a
+series still offers with:
+
+```bash
+curl -s 'https://hub.docker.com/v2/repositories/library/golang/tags?name=1.26.'
+```
+
+A series past its upstream end of life wants the same check. Its Go
+patch will never move again, but the alpine variants published under it
+still do.
 
 ### Node.js
 
@@ -1289,7 +1318,9 @@ RUN apt-get install -y --no-install-recommends python3-clang \
 
 ### Dockerfiles
 
-- Use specific base image tags (not `latest`)
+- Pin base image tags in full — the tool version and any distribution
+  suffix, never `latest`; see
+  [why both halves are pinned](#why-both-halves-of-the-tag-are-pinned)
 - Minimize layers by combining RUN commands
 - Clean up package manager caches
 - Add LABEL metadata for tracking
