@@ -300,7 +300,7 @@ else
 	# alias resolves to a no-op.
 	#
 	# The link sentinel holds this tag's line from .tag-dirs, settled
-	# with a cmp so its mtime moves only when this link moves.
+	# so its mtime moves only when this link moves.
 	cat <<EOT
 ifeq (\$(WANTS_TAGS),1)
 	\$(DOCKER_TAG) -t \$(PREFIX)$tag \$(PREFIX)$from
@@ -311,8 +311,7 @@ $a1: $s1
 	touch \$@
 
 $l1: \$(TAG_DIRS)
-	grep '^$tag ' \$< > \$@~
-	if ! cmp -s \$@~ \$@; then mv \$@~ \$@; else rm \$@~; fi
+	\$(call settle,\$@,grep '^$tag ' \$<)
 EOT
 fi
 

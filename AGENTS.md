@@ -595,8 +595,7 @@ endif
 	touch $@
 
 .link-docker-ubuntu-builder-latest: .tag-dirs
-	grep '^docker-ubuntu-builder:latest ' $< > $@~
-	if ! cmp -s $@~ $@; then mv $@~ $@; else rm $@~; fi
+	$(call settle,$@,grep '^docker-ubuntu-builder:latest ' $<)
 ```
 
 In a [local build](#local-builds) (`WANTS_TAGS` empty) the retag is
@@ -616,10 +615,10 @@ move reaches the rule.
 Depending on `.tag-dirs` directly would do that much, but it is one file
 for the whole tree: adding or removing any image directory rewrites it,
 and every family's `latest` would be re-asserted. Extracting one line
-per tag and settling it with a `cmp` — the same dance `.tag-dirs` itself
-uses — confines the mtime move to the link that actually moved. The
-sentinels carry no `SENTINEL_SUFFIX`: they describe the tree, not
-anything either build mode produced, so both modes share them.
+per tag and settling it with `settle` — the same helper `.tag-dirs`
+itself goes through — confines the mtime move to the link that actually
+moved. The sentinels carry no `SENTINEL_SUFFIX`: they describe the tree,
+not anything either build mode produced, so both modes share them.
 
 ### Makefile Generation
 
