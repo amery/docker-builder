@@ -2,5 +2,36 @@
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
 	"extends": [
 		"config:recommended"
+	],
+	"packageRules": [
+		{
+			"description": "A base tag is identity here, not a dependency to advance: docker/<name>/<version>/ is the pin, and quay.io/amery images are built by this repository.",
+			"matchDatasources": ["docker"],
+			"enabled": false
+		},
+		{
+			"description": "Go patch releases, which stay within the series the directory names. A minor would move one series onto another's version.",
+			"matchDatasources": ["docker"],
+			"matchPackageNames": ["golang"],
+			"matchUpdateTypes": ["patch"],
+			"enabled": true
+		},
+		{
+			"description": "Node minor and patch releases, which stay within the major the directory names. Its directories carry a major alone, where the golang ones carry a series.",
+			"matchDatasources": ["docker"],
+			"matchPackageNames": ["node"],
+			"matchUpdateTypes": ["minor", "patch"],
+			"enabled": true
+		}
+	],
+	"customManagers": [
+		{
+			"customType": "regex",
+			"description": "Images that fetch the Go toolchain by tarball pin it with ENV GO_VERSION, out of reach of the docker manager.",
+			"managerFilePatterns": ["/^docker/.+/Dockerfile$/"],
+			"matchStrings": ["ENV GO_VERSION=\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?"],
+			"depNameTemplate": "golang",
+			"datasourceTemplate": "docker"
+		}
 	]
 }

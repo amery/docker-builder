@@ -31,6 +31,15 @@ All notable changes to docker-builder will be documented in this file.
   tags that were missing are added, the major qualified by the alpine
   release and the exact version on its own, so `:24-alpine3.24` and
   `:24.19.0` publish alongside the forms already there.
+- Build system: Scope Renovate to the updates that stay inside an image
+  directory. Every `FROM` here is a pin the directory name declares, so
+  the recommended configuration read them as dependencies to advance and
+  proposed six Ubuntu bases onto 26.04 and nine Go series onto four. The
+  docker datasource is disabled, then re-enabled for `golang` patches
+  and for `node` minors and patches — the difference being that a golang
+  directory names a series and a nodejs one names a major. A custom
+  manager brings the `ENV GO_VERSION` pins under the same rule;
+  `ENV NODE_VERSION` stays out, being a floating NodeSource major.
 
 ### Fixed
 
