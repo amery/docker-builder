@@ -1,4 +1,4 @@
-FROM quay.io/amery/docker-apptly-builder:24.04
+FROM quay.io/amery/docker-apptly-builder:26.04
 
 # extra dependencies
 RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
