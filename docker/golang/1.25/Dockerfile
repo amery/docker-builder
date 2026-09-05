@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/golang/
-FROM golang:1.25.14-alpine3.24
+FROM golang:1.27.1-alpine3.24
 
 LABEL docker-builder.run-env.golang="GOPATH GO111MODULE GOINSECURE GOPRIVATE"
 
