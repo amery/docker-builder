@@ -63,10 +63,11 @@ docker/entrypoint/
 The build system automatically discovers Dockerfiles:
 
 ```bash
-# gen_tag_dirs.sh finds all directories with Dockerfiles
-find docker -name Dockerfile -type f | while read f; do
-    dirname "${f#docker/}"
-done
+# gen_tag_dirs.sh lists each directory holding a Dockerfile or a
+# Dockerfile.in, following symlinks so a latest link is listed too,
+# as "<image>:<version>" followed by its directory, or by the target's
+# tag for a link
+find -L * -name Dockerfile -o -name Dockerfile.in
 ```
 
 ### 2. Rule Generation
@@ -128,7 +129,7 @@ The system tracks image tags across three files:
 
 ## Build System Mechanics
 
-Understanding the build system's caching behavior is critical for efficient
+Understanding the build system's caching behaviour is critical for efficient
 development and troubleshooting stuck builds.
 
 ### Two-Level Caching
@@ -140,7 +141,7 @@ The build system employs two independent caching layers:
 - **Files**: `.image-*` (build) and `.alias-*` (tag) markers, plus a
   `.link-*` sentinel per symlinked version recording where it points
 - **Purpose**: Track build and alias completion separately
-- **Behavior**: If marker exists and deps unchanged, skip (see
+- **Behaviour**: If marker exists and deps unchanged, skip (see
   [What Triggers a Rebuild](#what-triggers-a-rebuild))
 - **Control**: Delete the marker of the image concerned, or `make clean`
   to clear the whole layer (see
@@ -150,7 +151,7 @@ The build system employs two independent caching layers:
 
 - **Files**: Docker's internal layer cache
 - **Purpose**: Reuse unchanged layers during docker build
-- **Behavior**: Each Dockerfile instruction creates a cached layer
+- **Behaviour**: Each Dockerfile instruction creates a cached layer
 - **Control**: Use `FORCE=1` variable (adds `--no-cache` flag)
 
 ### Build Control Options
@@ -159,8 +160,8 @@ The build system employs two independent caching layers:
 | ------- | ---------- | ------------ | -------- |
 | `make <target>` | ✓ Used | ✓ Used | Normal incremental builds |
 | `make FORCE=1 <target>` | ✓ Used | ✗ Bypassed | Refresh base images or upstream packages |
-| `rm .image-<name>`, then `make <target>` | ✗ Bypassed, that image and its descendants | ✓ Used | One image's marker is wrong |
-| `make clean`, then `make` | ✗ Bypassed, all | ✓ Used | Rebuild everything |
+| `rm .image-<name>`, then `make <target>` | ✗ Bypassed, that image and its descendants | ✓ Used, that image only | One image's marker is wrong |
+| `make clean`, then `make` | ✗ Bypassed, all | ✓ Used, third-party bases only | Rebuild everything |
 | `make clean`, then `make FORCE=1` | ✗ Bypassed, all | ✗ Bypassed | Complete clean rebuild from scratch |
 
 Clearing the make layer means removing markers, not forcing targets. **Do
@@ -181,9 +182,11 @@ markers and the generated makefiles, then leaves normal dependency
 resolution to decide what is built. Mind what that costs. The makefiles
 regenerate for free, but a marker only comes back by rebuilding, and in
 the normal mode every rebuild pushes — so the next full `make`
-re-publishes all of them, Docker's layer cache sparing the build work
-but not the push. Remove one image's marker, or a family's, when that
-is what you mean.
+re-publishes all of them. Nor does Docker's layer cache spare much of
+the build work: only an image on a third-party base comes back as a
+cache hit, and every image built on one of ours rebuilds from the first
+line (see [What Triggers a Rebuild](#what-triggers-a-rebuild)). Remove
+one image's marker, or a family's, when that is what you mean.
 
 ### What Triggers a Rebuild
 
@@ -228,6 +231,16 @@ Docker's layer cache then decides how much of each triggered build
 actually re-runs (see [Docker Layer](#2-docker-layer-build-cache)): an
 image whose base digest is unchanged is largely a cache hit even when
 its marker was invalidated.
+
+That condition is why a `BUILD_SYS` change is the expensive one. It
+marks every image for rebuild at once, bases included, and a rebuilt
+image gets a new digest even when nothing inside it changed. To an
+image built on top, that is a different base, so its stored layers no
+longer match and it builds again from the first line. Every image
+built on one of ours rebuilds that way, `multi` included, which
+compiles each Go series below its base from source for each
+architecture. Change the generator, the `Makefile` or `config.mk` when
+the build recipe has really changed, not to tidy.
 
 ### Multi-Architecture Builds
 
@@ -455,7 +468,7 @@ make quay.io/amery/docker-golang-builder    # ALL golang versions
 # Builds: 1.18, 1.19, 1.20, 1.21, 1.22, 1.23, 1.24, 1.25, 1.26, 1.27, latest, multi
 
 make quay.io/amery/docker-ubuntu-builder    # ALL ubuntu versions
-# Builds: 16.04, 18.04, 20.04, 22.04, 24.04, latest
+# Builds: 16.04, 18.04, 20.04, 22.04, 24.04, 26.04, latest
 ```
 
 #### When to Use Each
@@ -527,7 +540,7 @@ make quay.io/amery/docker-ubuntu-builder-24.04
 # follows on its own and needs no separate removal.
 rm .image-docker-ubuntu-builder-24.04
 make quay.io/amery/docker-ubuntu-builder-24.04
-# Rebuilds and re-aliases
+# Rebuilds and retags
 ```
 
 These markers are empty: they record only that the build and the retag
@@ -719,7 +732,7 @@ make BUILDER= <target>
   latest→current)
 - **ubuntu-nodejs-golang/{22.04,24.04,26.04}**: Combined Node.js + Go
 
-### Specialized Images
+### Specialised Images
 
 - **android/11**: Android SDK development
 - **ubuntu-android-studio**: Android Studio with SDK
@@ -1060,7 +1073,7 @@ When updating docker-builder:
 
    ```dockerfile
    FROM ubuntu:24.04
-   # Your customizations
+   # Your customisations
    COPY entrypoint.sh /entrypoint.sh  # If base image
    ENTRYPOINT ["/entrypoint.sh"]
    ```
@@ -1328,7 +1341,7 @@ RUN apt-get install -y --no-install-recommends python3-clang \
 - Pin base image tags in full — the tool version and any distribution
   suffix, never `latest`; see
   [why both halves are pinned](#why-both-halves-of-the-tag-are-pinned)
-- Minimize layers by combining RUN commands
+- Minimise layers by combining RUN commands
 - Clean up package manager caches
 - Add LABEL metadata for tracking
 - Use environment variables for versions and paths
@@ -1337,7 +1350,7 @@ RUN apt-get install -y --no-install-recommends python3-clang \
   - `05-*.sh` - Low-level system setup (X11 display, gpg-agent)
   - `10-*.sh` - Primary feature setup (golang, node, android)
   - `20-*.sh` - Feature extensions (pnpm, additional tools)
-  - `30-*.sh` - Complex/specialized setup (Yocto/OE, build systems)
+  - `30-*.sh` - Complex/specialised setup (Yocto/OE, build systems)
 
 ### Makefiles
 
@@ -1435,7 +1448,7 @@ DOCKER_ID=<image> docker-builder-run python3 -c "import sys; print(sys.path)"
    system packages only for compiled ones
 7. **Pin Versions**: Specify exact or compatible version ranges, for API
    compatibility rather than to fit the interpreter
-8. **Clean Builds**: Remove build artifacts in the same layer
+8. **Clean Builds**: Remove build artefacts in the same layer
 
 ## Security Considerations
 
