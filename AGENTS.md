@@ -568,23 +568,23 @@ pull-docker-<name>-builder-<version>            # Pull specific
 docker/ubuntu/24.04/Dockerfile
     → quay.io/amery/docker-ubuntu-builder-24.04
 
-docker/ubuntu/latest → 24.04 (symlink)
+docker/ubuntu/latest → 26.04 (symlink)
     → quay.io/amery/docker-ubuntu-builder-latest
 ```
 
 #### Symlink Handling
 
-Symlinked version directories (e.g., `latest → 24.04`) create tagging targets,
+Symlinked version directories (e.g., `latest → 26.04`) create tagging targets,
 not build targets:
 
 ```bash
 # Directory structure
-docker/ubuntu/24.04/Dockerfile    # Real directory with Dockerfile
-docker/ubuntu/latest → 24.04      # Symlink to directory
+docker/ubuntu/26.04/Dockerfile    # Real directory with Dockerfile
+docker/ubuntu/latest → 26.04      # Symlink to directory
 
 # Generated targets
-make quay.io/amery/docker-ubuntu-builder-24.04    # Builds from Dockerfile
-make quay.io/amery/docker-ubuntu-builder-latest   # Tags 24.04 as :latest
+make quay.io/amery/docker-ubuntu-builder-26.04    # Builds from Dockerfile
+make quay.io/amery/docker-ubuntu-builder-latest   # Tags 26.04 as :latest
 ```
 
 The `latest` target does not build anything — it depends on the
@@ -596,11 +596,11 @@ creates a registry-side tag:
 ```makefile
 # Generated rule for symlink
 .image-docker-ubuntu-builder-latest: \
-	.alias-docker-ubuntu-builder-24.04 \
+	.alias-docker-ubuntu-builder-26.04 \
 	.link-docker-ubuntu-builder-latest
 ifeq ($(WANTS_TAGS),1)
 	$(DOCKER_TAG) -t $(PREFIX)docker-ubuntu-builder:latest \
-	              $(PREFIX)docker-ubuntu-builder:24.04
+	              $(PREFIX)docker-ubuntu-builder:26.04
 endif
 	touch $@
 
@@ -622,7 +622,7 @@ changes which alias sentinel the rule names but no file's mtime —
 leaving make to find the sentinel current, report nothing to do, and
 exit 0 while the registry goes on serving the old version. The sentinel
 holds the tag's line from `.tag-dirs`, which records the resolved target
-(`docker-ubuntu-builder:latest docker-ubuntu-builder:24.04`), so the
+(`docker-ubuntu-builder:latest docker-ubuntu-builder:26.04`), so the
 move reaches the rule.
 
 Depending on `.tag-dirs` directly would do that much, but it is one file
@@ -721,7 +721,7 @@ make BUILDER= <target>
 ### Base Images
 
 - **ubuntu/{16.04,18.04,20.04,22.04,24.04,26.04}**: Base Ubuntu images with
-  builder_version.sh
+  builder_version.sh (latest→26.04)
 - **ubuntu-x11/{20.04,22.04,24.04,26.04}**: Ubuntu with X11 forwarding support
 - **ubuntu-vsc-base/{24.04,26.04}**: VS Code DevContainer base
 
@@ -736,9 +736,9 @@ make BUILDER= <target>
 
 - **android/11**: Android SDK development
 - **ubuntu-android-studio**: Android Studio with SDK
-- **poky/{18.04,24.04,26.04}**: Yocto/OE builds (latest→24.04)
+- **poky/{18.04,24.04,26.04}**: Yocto/OE builds (latest→26.04)
 - **poky-nodejs-golang/26.04**: Yocto/OE with Node.js and Go (latest→26.04)
-- **apptly/{24.04,26.04}**: Apptly development base (latest→24.04)
+- **apptly/{24.04,26.04}**: Apptly development base (latest→26.04)
 
 ### VS Code DevContainer Images
 

@@ -15,6 +15,10 @@ All notable changes to docker-builder will be documented in this file.
 - `docker-golang-builder`: Update Go 1.25 to 1.25.14 and Go 1.26 to
   1.26.8
 - `docker-golang-builder:latest`: Move from 1.26 to 1.27
+- `latest`: Move from 24.04 to 26.04 in `docker-ubuntu-builder`,
+  `docker-ubuntu-x11-builder`, `docker-ubuntu-nodejs-golang-builder`,
+  `docker-poky-builder`, `docker-apptly-builder` and the
+  `docker-ubuntu-vsc-*-builder` family
 - `docker-golang-builder:multi`: Rebase onto 1.27 and add 1.26 to the
   source-built set, so the image goes on carrying every series from 1.18
   up to its own base
