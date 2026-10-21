@@ -2,8 +2,14 @@
 
 set -eu
 
+# print the version names the published image reports, so aliases are
+# named after what was pushed rather than a stale local copy
+image_versions() {
+	${DOCKER:-docker} run --rm --pull always "$1" --version
+}
+
 get_versions() {
-	local image="$1" base= tag=
+	local image="$1" base= tag= versions=
 
 	base="${image%:*}"
 
@@ -21,7 +27,10 @@ get_versions() {
 		return
 	esac
 
-	for v in $(${DOCKER:-docker} run "$image" --version); do
+	# a plain assignment, so set -e aborts when the run fails
+	versions="$(image_versions "$image")"
+
+	for v in $versions; do
 		if [ "$v" != "$tag" -a "$v" != "undefined" ]; then
 			echo "$v"
 		fi
@@ -30,8 +39,9 @@ get_versions() {
 
 for x; do
 	base="${x%:*}"
+	versions="$(get_versions "$x")"
 
-	for v in $(get_versions "$x" | sort -uV); do
+	for v in $(printf '%s\n' "$versions" | sort -uV); do
 		echo "$base:$v"
 	done
 done
