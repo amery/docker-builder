@@ -39,7 +39,6 @@ RUN curl -LsS -o /tmp/commandlinetools-linux.zip \
 	&& $SDKMANAGER --install \
 		"cmdline-tools;latest" \
 		"platform-tools" \
-		"tools" \
 	&& for x in $ANDROID_API_VERSIONS; do \
 			echo "platforms;android-$x"; \
 		done | xargs -r $SDKMANAGER --install \
