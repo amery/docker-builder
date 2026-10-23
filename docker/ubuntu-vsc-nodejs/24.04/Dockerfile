@@ -33,3 +33,8 @@ RUN npm i -g \
 
 COPY 10-node.sh /etc/entrypoint.d/
 COPY 20-node-pnpm.sh /etc/entrypoint.d/
+
+#
+# dynamic version
+#
+COPY builder_version.sh /usr/local/bin/builder_version

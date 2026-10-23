@@ -37,3 +37,8 @@ RUN ARCH=$(dpkg --print-architecture) \
 ENV PATH=/opt/golang/bin:${PATH}
 
 COPY 10-golang.sh /etc/entrypoint.d/
+
+#
+# dynamic version
+#
+COPY builder_version.sh /usr/local/bin/builder_version
